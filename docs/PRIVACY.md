@@ -5,10 +5,10 @@ engine they all share — and applies from 2026-08-02.
 
 ## Summary
 
-qlinter collects nothing, transmits nothing, and contacts no server. Every part of it — parsing, linting,
-formatting — runs locally on your machine. There is no backend, no telemetry, no analytics, no crash
-reporting, no advertising, and no remotely hosted code. Your Qlik scripts never leave the browser tab or
-the editor they are written in.
+qlinter transmits nothing and contacts no server. Every part of it — parsing, linting, formatting — runs
+locally on your machine. There is no backend, no telemetry, no analytics, no crash reporting, no
+advertising, and no remotely hosted code. The only user data qlinter touches is the script you are
+editing, and it never leaves the browser tab or the editor it is written in.
 
 This is a structural property, not a promise: the engine (`@qlinter/core`) performs no I/O at all, and none
 of the bindings contain a single network call. The full source is public.
@@ -82,7 +82,7 @@ a config and returns diagnostics or formatted text. Neither makes network reques
 ## Third parties
 
 There are none. qlinter has no service providers, no processors, and no integrations. Nothing is sold,
-shared, or disclosed, because nothing is collected.
+shared, or disclosed, because nothing ever leaves your device.
 
 The only outbound requests connected to qlinter are ones **you** initiate: rule identifiers shown in the
 Chrome extension's options page and hover tooltips link to the rule reference on GitHub. Following such a
@@ -92,7 +92,11 @@ your script or configuration is attached to that link beyond the rule id in the 
 ## Permissions and data-use commitments (Chrome Web Store)
 
 - qlinter's **single purpose** is linting and formatting Qlik load scripts.
-- It does **not** collect or transmit user data of any category.
+- It **handles exactly one category** of user data: **website content**, namely the Qlik script text in
+  the Data Load Editor. That text is read into memory, linted, and written back — never transmitted,
+  never stored, never shared. Chrome requires this to be disclosed even though the processing is purely
+  local and the script never leaves the tab.
+- It does **not** handle user data of any other category.
 - It does **not** sell or transfer user data to third parties.
 - It does **not** use or transfer data for purposes unrelated to its single purpose.
 - It does **not** use or transfer data to determine creditworthiness or for lending purposes.
@@ -101,8 +105,8 @@ your script or configuration is attached to that link beyond the rule id in the 
 
 ## Your data, your machine
 
-Because nothing is collected, there is nothing held about you to access, correct, export, or delete. The
-only data that exists is local:
+Because nothing ever leaves your device, there is nothing held about you to access, correct, export, or
+delete. The only data that exists is local:
 
 - **Chrome:** remove your stored configuration with the "Reset" button on the options page, or by
   uninstalling the extension. Revoke site access at any time under `chrome://extensions`.
