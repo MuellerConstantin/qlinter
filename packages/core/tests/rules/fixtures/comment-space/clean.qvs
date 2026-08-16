@@ -19,3 +19,7 @@ LET vDay = 1;
  * stays untouched
  */
 LET vHour = 12;
+
+// The // in a lib:// scheme is part of the path, not a comment marker.
+Load *
+From lib://DataFiles/abc.qvd (qvd);

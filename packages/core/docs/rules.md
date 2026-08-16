@@ -1529,6 +1529,11 @@ another concern:
   [load-indent](#load-indent).
 - The leading `=` of a `$(= …)` dollar-sign expansion is an evaluation marker,
   not a binary operator, and is left untouched.
+- The `=` of an `$(Include=…)` / `$(Must_Include=…)` expansion belongs to a fixed
+  form that Qlik matches literally. Qlik's documentation is explicit that no
+  space may appear on either side of it, so a space there is a syntax error in
+  the Data Load Editor rather than a style choice. The whole expansion is
+  tokenized as one unit and never touched.
 
 Arithmetic operators (`+`, `-`, `*`, `/`) are intentionally **out of scope**.
 `+` and `-` are ambiguously unary (`LET x = -1`), and `*` doubles as the
@@ -1554,6 +1559,9 @@ SET vYear = 2026;
 LET vFlag = If(vYear >= 2025, 'new', 'old');
 LET vLabel = 'Year: ' & vYear;
 LET vEval = $(=Max(OrderDate));
+
+// An include expansion is a fixed form; its "=" is never spaced.
+$(Must_Include=[lib://DataFiles/helpers.qvs]);
 
 // Arithmetic and the Load wildcard are not enforced.
 LET vSum = 1+2;

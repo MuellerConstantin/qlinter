@@ -649,7 +649,7 @@ export const SYSTEM_VARIABLES = [
   'MoneyFormat',
   'MoneyThousandSep',
   'MonthNames',
-  'MustInclude',
+  'Must_Include',
   'NullDisplay',
   'NullInterpret',
   'NullValue',
@@ -751,6 +751,40 @@ export const traceMessageToken = createToken({
   pattern: /[^;]+/,
   line_breaks: true,
 });
+/*
+ * `$(Include=…)` / `$(Must_Include=…)` is not an assignment but a fixed dollar
+ * expansion form. Qlik matches the literal `Include=` and explicitly forbids a
+ * space on either side of the `=` — "Do not put a space character before or
+ * after the equal sign" — so an inserted space is a Data Load Editor syntax
+ * error, not a style choice. Lexing the whole expansion as one opaque token
+ * keeps every spacing and casing rule out of the construct.
+ *
+ * The pattern tolerates the (invalid) spaced form on purpose: a script that
+ * already carries the broken spacing must not be mangled further, and keeping
+ * it in a single token leaves a future rule free to flag it off the image.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/SystemVariables/Include.htm | Include}
+ */
+export const includeExpansionToken = createToken({
+  name: 'IncludeExpansion',
+  pattern: /\$\(\s*(?:Must_)?Include\s*=[^)\r\n]*\)/i,
+  line_breaks: false,
+});
+
+/*
+ * A `lib://` data connection path is a single lexical unit. Without this token
+ * it shatters into `LIB` (a keyword, from `Lib Connect To`) followed by `//`,
+ * which starts a line comment — the rest of the path would silently be treated
+ * as comment text and the case rule would rewrite the scheme. The bracketed
+ * form `[lib://…]` is already covered by bracketToken; this is the unbracketed
+ * form that Qlik's own documentation uses.
+ */
+export const libPathToken = createToken({
+  name: 'LibPath',
+  pattern: /lib:\/\/[^\s;,()[\]'"]*/i,
+  line_breaks: false,
+});
+
 export const bracketToken = createToken({ name: 'Bracket', pattern: /\[[^\]]*\]/ });
 export const quotedIdentifierToken = createToken({
   name: 'QuotedIdentifier',
@@ -801,6 +835,13 @@ const defaultModeTokens = [
   lineCommentToken,
   whitespaceToken,
   newlineToken,
+  /*
+   * Both of these must be tried before the keyword and identifier tokens:
+   * each starts with a prefix those tokens would happily match on their own
+   * ($ / lib), and only the longer match keeps the construct intact.
+   */
+  includeExpansionToken,
+  libPathToken,
   bracketToken,
   quotedIdentifierToken,
   stringLiteralToken,

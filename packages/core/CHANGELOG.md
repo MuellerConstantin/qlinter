@@ -53,3 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public TypeScript types: `Diagnostic`, `Rule`, `Severity`, `Fix`,
   `LintConfig`, `RulesConfig`, `RuleId`, `PresetName`, `RulesConfigOf`,
   `RuleConfigEntry`, `SeverityOrOff`, `FormatResult`, and per-rule option types.
+
+### Fixed
+
+- `$(Include=…)` / `$(Must_Include=…)` is no longer broken by `operator-spacing`.
+  Qlik forbids a space around the `=` of that dollar expansion, so the inserted
+  spaces made the Data Load Editor reject the script. The expansion now lexes as
+  a single opaque token and is left untouched.
+- An unbracketed `lib://` path is no longer mangled. The scheme used to split
+  into the `Lib` keyword plus a `//` line comment, which uppercased `LIB` and
+  silently commented out the rest of the path. It now lexes as one token.

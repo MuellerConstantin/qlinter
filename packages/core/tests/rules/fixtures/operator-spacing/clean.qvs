@@ -5,6 +5,11 @@ LET vLe = If(vYear <= 2025, 'le', 'gt');
 LET vLabel = 'Year: ' & vYear;
 LET vEval = $(=Max(OrderDate));
 
+// The "=" of an include expansion is part of a fixed form, never an operator.
+$(Include=abc.txt);
+$(Must_Include=[lib://DataFiles/helpers.qvs]);
+$(Must_Include=lib://DataFiles/more.qvs);
+
 // Arithmetic and the Load wildcard are intentionally not enforced.
 LET vSum = 1+2;
 LET vNeg = -1;
