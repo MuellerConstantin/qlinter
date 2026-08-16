@@ -11,6 +11,7 @@
 | [comment-space](#comment-space)                       | Require a space after `//` and inside `/* */`.                   |
 | [continuation-indent](#continuation-indent)           | Indent continuation lines one level per open parenthesis.        |
 | [eol-last](#eol-last)                                 | Require the file to end with exactly one newline.                |
+| [include-no-spaces](#include-no-spaces)               | Disallow spaces around the `=` of an include expansion.          |
 | [inline-comment-space](#inline-comment-space)         | Require exactly one space between code and a trailing comment.   |
 | [load-clause-newline](#load-clause-newline)           | Require each LOAD clause keyword to start its own line.          |
 | [load-field-per-line](#load-field-per-line)           | Require each LOAD field to start on its own line.                |
@@ -719,6 +720,60 @@ LET vMonth = 6;
 This rule has no options. "Exactly one newline at end of file" is the universal
 convention; making it configurable would defeat the point of an opinionated
 linter.
+
+---
+
+## include-no-spaces
+
+Disallow whitespace around the `=` of a `$(Include=…)` / `$(Must_Include=…)`
+expansion.
+
+### Rule Details
+
+An include expansion is not an assignment. Qlik matches `Include=` as a fixed
+literal form and its documentation states outright that no space may appear
+before or after the equal sign. A script that carries one does not merely read
+oddly — the Data Load Editor fails to recognise the construct and rejects the
+statement with a syntax error, so the included file is never loaded.
+
+This makes the rule a correctness rule rather than a style rule, which is why it
+defaults to `error`. It is also the reason the whole expansion is tokenized as a
+single unit: [operator-spacing](#operator-spacing) would otherwise treat that `=`
+as a binary operator and introduce exactly the spaces this rule removes.
+
+The autofix deletes the offending whitespace and touches nothing else. The
+include target is preserved byte for byte, because a data connection path may
+legitimately contain spaces of its own.
+
+The evaluation expansion `$(= …)` is a different construct and is out of scope —
+its leading `=` is an evaluation marker, and Qlik accepts a space after it.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+$(Include = abc.txt);
+$(Must_Include =[lib://DataFiles/helpers.qvs]);
+$(Must_Include= lib://DataFiles/more.qvs);
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+$(Include=abc.txt);
+$(Must_Include=[lib://DataFiles/helpers.qvs]);
+$(Must_Include=lib://DataFiles/more.qvs);
+
+// A path may carry spaces of its own; only the equal sign is enforced.
+$(Must_Include=[lib://Data Files/my helpers.qvs]);
+
+// An evaluation expansion is a different construct entirely.
+LET vEval = $(=Max(OrderDate));
+```
+
+### Options
+
+This rule has no options. The spacing it forbids is a syntax error in Qlik, not
+a matter of taste.
 
 ---
 

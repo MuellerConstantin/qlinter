@@ -1,0 +1,10 @@
+$(Include=abc.txt);
+$(Must_Include=[lib://DataFiles/helpers.qvs]);
+$(Must_Include=lib://DataFiles/more.qvs);
+$(MUST_INCLUDE=abc.txt);
+
+// A path may carry spaces of its own; only the equal sign is the rule's business.
+$(Must_Include=[lib://Data Files/my helpers.qvs]);
+
+// An evaluation expansion is a different construct entirely.
+LET vEval = $(=Max(OrderDate));

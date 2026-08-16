@@ -1,0 +1,4 @@
+$(Include = abc.txt);
+$(Must_Include =[lib://DataFiles/helpers.qvs]);
+$(Must_Include= lib://DataFiles/more.qvs);
+$(MUST_INCLUDE  =  abc.txt);

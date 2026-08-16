@@ -767,7 +767,7 @@ export const traceMessageToken = createToken({
  */
 export const includeExpansionToken = createToken({
   name: 'IncludeExpansion',
-  pattern: /\$\(\s*(?:Must_)?Include\s*=[^)\r\n]*\)/i,
+  pattern: /\$\([ \t]*(?:Must_)?Include[ \t]*=[^)\r\n]*\)/i,
   line_breaks: false,
 });
 

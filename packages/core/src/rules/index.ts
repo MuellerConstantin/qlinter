@@ -8,6 +8,7 @@ import { commaSpace } from './comma-space.js';
 import { commentSpace } from './comment-space.js';
 import { continuationIndent } from './continuation-indent.js';
 import { eolLast } from './eol-last.js';
+import { includeNoSpaces } from './include-no-spaces.js';
 import { inlineCommentSpace } from './inline-comment-space.js';
 import { loadClauseNewline } from './load-clause-newline.js';
 import { loadFieldPerLine } from './load-field-per-line.js';
@@ -48,6 +49,7 @@ export const allRules = [
   commentSpace,
   continuationIndent,
   eolLast,
+  includeNoSpaces,
   inlineCommentSpace,
   loadClauseNewline,
   loadFieldPerLine,
@@ -145,6 +147,7 @@ export {
   commentSpace,
   continuationIndent,
   eolLast,
+  includeNoSpaces,
   inlineCommentSpace,
   loadClauseNewline,
   loadFieldPerLine,

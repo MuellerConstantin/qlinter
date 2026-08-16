@@ -31,7 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `builtin-keyword-case`, `variable-case`), spacing (`comma-space`,
   `comment-space`, `inline-comment-space`, `block-comment-stars`,
   `operator-spacing`, `paren-spacing`), and correctness
-  (`no-legacy-path-variables`, `table-label-brackets`, `variable-charset`).
+  (`include-no-spaces`, `no-legacy-path-variables`, `table-label-brackets`,
+  `variable-charset`).
 - `recommended` preset, a ready-to-use `LintConfig` that enables every rule at
   its declared `defaultSeverity`. Pass it straight to `lint()` / `format()`.
 - Named presets via the `presets` field on `LintConfig`, which selects one or
@@ -59,7 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `$(Include=…)` / `$(Must_Include=…)` is no longer broken by `operator-spacing`.
   Qlik forbids a space around the `=` of that dollar expansion, so the inserted
   spaces made the Data Load Editor reject the script. The expansion now lexes as
-  a single opaque token and is left untouched.
+  a single opaque token and is left untouched; the new `include-no-spaces` rule
+  repairs scripts that already carry the broken spacing.
 - An unbracketed `lib://` path is no longer mangled. The scheme used to split
   into the `Lib` keyword plus a `//` line comment, which uppercased `LIB` and
   silently commented out the rest of the path. It now lexes as one token.
