@@ -10,6 +10,7 @@ import type {
   ConfigBridgeMessage,
   DiagnosticsMessage,
   FixAllBridgeMessage,
+  LocationChangeBridgeMessage,
 } from './types.js';
 
 const DOM_POLL_TIMEOUT_MS = 10_000;
@@ -37,6 +38,21 @@ onConfigChange((config) => {
   currentConfig = config;
   postConfig();
 });
+
+/*
+ * Both halves of the extension have to re-arm on an SPA navigation, and only
+ * this one hears about it: `webNavigation` events reach the isolated world.
+ * Without the relay the main-world script keeps whatever CodeMirror instance it
+ * bound to on the initial load — or, if its mount watch already gave up, none at
+ * all — while this side happily reports `active`.
+ */
+function postLocationChange(): void {
+  const message: LocationChangeBridgeMessage = {
+    source: 'qlinter-content',
+    type: 'qlinter:location-change',
+  };
+  window.postMessage(message, window.location.origin);
+}
 
 function broadcastStatus(): void {
   const message: StatusMessage = { type: 'qlinter:status', status };
@@ -110,6 +126,7 @@ console.log('[qlinter] content script loaded on', location.href);
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   if (message?.type === 'qlinter:location-change') {
     evaluateAndWatchForMount();
+    postLocationChange();
     return false;
   }
 

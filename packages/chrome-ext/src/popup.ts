@@ -169,11 +169,21 @@ async function refresh(): Promise<void> {
 // listener never responds.
 chrome.runtime.onMessage.addListener((message: Message): undefined => {
   if (message?.type === 'qlinter:status') {
-    renderStatus(message.status);
-
-    if (message.status !== 'active') {
-      renderCounts(undefined, 0);
+    /*
+     * An `active` broadcast means the content script came up after this
+     * popup's own pass already ran — which is the normal case right after a
+     * permission grant, where the pass races the service worker's injection
+     * and comes back with no counts. Repainting just the label would leave the
+     * popup showing an active status above an empty body, so re-run the whole
+     * query instead.
+     */
+    if (message.status === 'active') {
+      void refresh();
+      return;
     }
+
+    renderStatus(message.status);
+    renderCounts(undefined, 0);
   }
 
   if (message?.type === 'qlinter:diagnostics') {

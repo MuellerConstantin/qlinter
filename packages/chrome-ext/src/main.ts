@@ -7,6 +7,7 @@ import type { Diagnostic, LintConfig } from '@qlinter/core';
 import type { Editor } from 'codemirror';
 
 const MOUNT_TIMEOUT_MS = 10_000;
+const LINT_DEBOUNCE_MS = 150;
 
 // The loaded user config is used verbatim — nothing runs until it names a
 // preset or rules. This matches the CLI and the VS Code extension: no preset is
@@ -16,6 +17,7 @@ const MOUNT_TIMEOUT_MS = 10_000;
 let currentConfig: LintConfig = {};
 let triggerLint: (() => void) | undefined;
 let editorRef: Editor | undefined;
+let mountWatch: MutationObserver | undefined;
 
 function countBySeverity(diagnostics: Diagnostic[]): DiagnosticCounts {
   const counts: DiagnosticCounts = { error: 0, warning: 0, info: 0 };
@@ -45,14 +47,14 @@ function fixAll(editor: Editor): void {
   }
 }
 
-function onEditorReady(editor: ReturnType<typeof getEditor> & object): void {
+function onEditorReady(editor: Editor): void {
   console.log('[qlinter:main] CodeMirror ready');
 
   editorRef = editor;
   injectStyles();
   const highlighter = createHighlighter(editor);
 
-  const onScriptChange = debounce((): void => {
+  const runLint = (): void => {
     const diagnostics = lint(editor.getValue(), currentConfig);
     highlighter.apply(diagnostics);
 
@@ -65,12 +67,18 @@ function onEditorReady(editor: ReturnType<typeof getEditor> & object): void {
       fixable,
     };
     window.postMessage(message, window.location.origin);
-  }, 150);
+  };
 
-  editor.on('change', onScriptChange);
-  triggerLint = onScriptChange;
+  editor.on('change', debounce(runLint, LINT_DEBOUNCE_MS));
+  triggerLint = runLint;
 
-  onScriptChange();
+  /*
+   * The first pass runs undebounced. The popup reads the counts once, straight
+   * after the content script reports `active`, and then never asks again — a
+   * debounced first lint loses that race often enough to show an active status
+   * with no severity summary underneath it.
+   */
+  runLint();
 }
 
 window.addEventListener('message', (event: MessageEvent) => {
@@ -90,6 +98,11 @@ window.addEventListener('message', (event: MessageEvent) => {
     return;
   }
 
+  if (data.type === 'qlinter:location-change') {
+    waitForEditor();
+    return;
+  }
+
   if (data.type === 'qlinter:fix-all' && editorRef) {
     fixAll(editorRef);
   }
@@ -98,32 +111,48 @@ window.addEventListener('message', (event: MessageEvent) => {
 const getConfigRequest: GetConfigBridgeMessage = { source: 'qlinter-main', type: 'qlinter:get-config' };
 window.postMessage(getConfigRequest, window.location.origin);
 
+/**
+ * Binds to the CodeMirror instance, waiting for it to mount if it has not yet.
+ *
+ * Safe to call again on every SPA navigation, and the content script does
+ * exactly that. The watch times out to avoid observing the DOM forever on a
+ * page that never mounts an editor, but a timeout must not be terminal:
+ * leaving the script editor and coming back replaces the instance, and a
+ * one-shot watch would leave the main world bound to a dead editor — or to
+ * nothing — while the isolated world still reports `active`.
+ */
 function waitForEditor(): void {
+  mountWatch?.disconnect();
+  mountWatch = undefined;
+
   const editor = getEditor();
 
-  if (editor) {
+  if (editor && editor !== editorRef) {
     onEditorReady(editor);
     return;
   }
 
   const start = performance.now();
 
-  const observer = new MutationObserver(() => {
+  const watch = new MutationObserver(() => {
     const found = getEditor();
 
-    if (found) {
-      observer.disconnect();
+    if (found && found !== editorRef) {
+      watch.disconnect();
+      mountWatch = undefined;
       onEditorReady(found);
       return;
     }
 
     if (performance.now() - start > MOUNT_TIMEOUT_MS) {
-      observer.disconnect();
+      watch.disconnect();
+      mountWatch = undefined;
       console.warn('[qlinter:main] CodeMirror mount watch timed out at', location.href);
     }
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  mountWatch = watch;
+  watch.observe(document.body, { childList: true, subtree: true });
 }
 
 waitForEditor();

@@ -26,9 +26,11 @@ export type DiagnosticsBridgeMessage = {
 };
 export type FixAllBridgeMessage = { source: 'qlinter-content'; type: 'qlinter:fix-all' };
 export type ConfigBridgeMessage = { source: 'qlinter-content'; type: 'qlinter:config'; config: LintConfig };
+export type LocationChangeBridgeMessage = { source: 'qlinter-content'; type: 'qlinter:location-change' };
 export type GetConfigBridgeMessage = { source: 'qlinter-main'; type: 'qlinter:get-config' };
 export type BridgeMessage =
   | DiagnosticsBridgeMessage
   | FixAllBridgeMessage
   | ConfigBridgeMessage
+  | LocationChangeBridgeMessage
   | GetConfigBridgeMessage;
