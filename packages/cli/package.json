@@ -1,6 +1,6 @@
 {
   "name": "@qlinter/cli",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Command-line linter and formatter for Qlik load scripts, powered by @qlinter/core.",
   "keywords": [
     "qlik",
