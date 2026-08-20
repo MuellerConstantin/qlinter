@@ -1,6 +1,6 @@
 {
   "name": "@qlinter/chrome-ext",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chrome extension that lints and formats Qlik load scripts inline in the Qlik Sense Data Load Editor, powered by @qlinter/core.",
   "license": "MIT",
   "private": true,
