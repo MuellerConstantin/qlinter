@@ -38,7 +38,7 @@ describe('include-no-spaces', () => {
   });
 
   it('reports the right line for an expansion further down the script', () => {
-    const diagnostics = lintRule("SET vX = 1;\n\n$(Include= abc.txt);\n", includeNoSpaces);
+    const diagnostics = lintRule('SET vX = 1;\n\n$(Include= abc.txt);\n', includeNoSpaces);
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].range.start.line).toBe(3);

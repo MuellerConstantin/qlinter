@@ -1,0 +1,146 @@
+name: Release Chrome Extension
+
+# Builds the store-ready ZIP and attaches it to a GitHub release; the upload to the
+# Chrome Web Store stays manual, so this workflow holds no store credentials and its
+# only external side effect is the release itself.
+#
+# Two modes, one code path: a tag push creates the release, a manual dispatch rehearses
+# the identical steps with nothing leaving the runner. Any step with an external side
+# effect MUST therefore carry an `if: github.event_name == 'push'`.
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('Rehearsal (dry run) — {0}', github.ref_name)
+      || format('Release — {0}', github.ref_name) }}
+
+on:
+  push:
+    tags: ['chrome-ext-v*.*.*']
+  # Rehearsal against any branch: everything runs, but no release is created.
+  # Version comes from package.json, since there is no tag.
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+
+      # Cheapest possible failure: a mismatched tag should never cost a full test run.
+      # The manifest is checked too — it carries its own copy of the version, and it is
+      # the only one Chrome ever sees. Drift there ships a release under the wrong number.
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          VERSION="$(node -p "require('./packages/chrome-ext/package.json').version")"
+          MANIFEST_VERSION="$(node -p "require('./packages/chrome-ext/public/manifest.json').version")"
+          if [ "$MANIFEST_VERSION" != "$VERSION" ]; then
+            echo "::error::manifest.json version ($MANIFEST_VERSION) does not match package.json ($VERSION)"
+            exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#chrome-ext-v}"
+            if [ "$TAG_VERSION" != "$VERSION" ]; then
+              echo "::error::Tag version ($TAG_VERSION) does not match packages/chrome-ext/package.json ($VERSION)"
+              exit 1
+            fi
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          case "$VERSION" in
+            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Write run summary
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            MODE='Release — creates a GitHub release with the packaged ZIP attached'
+          else
+            MODE='Rehearsal — dry run, no release is created'
+          fi
+          {
+            echo "## qlinter Chrome extension $VERSION"
+            echo ""
+            echo "- **Mode:** $MODE"
+            echo "- **Chrome Web Store:** manual — upload the attached ZIP via the developer dashboard"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Extract changelog section
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          PRERELEASE: ${{ steps.meta.outputs.prerelease }}
+        run: |
+          # A prerelease ships whatever is currently unreleased; the final tag then
+          # freezes that same content under its own version heading.
+          if [ "$PRERELEASE" = "true" ]; then
+            SECTION="Unreleased"
+          else
+            SECTION="$VERSION"
+          fi
+          awk -v head="## [$SECTION]" '
+            index($0, head) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' packages/chrome-ext/CHANGELOG.md | sed -e '/./,$!d' > "$RUNNER_TEMP/release-notes.md"
+          if [ ! -s "$RUNNER_TEMP/release-notes.md" ]; then
+            echo "::error::packages/chrome-ext/CHANGELOG.md has no '## [$SECTION]' section"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # Re-validated here on purpose: a tag can point at any commit, not just one CI has seen.
+      - name: Check formatting
+        run: npm run prettier
+      - name: Lint
+        run: npm run lint
+
+      # Core must be built first. Without its dist/, tsdown cannot resolve @qlinter/core
+      # and silently falls back to treating it as external — the build still exits 0, but
+      # the extension bundle would import a bare specifier no browser can resolve.
+      - name: Build core
+        run: npm run build:core
+      - name: Type check
+        run: npm run typecheck -w @qlinter/chrome-ext
+      - name: Test
+        run: npm test -w @qlinter/chrome-ext
+
+      # Builds and zips in one step; the archive is named after the built manifest version.
+      - name: Package
+        run: npm run package:chrome-ext
+
+      # A rehearsal has no release to attach the ZIP to, so it goes to the run's artifacts
+      # instead — that archive is the whole point of rehearsing, and it can be loaded
+      # unpacked in Chrome to verify the build before a tag is ever pushed.
+      - name: Upload build artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qlinter-chrome-ext-${{ steps.meta.outputs.version }}
+          path: packages/chrome-ext/qlinter-chrome-ext-${{ steps.meta.outputs.version }}.zip
+          if-no-files-found: error
+
+      # The attached ZIP is the release: it is what gets uploaded to the Chrome Web Store
+      # by hand, so the published extension traces back to this exact commit and build.
+      - name: Create GitHub release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 'qlinter Chrome extension v${{ steps.meta.outputs.version }}'
+          prerelease: ${{ steps.meta.outputs.prerelease }}
+          body_path: ${{ runner.temp }}/release-notes.md
+          files: packages/chrome-ext/qlinter-chrome-ext-${{ steps.meta.outputs.version }}.zip
