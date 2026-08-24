@@ -5,3 +5,7 @@ LET vTab = If(vSum > 0,	'pos','neg');
 LET vBlock = If(vSum > 0,/* hint */ 'pos', 'neg');
 LOAD A,B,C
 FROM [lib://x/y.qvd];
+LET vBefore = If(vSum > 0 ,'pos' , 'neg');
+LET vTabBefore = If(vSum > 0	, 'pos', 'neg');
+LOAD A ,B , C
+FROM [lib://x/y.qvd];

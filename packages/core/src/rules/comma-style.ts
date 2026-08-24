@@ -2,27 +2,6 @@ import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 
-/*
- * A comma closes the operand it follows, and a script reads that way when the
- * comma stays on that operand's line:
- *
- *   Load
- *       X,
- *       Y
- *
- * The leading-comma style puts it at the head of the next line instead. Both
- * are valid Qlik; this rule picks the trailing one, which is also the shape
- * `load-field-per-line` and `multiline-call` already produce when they break a
- * jammed list apart — so the two styles cannot both survive a format pass
- * anyway.
- *
- * Scope: this rule owns *where the comma sits* and nothing else. The space
- * after it belongs to `comma-space`, the column of the lines around it to the
- * indent rules, and whether a field earns its own line at all to
- * `load-field-per-line`. The fix relocates the comma and the whitespace that
- * only existed to separate it from its neighbours; it never reflows.
- */
-
 /** Offset of the first character after the run of spaces and tabs at `from`. */
 function skipBlanks(source: string, from: number): number {
   let cursor = from;
@@ -91,7 +70,10 @@ export const commaStyle: Rule<undefined, 'comma-style'> = {
         range: tokenRange(token),
         message: "Expected ',' at the end of the previous line.",
         fix: operandFollowsOnLine
-          ? { range: { start: gapStart, end: /\s$/.test(gap) ? skipBlanks(source, after) : after }, replacement: `,${gap}` }
+          ? {
+              range: { start: gapStart, end: /\s$/.test(gap) ? skipBlanks(source, after) : after },
+              replacement: `,${gap}`,
+            }
           : { range: { start: gapStart, end: after }, replacement: `,${gap.trimEnd()}` },
       });
     }

@@ -7,7 +7,7 @@
 | [table-label-brackets](#table-label-brackets)         | Require table labels to be enclosed in brackets.                 |
 | [builtin-function-case](#builtin-function-case)       | Enforce canonical casing for Qlik built-in functions.            |
 | [builtin-keyword-case](#builtin-keyword-case)         | Enforce canonical casing for Qlik keywords.                      |
-| [comma-space](#comma-space)                           | Require exactly one space after a comma when followed by code.   |
+| [comma-space](#comma-space)                           | Require one space after a comma and none before it.              |
 | [comma-style](#comma-style)                           | Require a comma to close the line of the operand it follows.     |
 | [comment-space](#comment-space)                       | Require a space after `//` and inside `/* */`.                   |
 | [continuation-indent](#continuation-indent)           | Indent continuation lines one level per open parenthesis.        |
@@ -397,7 +397,7 @@ RESIDENT [TableA];
 
 ## comma-space
 
-Require exactly one space after a comma when the next token is on the same line.
+Require exactly one space after a comma and none before it.
 
 ### Rule Details
 
@@ -407,25 +407,36 @@ inflating the line; no space at all (`If(x>0,'pos','neg')`) makes arguments
 visually run together, and runs of two or more spaces (or a tab) are usually
 leftover alignment that bloats diffs whenever a sibling token changes length.
 
-The rule walks the token stream, finds every comma, and inspects what follows
-on the same line. If the next non-whitespace character is on a new line — the
-common multi-line case (`LOAD A,\n B,\n C`) — the comma is left alone. Otherwise
-the gap between the comma and the next character must be exactly one ASCII space.
+Before the comma there should be nothing at all. A comma closes the operand in
+front of it, so a space wedged between the two (`Load A ,B`) reads as if the
+comma belonged to neither — and the same alignment habit that produces run-on
+spacing after a comma produces it here.
+
+The rule walks the token stream, finds every comma, and inspects the whitespace
+touching it on each side. Both sides are checked independently, so a comma can
+produce two findings, and the autofix settles both in one pass.
 
 The rule is intentionally narrow:
 
 - Commas inside string literals (`'a,b,c'`), bracket identifiers (`[Order,Items]`),
   and `Trace` bodies are absorbed by the lexer into a single token and never
   reach this rule.
-- Trailing whitespace after the comma but before the newline (`LOAD A,   \n B`)
-  is not flagged here — that's the domain of [trailing-whitespace](#trailing-whitespace).
+- If the next non-whitespace character after the comma is on a new line — the
+  common multi-line case (`LOAD A,\n B,\n C`) — that side is left alone. Trailing
+  whitespace after the comma but before the newline (`LOAD A,   \n B`) is the
+  domain of [trailing-whitespace](#trailing-whitespace).
+- A comma that _opens_ its line is left alone entirely: which line a comma
+  belongs on is a placement question owned by [comma-style](#comma-style), and
+  flagging that line's indentation here would have the two rules fighting over
+  the same characters. The backward scan stops at the line break, so the two
+  never overlap.
 - A space is required before an inline block comment that follows the comma
   (`If(x, /* hint */ 'a', 'b')`), consistent with how
   [inline-comment-space](#inline-comment-space) treats other inline comments.
 
-The autofix replaces the whitespace between the comma and the next same-line
-character with a single space, so `If(x,'a','b')` and `If(x,   'a',\t'b')` both
-converge on `If(x, 'a', 'b')` in one format pass.
+The autofix collapses the whitespace after the comma to a single space and
+removes it before the comma entirely, so `If(x,'a','b')`, `If(x,   'a',\t'b')`
+and `If(x ,'a' , 'b')` all converge on `If(x, 'a', 'b')` in one format pass.
 
 Examples of **incorrect** code for this rule:
 
@@ -434,7 +445,8 @@ LET vSum = RangeSum(1,2,3);
 LET vIf = If(vSum > 0,'pos','neg');
 LET vMix = If(vSum > 0,  'pos', 'neg');
 LET vBlock = If(vSum > 0,/* hint */ 'pos', 'neg');
-LOAD A,B,C
+LET vBefore = If(vSum > 0 ,'pos' , 'neg');
+LOAD A ,B, C
 FROM [lib://x/y.qvd];
 ```
 
@@ -458,9 +470,11 @@ Trace loading a,b,c;
 
 ### Options
 
-This rule has no options. "Exactly one space after a comma" is the universally
-expected convention; offering toggles for zero spaces or alignment runs would
-defeat the purpose of an opinionated linter.
+This rule has no options. "One space after a comma, none before" is the
+universally expected convention; offering toggles for zero spaces or alignment
+runs would defeat the purpose of an opinionated linter. The two sides are one
+question — how a comma is spaced — and stay in one rule rather than splitting
+into a pair that could be half-enabled into an inconsistent style.
 
 ---
 
@@ -493,7 +507,7 @@ surrounding shape survives, and the field list is not reflowed.
 
 The rule is intentionally narrow:
 
-- The space _after_ a comma belongs to [comma-space](#comma-space), the column
+- The space on either side of a comma belongs to [comma-space](#comma-space), the column
   each line starts at to the indent rules, and whether a field earns its own
   line at all to [load-field-per-line](#load-field-per-line).
 - Commas inside string literals, bracket identifiers (`[Order,Items]`), and

@@ -64,6 +64,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   statement — came out formatted two different ways, and left the `*` line
   owned by no rule, so `continuation-indent` claimed it by default. Scripts
   using `Load *` gain one line per statement when reformatted.
+- `comma-space` now also disallows whitespace *before* a comma, which no rule
+  previously owned: `Load A ,B, C` kept its stray space through a full format
+  pass. The rule checks both sides of a comma independently and fixes them in
+  one pass. A comma that opens its own line is still left entirely to
+  `comma-style` — the backward scan stops at the line break, so the placement
+  rule and the spacing rule never flag the same character.
 
 ### Fixed
 

@@ -14,3 +14,8 @@ LET vStr = 'a,b,c';
 LOAD [Order,Items] AS OrderItems
 FROM [lib://x/y.qvd];
 Trace loading a,b,c;
+
+// A comma closes the operand it follows: no space wedged in before it.
+LET vBefore = If(vSum > 0, 'pos', 'neg');
+LOAD A, B, C
+FROM [lib://x/y.qvd];
