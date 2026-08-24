@@ -1,9 +1,9 @@
-import type { IToken } from 'chevrotain';
-import { keywordToken } from '../lexer.js';
+import { tokenMatcher, type IToken } from 'chevrotain';
+import { blockCloseToken, blockOpenToken, keywordToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { hasExpectedIndent, makeIndentFinding, INDENT_OPTIONS_SCHEMA, type IndentStyle } from './utils/indent.js';
 import { groupByLine } from './utils/lines.js';
-import { BLOCK_CLOSE, BLOCK_OPEN, previousLineClosesStatement } from './utils/statements.js';
+import { previousLineClosesStatement } from './utils/statements.js';
 
 export interface BlockIndentOptions {
   size: number;
@@ -12,18 +12,24 @@ export interface BlockIndentOptions {
 
 type LineKind = 'open' | 'close' | 'mid-flat' | 'mid-case' | 'regular';
 
+/*
+ * Which words open and close a block comes from the lexer's token categories.
+ * The `else`/`case` distinctions below stay on the image: they are not about
+ * what the word is but about how this rule treats the line it starts — a
+ * mid-block continuation that dedents without closing anything.
+ */
 function classify(lineTokens: IToken[]): LineKind {
   const first = lineTokens[0];
 
-  if (first.tokenType !== keywordToken) {
+  if (!tokenMatcher(first, keywordToken)) {
     return 'regular';
   }
 
-  const lower = first.image.toLowerCase();
-
-  if (BLOCK_CLOSE.has(lower)) {
+  if (tokenMatcher(first, blockCloseToken)) {
     return 'close';
   }
+
+  const lower = first.image.toLowerCase();
 
   if (lower === 'else' || lower === 'elseif') {
     return 'mid-flat';
@@ -33,7 +39,7 @@ function classify(lineTokens: IToken[]): LineKind {
     return 'mid-case';
   }
 
-  if (BLOCK_OPEN.has(lower)) {
+  if (tokenMatcher(first, blockOpenToken)) {
     return 'open';
   }
 

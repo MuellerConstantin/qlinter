@@ -1,4 +1,4 @@
-import { createToken, Lexer } from 'chevrotain';
+import { createToken, Lexer, type TokenType } from 'chevrotain';
 
 /**
  * Qlik Sense reserved keywords extracted from the Qlik Engine (12.2386.30) GetBaseBNF dump.
@@ -133,6 +133,12 @@ export const KEYWORDS = [
   'Switch',
   'Tag',
   'Tagged',
+  /*
+   * Absent from the GetBaseBNF dump, which folds it into the If production
+   * rather than listing it as a terminal. It is a reserved word in every
+   * practical sense, so it is listed here explicitly.
+   */
+  'Then',
   'Trace',
   'Unless',
   'Unmap',
@@ -740,17 +746,86 @@ export const keywordToken = createToken({
   pattern: KEYWORD_TOKEN_PATTERN,
   longer_alt: identifierToken,
 });
+
+/*
+ * Category markers for the keywords that carry block structure. They have no
+ * pattern of their own (`Lexer.NA`) — concrete keyword tokens below opt into
+ * them, and rules ask `tokenMatcher(token, blockCloseToken)` instead of keeping
+ * their own list of which words close a block.
+ *
+ * Which words these are is lexical vocabulary and belongs here next to
+ * {@link KEYWORDS}, not in a set maintained alongside the rules. What a rule
+ * *does* with a block opener — how deep to indent it, whether its header fits on
+ * one line — stays the rule's business.
+ */
+export const blockOpenToken = createToken({ name: 'BlockOpen', pattern: Lexer.NA });
+export const blockCloseToken = createToken({ name: 'BlockClose', pattern: Lexer.NA });
+
+/**
+ * Keywords that end their statement when they are the last token on a line —
+ * `If x Then`, a dangling `Do`, `Else`. Every block closer is one too.
+ */
+export const statementTerminatorToken = createToken({ name: 'StatementTerminator', pattern: Lexer.NA });
+
+function structuralKeyword(name: string, pattern: RegExp, categories: TokenType[]): TokenType {
+  return createToken({ name, pattern, longer_alt: identifierToken, categories: [keywordToken, ...categories] });
+}
+
+const blockKeywordTokens = [
+  structuralKeyword('EndSub', /EndSub\b/i, [blockCloseToken, statementTerminatorToken]),
+  structuralKeyword('EndIf', /EndIf\b/i, [blockCloseToken, statementTerminatorToken]),
+  structuralKeyword('EndSwitch', /EndSwitch\b/i, [blockCloseToken, statementTerminatorToken]),
+  structuralKeyword('End', /End\b/i, [blockCloseToken, statementTerminatorToken]),
+  structuralKeyword('Next', /Next\b/i, [blockCloseToken, statementTerminatorToken]),
+  structuralKeyword('Loop', /Loop\b/i, [blockCloseToken, statementTerminatorToken]),
+  structuralKeyword('Then', /Then\b/i, [statementTerminatorToken]),
+  structuralKeyword('Else', /Else(?!If)\b/i, [statementTerminatorToken]),
+  structuralKeyword('Default', /Default\b/i, [statementTerminatorToken]),
+  structuralKeyword('Do', /Do\b/i, [blockOpenToken, statementTerminatorToken]),
+  structuralKeyword('Sub', /Sub\b/i, [blockOpenToken]),
+  structuralKeyword('If', /If\b/i, [blockOpenToken]),
+  structuralKeyword('For', /For\b/i, [blockOpenToken]),
+  structuralKeyword('Switch', /Switch\b/i, [blockOpenToken]),
+];
+
+/**
+ * Keywords that close a LOAD field list and open the clause list.
+ *
+ * `Group` and `Order` carry the category; the trailing `By` is not a separate
+ * clause and stays on the same line as its head.
+ *
+ * Deliberately excluded: Distinct, NoConcatenate, Concatenate, Add, Replace,
+ * Mapping, Buffer, First, the Join/Keep prefixes, `as`. Those modify the LOAD
+ * itself rather than closing its field list.
+ */
+export const clauseStarterToken = createToken({ name: 'ClauseStarter', pattern: Lexer.NA });
+
+const clauseKeywordTokens = [
+  structuralKeyword('From_Field', /From_Field\b/i, [clauseStarterToken]),
+  structuralKeyword('From', /From\b/i, [clauseStarterToken]),
+  structuralKeyword('Resident', /Resident\b/i, [clauseStarterToken]),
+  structuralKeyword('Inline', /Inline\b/i, [clauseStarterToken]),
+  structuralKeyword('AutoGenerate', /AutoGenerate\b/i, [clauseStarterToken]),
+  structuralKeyword('Extension', /Extension\b/i, [clauseStarterToken]),
+  structuralKeyword('Where', /Where\b/i, [clauseStarterToken]),
+  structuralKeyword('While', /While\b/i, [clauseStarterToken]),
+  structuralKeyword('Group', /Group\b/i, [clauseStarterToken]),
+  structuralKeyword('Order', /Order\b/i, [clauseStarterToken]),
+];
+
 export const traceKeywordToken = createToken({
   name: 'TraceKeyword',
   pattern: /Trace\b/i,
   longer_alt: identifierToken,
   push_mode: 'trace_body',
 });
+
 export const traceMessageToken = createToken({
   name: 'TraceMessage',
   pattern: /[^;]+/,
   line_breaks: true,
 });
+
 /*
  * `$(Include=…)` / `$(Must_Include=…)` is not an assignment but a fixed dollar
  * expansion form. Qlik matches the literal `Include=` and explicitly forbids a
@@ -790,19 +865,23 @@ export const quotedIdentifierToken = createToken({
   name: 'QuotedIdentifier',
   pattern: /"(?:[^"]|"")*"/,
 });
+
 export const stringLiteralToken = createToken({ name: 'StringLiteral', pattern: /'(?:[^']|'')*'/ });
 export const numberLiteralToken = createToken({
   name: 'NumberLiteral',
   pattern: /\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/,
 });
+
 export const colonToken = createToken({ name: 'Colon', pattern: /:/ });
 export const semicolonToken = createToken({ name: 'Semicolon', pattern: /;/ });
+
 export const traceEndToken = createToken({
   name: 'TraceEnd',
   pattern: /;/,
   pop_mode: true,
   categories: [semicolonToken],
 });
+
 export const commaToken = createToken({ name: 'Comma', pattern: /,/ });
 export const equalsToken = createToken({ name: 'Equals', pattern: /=/ });
 export const punctuationToken = createToken({ name: 'Punctuation', pattern: /[(){}+\-*/<>.@&|?!%^]/ });
@@ -823,6 +902,7 @@ export const lineCommentToken = createToken({
   pattern: /\/\/[^\n\r]*/,
   group: COMMENT_GROUP,
 });
+
 export const blockCommentToken = createToken({
   name: 'BlockComment',
   pattern: /\/\*[\s\S]*?\*\//,
@@ -849,6 +929,12 @@ const defaultModeTokens = [
   builtinFunctionToken,
   systemVariableToken,
   traceKeywordToken,
+  /*
+   * Before the general keyword token so the structural keywords win, but after
+   * builtinFunctionToken so `If(` still lexes as the function it is.
+   */
+  ...blockKeywordTokens,
+  ...clauseKeywordTokens,
   keywordToken,
   identifierToken,
   colonToken,

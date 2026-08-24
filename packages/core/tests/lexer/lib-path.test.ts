@@ -1,3 +1,4 @@
+import { tokenMatcher } from 'chevrotain';
 import { describe, expect, it } from 'vitest';
 import { format } from '../../src/index.js';
 import { recommended } from '../../src/rules/index.js';
@@ -32,13 +33,13 @@ describe('lib:// path tokenization', () => {
   it('does not produce a LIB keyword token for the scheme', () => {
     const { tokens } = lexer.tokenize('Load * From lib://DataFiles/abc.qvd (qvd);');
 
-    expect(tokens.filter((t) => t.tokenType === keywordToken).map((t) => t.image)).not.toContain('lib');
+    expect(tokens.filter((t) => tokenMatcher(t, keywordToken)).map((t) => t.image)).not.toContain('lib');
   });
 
   it('still recognises Lib as a keyword in a Lib Connect To statement', () => {
     const { tokens } = lexer.tokenize('Lib Connect To [DataFiles];');
 
-    expect(tokens.some((t) => t.tokenType === keywordToken && t.image === 'Lib')).toBe(true);
+    expect(tokens.some((t) => tokenMatcher(t, keywordToken) && t.image === 'Lib')).toBe(true);
   });
 
   it('stops at the statement terminator', () => {

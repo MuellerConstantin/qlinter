@@ -1,3 +1,4 @@
+import { tokenMatcher } from 'chevrotain';
 import { semicolonToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
@@ -39,7 +40,7 @@ export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statemen
     for (let index = 0; index < tokens.length - 1; index++) {
       const token = tokens[index];
 
-      if (token.tokenType !== semicolonToken) {
+      if (!tokenMatcher(token, semicolonToken)) {
         continue;
       }
 

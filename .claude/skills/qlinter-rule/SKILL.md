@@ -86,6 +86,47 @@ cheaper than a coupling. If it is large, subtle, or something the two rules must
 _agree_ on to stay consistent, **put it in `utils/`**, where it has one owner and one
 set of tests.
 
+### What a word _is_ belongs to the lexer
+
+Before adding a keyword set to a rule or to `utils/`, stop. "Which words close a
+block", "which words end a statement" are claims about Qlik's vocabulary, and
+vocabulary lives in [lexer.ts](../../../packages/core/src/lexer.ts) next to `KEYWORDS`
+— as chevrotain **token categories**, not as a `Set<string>` compared against
+`token.image`:
+
+```ts
+export const blockCloseToken = createToken({ name: 'BlockClose', pattern: Lexer.NA });
+// the concrete keyword opts in via `categories: [keywordToken, blockCloseToken]`
+```
+
+Rules then ask `tokenMatcher(token, blockCloseToken)`. Two things follow:
+
+- **Never compare token types with `===`.** A token carrying a category is not
+  identical to it: `tokenType === keywordToken` is false for `End`, and
+  `tokenType === semicolonToken` is false for the `;` that closes a `Trace`. Always
+  `tokenMatcher`. An identity check here already caused one silent bug, where a Trace
+  statement was merged with the statement after it.
+- **What a rule _does_ with a word stays the rule's business.** Whether a block opener
+  indents its body, whether its header is assumed to fit on one line — layout
+  decisions, and they stay in the rule. `SINGLE_LINE_HEADER` in `utils/statements.ts`
+  is the one such assumption left, and it says so.
+
+Core has **no parser and no AST**, deliberately — that is what keeps the linter light,
+not a gap waiting to be filled. A rule needing binding, scope, or expression structure
+("is this identifier a field or a table", "is this variable unused", anything about
+operator precedence) is a rule this project does not ship. Decline it rather than
+approximating it with more keyword sets.
+
+Shared vocabulary that is genuinely the rules' own lives in
+`packages/core/src/rules/utils/`:
+
+- `tokens.ts` — token-shape predicates (`isKeyword`, `isOpenParen`, ...).
+- `lines.ts` — the source's line ending, grouping tokens by line.
+- `statements.ts` — statement splitting, LOAD field-list boundaries, and whether a line closes its statement.
+- `indent.ts` — indent style vocabulary and option schema, the shared indent check and finding builder.
+- `load-anchors.ts` — which lines of a LOAD are header, field, and clause anchors: the split `load-indent` enforces and `continuation-indent` takes the complement of.
+- `fixes.ts` — fix-range construction that preserves comments.
+
 ## Naming contract
 
 For a rule named `my-rule`, all five identifiers share the same kebab-case stem:

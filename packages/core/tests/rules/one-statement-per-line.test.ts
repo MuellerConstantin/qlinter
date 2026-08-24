@@ -12,6 +12,24 @@ function readFixture(kind: 'violation' | 'clean'): string {
 }
 
 describe('one-statement-per-line', () => {
+  /*
+   * Regression: the `;` closing a Trace statement lexes as TraceEnd and carries
+   * Semicolon only as a category, so an identity check on the token type let a
+   * statement following a Trace on the same line pass unflagged.
+   */
+  it('flags a statement that follows a Trace on the same line', () => {
+    const diagnostics = lintRule('Trace loading; Let x = 1;\n', oneStatementPerLine);
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]).toMatchObject({ ruleId: 'one-statement-per-line', severity: 'warning' });
+  });
+
+  it('autofixes a statement that follows a Trace on the same line', () => {
+    const result = formatRule('Trace loading; Let x = 1;\n', oneStatementPerLine);
+
+    expect(result.output).toBe('Trace loading;\nLet x = 1;\n');
+  });
+
   it('flags two statements separated by a semicolon on the same line', () => {
     const diagnostics = lintFixture('violation', oneStatementPerLine);
 

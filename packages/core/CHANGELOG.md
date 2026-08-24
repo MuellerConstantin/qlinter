@@ -67,6 +67,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as `as const` arrays (`CASE_STYLES`, `INDENT_STYLES`, `LINE_ENDINGS`,
   `VARIABLE_CASE_STYLES`) from which the corresponding union types are derived,
   so they remain readable at runtime rather than being erased with the types.
+- Token categories for the keywords that carry structure — block openers and
+  closers, statement terminators, and the clause keywords that close a LOAD
+  field list. Which words these are is lexical vocabulary and lives in the lexer
+  beside the keyword list; rules match them with chevrotain's `tokenMatcher`
+  rather than keeping their own sets of lowercased images. `Then`, which the
+  Engine BNF dump folds into the `If` production instead of listing as a
+  terminal, is named explicitly in the keyword list and is therefore cased by
+  `builtin-keyword-case` like any other keyword.
 - Inline disable directives (`// qlinter-disable`, `// qlinter-disable-next-line`,
   `// qlinter-disable-line`) for opting individual lines or blocks out of
   linting.

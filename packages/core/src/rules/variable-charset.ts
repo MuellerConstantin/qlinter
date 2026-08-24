@@ -1,3 +1,4 @@
+import { tokenMatcher } from 'chevrotain';
 import { identifierToken, keywordToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
@@ -15,7 +16,7 @@ export const variableCharset: Rule<undefined, 'variable-charset'> = {
     for (let index = 0; index < tokens.length - 1; index++) {
       const token = tokens[index];
 
-      if (token.tokenType !== keywordToken) {
+      if (!tokenMatcher(token, keywordToken)) {
         continue;
       }
 

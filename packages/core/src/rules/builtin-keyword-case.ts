@@ -1,3 +1,4 @@
+import { tokenMatcher } from 'chevrotain';
 import { keywordToken, traceKeywordToken, KEYWORDS } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange, tokenFix } from '../token.js';
@@ -25,7 +26,7 @@ export const builtinKeywordCase: Rule<CaseRuleOptions, 'builtin-keyword-case'> =
     const out: Finding[] = [];
 
     for (const token of tokens) {
-      if (token.tokenType !== keywordToken && token.tokenType !== traceKeywordToken) {
+      if (!tokenMatcher(token, keywordToken) && token.tokenType !== traceKeywordToken) {
         continue;
       }
 

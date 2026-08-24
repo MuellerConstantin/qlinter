@@ -1,3 +1,4 @@
+import { tokenMatcher } from 'chevrotain';
 import { describe, expect, it } from 'vitest';
 import { lintRule } from '../support.js';
 import { keywordToken, lexer, traceEndToken, traceKeywordToken, traceMessageToken } from '../../src/lexer.js';
@@ -15,7 +16,7 @@ describe('trace_body lexer mode', () => {
   it('does not emit Keyword tokens for words inside a trace message', () => {
     const { tokens } = lexer.tokenize('Trace Load Where x;');
 
-    const keywordHits = tokens.filter((t) => t.tokenType === keywordToken);
+    const keywordHits = tokens.filter((t) => tokenMatcher(t, keywordToken));
     expect(keywordHits).toEqual([]);
   });
 
@@ -27,8 +28,8 @@ describe('trace_body lexer mode', () => {
     expect(names).toContain('TraceMessage');
     expect(names).toContain('TraceEnd');
     // Real Load/Resident in the following statement still tokenize as keywords.
-    expect(tokens.some((t) => t.tokenType === keywordToken && t.image === 'Load')).toBe(true);
-    expect(tokens.some((t) => t.tokenType === keywordToken && t.image === 'Resident')).toBe(true);
+    expect(tokens.some((t) => tokenMatcher(t, keywordToken) && t.image === 'Load')).toBe(true);
+    expect(tokens.some((t) => tokenMatcher(t, keywordToken) && t.image === 'Resident')).toBe(true);
   });
 
   it('handles a multiline trace body', () => {
@@ -40,7 +41,7 @@ describe('trace_body lexer mode', () => {
     expect(traceMessage?.image).toContain('second line');
     expect(traceMessage?.image).toContain('third Load Where');
     // After the ;, the real Load keyword is back.
-    expect(tokens.filter((t) => t.tokenType === keywordToken).map((t) => t.image)).toContain('Load');
+    expect(tokens.filter((t) => tokenMatcher(t, keywordToken)).map((t) => t.image)).toContain('Load');
   });
 
   it('still recognises the leading Trace as a keyword token', () => {

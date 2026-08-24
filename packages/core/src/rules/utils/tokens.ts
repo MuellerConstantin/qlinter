@@ -1,9 +1,9 @@
-import type { IToken } from 'chevrotain';
+import { tokenMatcher, type IToken } from 'chevrotain';
 import { keywordToken, punctuationToken } from '../../lexer.js';
 
 /** True when the token is the given keyword, compared case-insensitively. */
 export function isKeyword(token: IToken, image: string): boolean {
-  return token.tokenType === keywordToken && token.image.toLowerCase() === image;
+  return tokenMatcher(token, keywordToken) && token.image.toLowerCase() === image;
 }
 
 export function isOpenParen(token: IToken): boolean {
