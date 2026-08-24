@@ -11,14 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Tokenizer for Qlik load script built on Chevrotain, covering keywords, builtin
   functions, variables, comments, string literals, and the LOAD/SELECT statement
-  surface.
+  surface. Constructs whose interior is not Qlik expression syntax lex as a
+  single opaque token, so no rule can rewrite their insides: `$(Include=…)` /
+  `$(Must_Include=…)`, whose `=` Qlik forbids a space around, and unbracketed
+  `lib://` paths, whose `//` would otherwise read as a line comment.
 - `lint(source, config)` API that runs the rules named in `config.rules` over a
   script and returns structured `Diagnostic` objects (severity, range, ruleId,
   message). Rules are resolved against an internal registry keyed by rule id; a
   rule not listed in the config is not checked, and an unknown rule id throws.
 - `format(source, config)` API that applies autofixes in successive passes until
   the output stabilizes, returning the formatted source, remaining diagnostics,
-  and a fix count.
+  and a fix count. Every break a fix inserts matches the line ending the source
+  already uses, so a CRLF script never comes back with mixed terminators.
 - `validateConfig(value, sourceLabel?)` API that validates an arbitrary
   JSON-parsed value against the `LintConfig` shape and returns it typed, throwing
   readable errors for unknown rule ids, invalid severities, and malformed rule
@@ -32,7 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `comment-space`, `inline-comment-space`, `block-comment-stars`,
   `operator-spacing`, `paren-spacing`), and correctness
   (`include-no-spaces`, `no-legacy-path-variables`, `table-label-brackets`,
-  `variable-charset`).
+  `variable-charset`). Each rule answers one question and claims its own lines
+  or tokens: `comma-space` owns the whitespace on both sides of a comma,
+  `comma-style` owns which line the comma sits on. See
+  [docs/rules.md](docs/rules.md) for the full reference.
 - `recommended` preset, a ready-to-use `LintConfig` that enables every rule at
   its declared `defaultSeverity`. Pass it straight to `lint()` / `format()`.
 - Named presets via the `presets` field on `LintConfig`, which selects one or
@@ -55,44 +62,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `LintConfig`, `RulesConfig`, `RuleId`, `PresetName`, `RulesConfigOf`,
   `RuleConfigEntry`, `SeverityOrOff`, `FormatResult`, and per-rule option types.
 
-### Changed
-
-- The `*` of a `Load` is now treated as a field in every position, so
-  `load-field-per-line` breaks it onto its own line and `load-indent` indents
-  it one step. It was previously exempt when it made up the whole field list,
-  which meant `Load * From X` and `Load Id From X` — structurally the same
-  statement — came out formatted two different ways, and left the `*` line
-  owned by no rule, so `continuation-indent` claimed it by default. Scripts
-  using `Load *` gain one line per statement when reformatted.
-- `comma-space` now also disallows whitespace *before* a comma, which no rule
-  previously owned: `Load A ,B, C` kept its stray space through a full format
-  pass. The rule checks both sides of a comma independently and fixes them in
-  one pass. A comma that opens its own line is still left entirely to
-  `comma-style` — the backward scan stops at the line break, so the placement
-  rule and the spacing rule never flag the same character.
-
-### Fixed
-
-- `$(Include=…)` / `$(Must_Include=…)` is no longer broken by `operator-spacing`.
-  Qlik forbids a space around the `=` of that dollar expansion, so the inserted
-  spaces made the Data Load Editor reject the script. The expansion now lexes as
-  a single opaque token and is left untouched; the new `include-no-spaces` rule
-  repairs scripts that already carry the broken spacing.
-- An unbracketed `lib://` path is no longer mangled. The scheme used to split
-  into the `Lib` keyword plus a `//` line comment, which uppercased `LIB` and
-  silently commented out the rest of the path. It now lexes as one token.
-- A `Load` header torn across lines is no longer indented as if it were a
-  continuation. `continuation-indent` used to claim the `Load`, `Distinct` and
-  `NoConcatenate` lines of a prefixed statement (`Left Join(X)` on one line, its
-  `Load` on the next) and push them one level in — landing them on the same
-  column as the field list they introduce. `load-indent` now owns those header
-  lines and pins them to the statement's own indent. A prefix whose argument
-  list is wrapped (`Hierarchy(NodeId, ParentId,\n    NodeName)`) is still a
-  continuation and keeps hanging one level off the opening line.
-- Formatting a CRLF script no longer leaves it with mixed line terminators.
-  `load-field-per-line`, `load-clause-newline` and `multiline-call` hardcoded
-  `\n` for every break they insert, so breaking up a jammed LOAD in a Windows
-  script scattered bare LFs through an otherwise CRLF file. All three now insert
-  the source's dominant ending, via a shared `detectLineEnding` helper that
-  `eol-last`, `one-statement-per-line` and `block-comment-stars` — which each
-  carried their own copy of the check — now share.
