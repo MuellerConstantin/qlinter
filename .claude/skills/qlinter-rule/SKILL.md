@@ -74,17 +74,17 @@ fix pass, so a fix that creates a new line (`load-clause-newline` inserting a `\
 picked up by the indent rules on the next pass — that is the intended handoff, and the
 reason a rule should not try to do a neighbour's job "while it is in there anyway".
 
-What rules _may_ share is the vocabulary they must agree on, in
-`packages/core/src/rules/utils/`:
+**A rule file never imports from another rule file.** Not a helper, not a type, not a
+constant — the dependency graph runs rule → `utils/`, never rule → rule. A rule that
+reaches into a neighbour couples the two in both directions: the neighbour can no
+longer change a helper without breaking a rule that does not appear in its tests, and
+the importing rule stops being readable on its own terms.
 
-- `tokens.ts` — token-shape predicates (`isKeyword`, `isOpenParen`, ...).
-- `statements.ts` — statement splitting and LOAD field-list boundaries.
-- `fixes.ts` — fix-range construction that preserves comments.
-
-Import these instead of reimplementing them. When two rules disagree about where a
-field list ends, a token is a field for one and a clause for the other, and their
-autofixes start rewriting each other. Editing a helper here changes every rule that
-uses it — check the consumers and run the full suite.
+When two rules need the same thing, there are exactly two correct answers. If it is
+small and self-contained, **write it twice** — a four-line predicate in two files is
+cheaper than a coupling. If it is large, subtle, or something the two rules must
+_agree_ on to stay consistent, **put it in `utils/`**, where it has one owner and one
+set of tests.
 
 ## Naming contract
 

@@ -1,10 +1,16 @@
 import type { IToken } from 'chevrotain';
 import type { Rule, Finding, RuleContext } from '../types.js';
-import { groupByLine, previousLineClosesStatement, INDENT_OPTIONS_SCHEMA, type IndentStyle } from './block-indent.js';
-import { collectLoadAnchors, firstTokenByLine, hasExpectedIndent, makeIndentFinding } from './load-indent.js';
+import {
+  firstTokenByLine,
+  hasExpectedIndent,
+  makeIndentFinding,
+  INDENT_OPTIONS_SCHEMA,
+  type IndentStyle,
+} from './utils/indent.js';
+import { groupByLine } from './utils/lines.js';
+import { collectLoadAnchors } from './utils/load-anchors.js';
+import { previousLineClosesStatement } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
-
-export type { IndentStyle } from './block-indent.js';
 
 export interface ContinuationIndentOptions {
   size: number;

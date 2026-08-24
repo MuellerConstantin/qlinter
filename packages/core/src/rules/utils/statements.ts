@@ -33,6 +33,74 @@ export function isClauseStarter(token: IToken): boolean {
 }
 
 /*
+ * Tokens whose presence as a line's last token forces the next line to be
+ * treated as a fresh statement. `;` is the universal terminator; `:` ends a
+ * table label (`MyTable:`); the keywords below implicitly terminate a
+ * block-control statement when they appear as its final token (`If x Then`,
+ * a dangling `Do`, `Else`, ...).
+ */
+const TERMINATOR_LAST = new Set([
+  ';',
+  ':',
+  'then',
+  'do',
+  'else',
+  'default',
+  'end',
+  'endsub',
+  'endif',
+  'endswitch',
+  'next',
+  'loop',
+]);
+
+/*
+ * Block-control keywords that, when they start a line, are assumed to keep
+ * their entire header on that single line. Used as a tiebreaker for the
+ * statement-start heuristic — `Sub greet`, `For i = 1 to 10`, `Switch x`,
+ * `Case 'A'`, `ElseIf x Then` all terminate at end-of-line in practice.
+ * Multi-line headers for these constructs are not supported.
+ */
+const OPENER_FIRST = new Set(['sub', 'for', 'switch', 'case', 'elseif']);
+
+/** Keywords that open a block construct. */
+export const BLOCK_OPEN = new Set(['sub', 'if', 'for', 'do', 'switch']);
+
+/** Keywords that close a block construct. */
+export const BLOCK_CLOSE = new Set(['end', 'endsub', 'endif', 'endswitch', 'next', 'loop']);
+
+/*
+ * Whether the line made of `prevTokens` ends its statement, so the line after
+ * it starts a new one.
+ *
+ * Every indent rule needs the same answer to "is this line a statement start?":
+ * `block-indent` to claim the line, `load-indent` to find the line a LOAD hangs
+ * off, `continuation-indent` to know which lines are left over. Deriving it once
+ * is what keeps them from claiming the same line at different widths and
+ * fighting over its fix.
+ */
+export function previousLineClosesStatement(prevTokens: IToken[]): boolean {
+  const first = prevTokens[0];
+  const last = prevTokens[prevTokens.length - 1];
+
+  if (TERMINATOR_LAST.has(last.image.toLowerCase())) {
+    return true;
+  }
+
+  const firstLower = first.image.toLowerCase();
+
+  if (OPENER_FIRST.has(firstLower)) {
+    return true;
+  }
+
+  if (BLOCK_CLOSE.has(firstLower)) {
+    return true;
+  }
+
+  return false;
+}
+
+/*
  * Split the token stream into statements at top-level semicolons.
  * Parenthesised content keeps a `;` from terminating the statement; in
  * practice no Qlik construct puts `;` inside parens, but the depth check
