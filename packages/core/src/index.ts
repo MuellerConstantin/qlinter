@@ -12,6 +12,7 @@ export type {
   RulesConfigOf,
   RuleConfigEntry,
   SeverityOrOff,
+  SeverityOrInherit,
   FormatResult,
 } from './types.js';
 export type { LintConfig, RulesConfig, RuleId, PresetName } from './rules/index.js';

@@ -103,6 +103,8 @@ the opinionated default set, name it explicitly:
 
 `rules` overrides the preset per rule — each entry is a severity string
 (`"error"`, `"warning"`, `"info"`, `"off"`) or a `[severity, options]` tuple.
+Use `null` as the severity (`[null, { "size": 2 }]`) to set options while leaving
+the severity to the preset or the rule's own default.
 Omit `presets` (or set `"presets": []`) to run **only** the rules you list, with
 no preset base.
 

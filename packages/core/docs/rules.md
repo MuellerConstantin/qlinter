@@ -35,6 +35,23 @@ outside the **Range** column below are all rejected with an error naming the rul
 and the option — a typo in a config fails loudly instead of quietly doing
 nothing.
 
+To change a rule's options without choosing a severity, put `null` in the
+severity slot:
+
+```json
+{
+  "presets": "recommended",
+  "rules": {
+    "block-indent": [null, { "size": 2 }]
+  }
+}
+```
+
+The rule then keeps whatever severity the preset — or its own default — gives
+it, and follows along if that ever changes. Writing `["warning", { "size": 2 }]`
+instead pins the severity to `warning` forever, which is rarely what someone
+adjusting an indent width intends.
+
 ---
 
 ## block-comment-stars

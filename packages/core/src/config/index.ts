@@ -85,7 +85,7 @@ function validateRuleEntry(rule: AnyRule, entry: unknown, where: string): void {
     if (entry.length < 1 || entry.length > 2) {
       throw new Error(`Rule "${rule.id}"${where} must be [severity] or [severity, options].`);
     }
-    assertSeverity(entry[0], rule.id, where);
+    assertTupleSeverity(entry[0], rule.id, where);
     validateOptions(rule, entry[1], where);
     return;
   }
@@ -97,6 +97,25 @@ function assertSeverity(value: unknown, ruleId: string, where: string): void {
   if (typeof value !== 'string' || !VALID_SEVERITIES.has(value)) {
     throw new Error(
       `Rule "${ruleId}"${where} has invalid severity "${String(value)}". Expected one of: error, warning, info, off.`,
+    );
+  }
+}
+
+/*
+ * The tuple's severity slot additionally accepts `null`: "leave the severity as
+ * it is, but apply these options". Without it, setting a single option forces
+ * the author to restate a severity they never chose, which silently pins it
+ * against later changes to the preset or the rule's default.
+ */
+function assertTupleSeverity(value: unknown, ruleId: string, where: string): void {
+  if (value === null) {
+    return;
+  }
+
+  if (typeof value !== 'string' || !VALID_SEVERITIES.has(value)) {
+    throw new Error(
+      `Rule "${ruleId}"${where} has invalid severity "${String(value)}". Expected one of: error, warning, info, off, ` +
+        `or null to keep the current severity.`,
     );
   }
 }

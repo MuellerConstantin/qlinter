@@ -78,7 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Inline disable directives (`// qlinter-disable`, `// qlinter-disable-next-line`,
   `// qlinter-disable-line`) for opting individual lines or blocks out of
   linting.
+- `null` accepted in the severity slot of a rule entry's tuple form
+  (`"block-indent": [null, { "size": 2 }]`), meaning "leave the severity
+  alone". The rule keeps whatever a preset or its own `defaultSeverity` gives it
+  and follows along when that changes, where restating a severity to reach the
+  options beside it would have pinned it silently.
 - Public TypeScript types: `Diagnostic`, `Rule`, `AnyRule`, `Severity`, `Fix`,
   `OptionSchema`, `OptionsSchemaOf`, `LintConfig`, `RulesConfig`, `RuleId`,
   `PresetName`, `RulesConfigOf`, `RuleConfigEntry`, `SeverityOrOff`,
-  `FormatResult`, and per-rule option types.
+  `SeverityOrInherit`, `FormatResult`, and per-rule option types.

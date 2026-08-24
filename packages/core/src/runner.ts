@@ -24,7 +24,7 @@ function firstTokenPerLine(tokens: IToken[]): IToken[] {
 const MAX_PASSES = 10;
 
 function parseEntry(entry: RuleConfigEntry<unknown> | undefined): {
-  severity?: SeverityOrOff;
+  severity?: SeverityOrOff | null;
   options?: unknown;
 } {
   if (entry === undefined) {

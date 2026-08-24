@@ -89,14 +89,17 @@ export type Rule<O = undefined, Id extends string = string> = RuleBase<O, Id> &
 /** A {@link Severity}, or `'off'` to disable a rule in a config entry. */
 export type SeverityOrOff = Severity | 'off';
 
+export type SeverityOrInherit = SeverityOrOff | null;
+
 /**
  * A rule's entry in `config.rules`: a bare severity (`'error'`), a
  * single-element tuple (`['warning']`), or — for rules with options — a
- * `[severity, options]` tuple (`['error', { max: 100 }]`).
+ * `[severity, options]` tuple (`['error', { max: 100 }]`). The tuple forms also
+ * accept `null` in place of the severity (`[null, { max: 100 }]`).
  */
 export type RuleConfigEntry<O = unknown> = [O] extends [undefined]
-  ? SeverityOrOff | [SeverityOrOff]
-  : SeverityOrOff | [SeverityOrOff] | [SeverityOrOff, Partial<O>];
+  ? SeverityOrOff | [SeverityOrInherit]
+  : SeverityOrOff | [SeverityOrInherit] | [SeverityOrInherit, Partial<O>];
 
 /*
  * Rule is invariant in O, so heterogeneous rule tuples can only share a common

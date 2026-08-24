@@ -62,8 +62,8 @@ merged:
 2. **VS Code settings**, used when no `qlinter.json` is found. Qlik scripts often open as a lone
    `.qvs` file with no project — settings cover exactly that case:
    - `qlinter.presets` — preset(s) to use as a base. Defaults to `["recommended"]`.
-   - `qlinter.rules` — per-rule overrides (a severity string, or a `[severity, options]` pair).
-     Defaults to `{}`.
+   - `qlinter.rules` — per-rule overrides (a severity string, or a `[severity, options]` pair;
+     `null` as the severity sets options without pinning one). Defaults to `{}`.
 
 A fresh install therefore lints with the `recommended` preset out of the box. The default is
 declared in the extension manifest, so VS Code shows it in the Settings UI like any other

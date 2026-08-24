@@ -26,6 +26,26 @@ describe('validateConfig — rule options', () => {
     });
   });
 
+  it('accepts null in place of the severity, to set options without pinning one', () => {
+    expect(validateConfig({ rules: { 'block-indent': [null, { size: 2 }] } })).toEqual({
+      rules: { 'block-indent': [null, { size: 2 }] },
+    });
+  });
+
+  it('accepts a lone null tuple', () => {
+    expect(validateConfig({ rules: { 'block-indent': [null] } })).toEqual({ rules: { 'block-indent': [null] } });
+  });
+
+  it('still rejects a bare null entry, which names no rule state at all', () => {
+    expect(() => validateConfig({ rules: { 'block-indent': null } })).toThrow(/must be a severity string or an array/);
+  });
+
+  it('mentions null among the accepted tuple severities', () => {
+    expect(() => validateConfig({ rules: { 'block-indent': ['fatal', { size: 2 }] } })).toThrow(
+      /Expected one of: error, warning, info, off, or null to keep the current severity/,
+    );
+  });
+
   it('throws on an unknown option key rather than silently ignoring it', () => {
     expect(() => validateConfig({ rules: { 'max-line-length': ['warning', { maxLength: 80 }] } })).toThrow(
       /unknown option "maxLength". Known options: max/,

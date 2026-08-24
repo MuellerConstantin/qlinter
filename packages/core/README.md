@@ -115,7 +115,8 @@ Pass a `LintConfig` as the second argument to select a preset base and override
 severity and per-rule options without forking the rule code. `presets` names the
 built-in preset(s) to start from (currently only `'recommended'`), and each entry
 under `rules` — a severity string or a `[severity, options]` tuple — overrides
-them per rule:
+them per rule. Passing `null` as the severity (`[null, { max: 100 }]`) sets the
+options and leaves the severity to the preset or the rule's default:
 
 ```ts
 import { lint } from '@qlinter/core';

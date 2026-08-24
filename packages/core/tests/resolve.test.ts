@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { lint } from '../src/runner.js';
-import { recommended, resolveConfig } from '../src/rules/index.js';
+import { maxLineLength, recommended, resolveConfig } from '../src/rules/index.js';
 
 const SOURCE = 'SET vX=1;\n';
 
@@ -49,5 +49,39 @@ describe('lint preset resolution', () => {
 
   it('runs no rules when no preset and no rules are given (no implicit base)', () => {
     expect(lint(SOURCE, {})).toEqual([]);
+  });
+});
+
+/*
+ * A null severity is how a config sets options without choosing a severity.
+ * Restating one would silently pin it: the entry would keep saying "warning"
+ * long after the preset or the rule's default moved on.
+ */
+describe('inherited severity', () => {
+  const LONG = 'SET vVeryLongVariableName=1;\n';
+
+  it('applies the options while leaving the severity to the rule default', () => {
+    const [diagnostic] = lint(LONG, { rules: { 'max-line-length': [null, { max: 20 }] } });
+
+    expect(diagnostic).toMatchObject({ ruleId: 'max-line-length', severity: maxLineLength.defaultSeverity });
+  });
+
+  it('takes the severity from the preset rather than the entry', () => {
+    const withPreset = lint(LONG, {
+      presets: 'recommended',
+      rules: { 'max-line-length': [null, { max: 20 }] },
+    });
+
+    expect(withPreset.find((d) => d.ruleId === 'max-line-length')?.severity).toBe(maxLineLength.defaultSeverity);
+  });
+
+  it('still honours an explicit severity beside the options', () => {
+    const [diagnostic] = lint(LONG, { rules: { 'max-line-length': ['error', { max: 20 }] } });
+
+    expect(diagnostic.severity).toBe('error');
+  });
+
+  it('runs the rule at its default severity for a lone null tuple', () => {
+    expect(lint(LONG, { rules: { 'max-line-length': [null] } })).toEqual([]);
   });
 });
