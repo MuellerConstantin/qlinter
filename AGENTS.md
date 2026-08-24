@@ -76,6 +76,10 @@ The following sub-modules/projects exists:
 - **Immutability by Default**: Use `const`, `readonly`, and spread operators. Avoid mutation unless there's a clear performance reason.
 - **Explicit over Implicit**: Prefer explicit parameters and return types over hidden assumptions or side effects.
 - **No Comment Spam**: Document _why_, not _what_. Docstrings on public APIs are welcome; `// increment counter` before `counter += 1` is not.
+- **Comments explain the code; docs explain the rules.** A comment answers "why is this line written this way" for whoever edits it next. Anything a _user_ would ask — what a rule enforces, which values an option takes, why a convention was chosen — belongs in `packages/core/docs/rules.md`. If a comment would read sensibly in the published rule reference, it is in the wrong file.
+- **A rule's comments name no other rule.** Mentioning a neighbour couples the two in the reader's head even where the code is independent, and the note rots the moment the neighbour changes. Where two rules must genuinely agree on something, that agreement lives in `rules/utils/` and is explained there once.
+- **Examples belong in docs or tests, not in comments.** Those are checked; a comment is not. Keep an inline illustration to a single line or leave it out.
+- **Never transcribe a design discussion.** Record the conclusion in one sentence, or as a docs entry. If the justification needs a paragraph, it is a docs change.
 - **Explicit Blocks over Inline Statements**: Always use braces and a separate body line for control structures – `if (cond) {\n  doThing();\n}` instead of `if (cond) doThing();`. Explicit blocks prevent dangling-statement bugs, keep diffs clean when adding lines, and make control flow unambiguous.
 
 ## Versioning and Releases

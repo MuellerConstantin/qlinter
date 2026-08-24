@@ -749,14 +749,8 @@ export const keywordToken = createToken({
 
 /*
  * Category markers for the keywords that carry block structure. They have no
- * pattern of their own (`Lexer.NA`) — concrete keyword tokens below opt into
- * them, and rules ask `tokenMatcher(token, blockCloseToken)` instead of keeping
- * their own list of which words close a block.
- *
- * Which words these are is lexical vocabulary and belongs here next to
- * {@link KEYWORDS}, not in a set maintained alongside the rules. What a rule
- * *does* with a block opener — how deep to indent it, whether its header fits on
- * one line — stays the rule's business.
+ * pattern of their own (`Lexer.NA`); the concrete keyword tokens below opt into
+ * them, and consumers match with `tokenMatcher`.
  */
 export const blockOpenToken = createToken({ name: 'BlockOpen', pattern: Lexer.NA });
 export const blockCloseToken = createToken({ name: 'BlockClose', pattern: Lexer.NA });

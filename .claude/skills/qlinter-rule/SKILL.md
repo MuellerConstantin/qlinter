@@ -389,6 +389,22 @@ pattern.
 
 Disable-directive behavior is covered centrally; do not test it per rule.
 
+## Comments in a rule file
+
+The rule reference is the place for everything a user would ask. A comment in the
+rule file is for whoever edits that line next, and nothing else:
+
+- **No other rule's name appears in a comment.** It couples the two in the reader's
+  head even where the code does not, and rots the moment the neighbour changes. A
+  genuine shared agreement lives in `rules/utils/` and is explained there once.
+- **No worked examples.** A snippet in a comment is unchecked; the same snippet as a
+  fixture or a docs block is not. One line at most, or leave it out.
+- **No design discussion.** Record the conclusion, not the argument that reached it. A
+  justification that needs a paragraph is a `docs/rules.md` change.
+
+Rationale that fails these tests is rarely worthless — it is usually in the wrong file.
+Move it to the rule's docs section rather than deleting it.
+
 ## Docs entry — `packages/core/docs/rules.md`
 
 This file is the public rules reference. On the first invocation of this skill, if

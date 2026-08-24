@@ -84,15 +84,10 @@ function collectClauseStarters(tokens: IToken[], fieldsEnd: number): IToken[] {
 }
 
 /*
- * The line whose indent the field/clause list hangs off. Usually the line the
- * `Load` keyword sits on, but when the `Load` is a continuation of a prefixed
- * statement — `Left Join(...) IntervalMatch(...)`, a `Hierarchy (...)`, or a
- * `NoConcatenate` broken onto its own line — the base is set by the line that
- * opens the statement, not the continuation line the `Load` happens to land on.
- * That continuation line is a header line in its own right — `load-indent` pins
- * it to `base` too — so trusting its column would let a misindented `Load` drag
- * the whole field list sideways with it. Walk up while each line above is still
- * part of the same statement.
+ * The line the field/clause list hangs off: the line that opens the statement,
+ * not necessarily the one the `Load` sits on. A `Load` continuing a prefixed
+ * statement is itself pinned to that base, so trusting its own column would let
+ * a misindented `Load` drag the field list sideways with it.
  */
 function findStatementStartLine(tokens: IToken[], loadLine: number): number {
   const lines = groupByLine(tokens);
@@ -110,25 +105,12 @@ function findStatementStartLine(tokens: IToken[], loadLine: number): number {
 }
 
 /*
- * The header lines of a `Load` — every line the statement spends on its own
- * head before the field list starts: a prefix chain broken off its `Load`
- * (`Left Join(X)` / `NoConcatenate`), the `Load` keyword itself, a `Distinct`
- * pushed onto its own line. They belong at `base`, the same column as the line
- * that opens the statement, so the field list one step deeper still reads as
- * subordinate to them.
+ * The lines a `Load` spends on its own head before the field list starts. They
+ * belong at `base`, so the field list one step deeper reads as subordinate.
  *
- * The opening line is excluded — `block-indent` owns it as a statement start,
- * and claiming it here would report it twice.
- *
- * Only lines that begin at parenthesis depth zero count. A prefix whose
- * argument list is wrapped —
- *
- *   Hierarchy(NodeId, ParentId,
- *       NodeName)
- *   Load
- *
- * — is a genuine continuation of an expression and stays with
- * `continuation-indent`; only the `Load` line is header.
+ * The opening line is excluded: it is a statement start and claimed as one
+ * elsewhere. Only lines beginning at parenthesis depth zero count — a wrapped
+ * prefix argument list continues an expression rather than heading the `Load`.
  */
 function collectHeaderStarts(tokens: IToken[], fieldsStart: number, headerLine: number): IToken[] {
   const out: IToken[] = [];
@@ -160,12 +142,8 @@ function collectHeaderStarts(tokens: IToken[], fieldsStart: number, headerLine: 
 
 /*
  * The lines a `Load` statement claims for indentation, one entry per statement.
- *
- * `load-indent` enforces these positions; `continuation-indent` needs the exact
- * complement, since every line that is neither a statement start nor one of
- * these anchors is a continuation line. Both rules must agree on the split, so
- * it is derived here once — otherwise a line falls to both at different expected
- * widths and their fixes rewrite each other.
+ * The indent rules split these lines between them and must agree on the split,
+ * so it is derived here once rather than in each of them.
  */
 export function collectLoadAnchors(tokens: IToken[], firstByLine: Map<number, IToken>): LoadAnchors[] {
   const out: LoadAnchors[] = [];

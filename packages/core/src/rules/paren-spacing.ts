@@ -4,17 +4,12 @@ import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 
 /*
- * Spacing around parentheses. Two concerns:
+ * Only built-in function calls are considered; keywords and grouping parens are
+ * left alone.
  *
- *   1. A built-in function call keeps its `(` glued to the name — `Sum(x)`, not
- *      `Sum (x)`. Only built-in functions are considered (the same scope as
- *      multiline-call); keywords and grouping parens (`Where (x > 0)`) are left
- *      alone, because gluing a keyword to a paren reads worse, not better.
- *   2. Parentheses carry no inner padding — `(x)`, not `( x )`.
- *
- * A gap is only ever closed when it is pure spaces/tabs. A gap that spans a
- * line break (a `multiline-call`-style broken argument list) or that contains a
- * comment is left untouched — those are owned by the indent and comment rules.
+ * A gap is closed only when it is pure spaces or tabs. One spanning a line break
+ * or containing a comment is left untouched: rewriting it would mean taking over
+ * indentation and comment placement, which this rule does not own.
  */
 
 const endOf = (token: IToken): number => (token.endOffset ?? token.startOffset) + 1;

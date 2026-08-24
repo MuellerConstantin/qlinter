@@ -14,16 +14,11 @@ export function isClauseStarter(token: IToken): boolean {
 }
 
 /*
- * Block-control keywords that, when they start a line, are assumed to keep their
- * entire header on that single line — `Sub greet`, `For i = 1 to 10`,
- * `Switch x`, `Case 'A'`, `ElseIf x Then`.
- *
- * This is the one piece of the statement-start question the lexer does not own,
- * and deliberately so: it is not a statement about what these words *are* — that
- * lives in `lexer.ts` as token categories — but an assumption about how their
- * headers are written. Multi-line headers for these constructs are not
- * supported. Matched by image because `Case` and `ElseIf` carry no structural
- * category; they open no block.
+ * Keywords assumed to keep their whole header on the line that starts it;
+ * multi-line headers for these constructs are not supported. An assumption about
+ * how they are written rather than about what the words are, which is why it is
+ * not a lexer category. Matched by image because `Case` and `ElseIf` have none:
+ * they open no block.
  */
 const SINGLE_LINE_HEADER = new Set(['sub', 'for', 'switch', 'case', 'elseif']);
 

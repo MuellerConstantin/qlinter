@@ -59,10 +59,8 @@ export type OptionSchema = { type: 'number'; min?: number; max?: number } | { ty
  * missing, misspelled, or wrongly-typed key is a compile error.
  *
  * An option whose type has no {@link OptionSchema} counterpart resolves to a
- * marker no literal can satisfy. Adding e.g. a boolean option therefore fails to
- * compile naming the unsupported type, and stays failing until `OptionSchema`
- * and its exhaustive consumers — `validateOptions` in `config/options.ts` and
- * the Chrome extension's options renderer — have been extended too.
+ * marker no literal can satisfy, so it fails to compile naming that type until
+ * `OptionSchema` and everything switching exhaustively over it are extended.
  */
 export type OptionsSchemaOf<O> = {
   [K in keyof O]-?: [O[K]] extends [number]

@@ -53,12 +53,9 @@ function lineLengthAt(source: string, line: number): number {
 
 /*
  * Decides *where* an over-long call is broken, not how far the resulting lines
- * are indented. The fix emits bare newlines and leaves the indentation to
- * `continuation-indent`, which owns every line inside a wrapped expression —
- * the same division of labour `load-clause-newline` and `load-field-per-line`
- * have with `load-indent`. Emitting an indent here would mean two rules with
- * two independent width settings writing the same leading whitespace, and the
- * one running later would silently win.
+ * are indented: the fix emits bare newlines. Writing the leading whitespace here
+ * too would put a second, independently configured width on the same characters,
+ * and whichever pass ran last would silently win.
  */
 export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
   id: 'multiline-call',

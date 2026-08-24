@@ -18,7 +18,7 @@ function spaceBefore(source: string, token: IToken): Finding | null {
 
   /*
    * Nothing but whitespace back to the line break (or the start of the file):
-   * the comma opens its line, which is `comma-style`'s call, not this rule's.
+   * the comma opens its line, and where a comma sits is not this rule's concern.
    */
   if (cursor === 0 || source[cursor - 1] === '\n' || source[cursor - 1] === '\r') {
     return null;
