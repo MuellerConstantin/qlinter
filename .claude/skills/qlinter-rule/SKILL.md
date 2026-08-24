@@ -17,6 +17,75 @@ extension depend on — keep it stable.
 - Removing a rule.
 - Adding or removing an autofix on an existing rule.
 
+## Rule scope
+
+**One rule answers one question.** If a rule's description needs an "and", it is two
+rules. When in doubt, split: two narrow rules compose through the format loop, while
+one broad rule cannot be half-disabled — users set severity per rule id, and merging
+takes that dial away from them.
+
+The converse matters just as much: **one question stays one rule, even when it has
+several defensible answers.** Tab versus space, two versus four, camel versus pascal
+are values of one dimension and belong in an option on a single rule.
+`indent-tab`, `indent-4-spaces` and `indent-2-spaces` would be three rules answering
+the same question. Split by _question_, never by _value_.
+
+Keep the axes apart. The main ones here:
+
+| Axis            | Question                                   | Examples                                             |
+| --------------- | ------------------------------------------ | ---------------------------------------------------- |
+| **Placement**   | Which line does this token go on?          | `load-clause-newline`, `load-field-per-line`         |
+| **Indentation** | Which column does that line start at?      | `block-indent`, `load-indent`, `continuation-indent` |
+| **Spacing**     | What sits between two tokens on one line?  | `comma-space`, `operator-spacing`, `paren-spacing`   |
+| **Naming**      | How is this identifier or keyword spelled? | `variable-case`, `builtin-keyword-case`              |
+
+A rule that reaches across two axes is the one to split. `comma-space` governs the
+space after a comma; whether a comma may _open a line_ is a placement question and
+belongs in its own rule rather than bolted onto the spacing one.
+
+### Every line needs exactly one owner
+
+This is the failure mode that has produced real bugs here, more than once. The indent
+rules partition lines between them: `block-indent` takes statement starts,
+`load-indent` takes the header, field and clause lines of a LOAD, and
+`continuation-indent` takes **everything left over**. That last one is a catch-all, so
+a line your rule declines to claim does not become unmanaged — it silently becomes a
+continuation line and is indented one level in.
+
+So when writing or changing a rule, ask what happens to the tokens it does _not_
+claim. Past bugs, all the same shape:
+
+- A `Load` torn off its prefix was claimed by nobody, so `continuation-indent` pushed
+  it to the same column as the field list it introduces.
+- A lone `*` was exempted from the field rules, so `continuation-indent` indented it
+  instead — landing on the right column by coincidence, which hid the gap for months.
+- A leading comma opens a line no rule claims, and ends up two levels deep.
+
+All three **converged**, so the fixture-corpus sweep in `tests/format.test.ts` did not
+catch them. Convergence proves the rules do not fight; it does not prove the shape
+they agree on is the intended one. Pin intended shapes down in a contract suite —
+`tests/load-header.test.ts` is the model.
+
+### Rules compose through the format loop, not through each other
+
+A rule never calls another rule and never assumes another has already run. Each
+`check` must be correct on the raw input it is handed. The runner re-lints after every
+fix pass, so a fix that creates a new line (`load-clause-newline` inserting a `\n`) is
+picked up by the indent rules on the next pass — that is the intended handoff, and the
+reason a rule should not try to do a neighbour's job "while it is in there anyway".
+
+What rules _may_ share is the vocabulary they must agree on, in
+`packages/core/src/rules/utils/`:
+
+- `tokens.ts` — token-shape predicates (`isKeyword`, `isOpenParen`, ...).
+- `statements.ts` — statement splitting and LOAD field-list boundaries.
+- `fixes.ts` — fix-range construction that preserves comments.
+
+Import these instead of reimplementing them. When two rules disagree about where a
+field list ends, a token is a field for one and a clause for the other, and their
+autofixes start rewriting each other. Editing a helper here changes every rule that
+uses it — check the consumers and run the full suite.
+
 ## Naming contract
 
 For a rule named `my-rule`, all five identifiers share the same kebab-case stem:
@@ -153,8 +222,17 @@ export const myRule: Rule<MyRuleOptions, 'my-rule'> = {
 - `fix` is optional. Omit it entirely if the rule cannot safely auto-fix.
 - Disable directives (`// qlinter-disable-next-line my-rule`) are handled by the
   runner — do not implement them in the rule.
-- Before adding a new rule, check whether it makes sense to extend or modify an existing rule.
-- Keep the rules as generic and configurable as possible, if feasible.
+- Before adding a new rule, check whether an existing rule already owns that
+  question. Extend it only when it is genuinely the _same_ question, not merely a
+  neighbouring one — see [Rule scope](#rule-scope).
+- **Options are for dimensions.** Where a rule has a natural dimension with several
+  defensible values — `size`, `style`, `max`, case style — expose it as one option
+  instead of shipping a rule per value.
+- **But an option is not a prerequisite for a rule.** Where there is genuinely only
+  one sensible shape, the rule ships with `defaultOptions: undefined`; most layout
+  rules here do, and that is deliberate, not a gap. `severity: 'off'` stays the
+  escape hatch. What is never an option is a switch whose two values amount to
+  "enforce" and "do nothing" — that switch already exists.
 
 ## Registration in `rules/index.ts`
 
@@ -283,7 +361,10 @@ Keep sections alphabetical by rule id.
 When invoked, walk this checklist in order. Skip steps that do not apply.
 
 1. **Identify intent.** Add / modify / rename / remove? For modify and remove,
-   confirm which existing rule and which aspect.
+   confirm which existing rule and which aspect. For add, settle the scope first
+   (see [Rule scope](#rule-scope)): what single question does it answer, which axis
+   is it on, and which lines or tokens does it claim — and which does it leave to
+   somebody else?
 2. **Bootstrap docs if missing.** If `packages/core/docs/rules.md` does not exist,
    create it and seed entries for the existing rules before proceeding.
 3. **Write/edit the rule file** following the templates above. Stay inside the
