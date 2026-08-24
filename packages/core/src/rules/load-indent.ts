@@ -1,146 +1,21 @@
 import type { IToken } from 'chevrotain';
-import { keywordToken, punctuationToken, commaToken, semicolonToken } from '../lexer.js';
+import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { groupByLine, previousLineClosesStatement, type IndentStyle } from './block-indent.js';
-import { isClauseStarter, isCloseParen, isOpenParen } from './shared.js';
+import {
+  findFieldListBoundaries,
+  findLoadIndex,
+  isClauseStarter,
+  isLoneWildcard,
+  splitStatements,
+} from './utils/statements.js';
+import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
 export type { IndentStyle } from './block-indent.js';
 
 export interface LoadIndentOptions {
   size: number;
   style: IndentStyle;
-}
-
-function isKeyword(token: IToken, image: string): boolean {
-  return token.tokenType === keywordToken && token.image.toLowerCase() === image;
-}
-
-function isWildcard(token: IToken): boolean {
-  return token.tokenType === punctuationToken && token.image === '*';
-}
-
-function splitStatements(tokens: IToken[]): IToken[][] {
-  const stmts: IToken[][] = [];
-  let current: IToken[] = [];
-  let depth = 0;
-
-  for (const t of tokens) {
-    if (isOpenParen(t)) {
-      depth++;
-    } else if (isCloseParen(t)) {
-      depth--;
-    }
-
-    current.push(t);
-
-    if (depth === 0 && t.tokenType === semicolonToken) {
-      stmts.push(current);
-      current = [];
-    }
-  }
-
-  if (current.length > 0) {
-    stmts.push(current);
-  }
-
-  return stmts;
-}
-
-function findLoadIndex(tokens: IToken[]): number {
-  let depth = 0;
-
-  for (let i = 0; i < tokens.length; i++) {
-    const t = tokens[i];
-
-    if (isOpenParen(t)) {
-      depth++;
-      continue;
-    }
-
-    if (isCloseParen(t)) {
-      depth--;
-      continue;
-    }
-
-    if (depth === 0 && isKeyword(t, 'load')) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-function findFieldListBoundaries(tokens: IToken[], loadIdx: number): { start: number; end: number } {
-  let start = loadIdx + 1;
-
-  while (start < tokens.length && isKeyword(tokens[start], 'distinct')) {
-    start++;
-  }
-
-  let depth = 0;
-  let end = tokens.length;
-
-  for (let i = start; i < tokens.length; i++) {
-    const t = tokens[i];
-
-    if (isOpenParen(t)) {
-      depth++;
-      continue;
-    }
-
-    if (isCloseParen(t)) {
-      depth--;
-      continue;
-    }
-
-    if (depth !== 0) {
-      continue;
-    }
-
-    if (t.tokenType === semicolonToken) {
-      end = i;
-      break;
-    }
-
-    if (isClauseStarter(t)) {
-      end = i;
-      break;
-    }
-  }
-
-  return { start, end };
-}
-
-function isLoneWildcard(tokens: IToken[], start: number, end: number): boolean {
-  let depth = 0;
-  let topLevelCount = 0;
-  let wildcardSeen = false;
-
-  for (let i = start; i < end; i++) {
-    const t = tokens[i];
-
-    if (isOpenParen(t)) {
-      depth++;
-      continue;
-    }
-
-    if (isCloseParen(t)) {
-      depth--;
-      continue;
-    }
-
-    if (depth !== 0) {
-      continue;
-    }
-
-    topLevelCount++;
-
-    if (isWildcard(t)) {
-      wildcardSeen = true;
-    }
-  }
-
-  return wildcardSeen && topLevelCount === 1;
 }
 
 function collectFieldStarts(tokens: IToken[], start: number, end: number): IToken[] {

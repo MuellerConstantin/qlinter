@@ -2,7 +2,7 @@ import type { IToken } from 'chevrotain';
 import { builtinFunctionToken, commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { isCloseParen, isOpenParen } from './shared.js';
+import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
 export interface MultilineCallOptions {
   maxLineLength: number;
