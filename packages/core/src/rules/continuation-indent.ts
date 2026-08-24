@@ -13,10 +13,17 @@ export interface ContinuationIndentOptions {
 
 /*
  * Owns the indentation of *continuation* lines — the lines left over once
- * `block-indent` has taken every statement start and `load-indent` every field
- * and clause of a `Load`. Those are the lines inside a wrapped expression: a
- * broken `&`-chain, a multi-line `Where` condition, the arguments of a call
- * spread over several lines.
+ * `block-indent` has taken every statement start and `load-indent` every
+ * header, field and clause line of a `Load`. Those are the lines inside a
+ * wrapped expression: a broken `&`-chain, a multi-line `Where` condition, the
+ * arguments of a call spread over several lines.
+ *
+ * A torn-apart `Load` header is explicitly *not* one of them. `Left Join(X)`
+ * on one line and its `Load` on the next is a statement head split in two, not
+ * a wrapped expression; hanging the `Load` one level in would put it at the
+ * same column as the fields it introduces and flatten the very hierarchy
+ * `load-indent` exists to draw. Those lines are anchors, owned by `load-indent`
+ * at `base`.
  *
  * The expected indent hangs off the nearest preceding *anchor* — the statement
  * start or field/clause line the continuation belongs to — plus one level per
@@ -73,7 +80,14 @@ export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-i
 
     const anchored = new Set<IToken>();
 
-    for (const { fieldStarts, clauseStarters } of collectLoadAnchors(tokens, firstTokenByLine(firstOnLine))) {
+    for (const { headerStarts, fieldStarts, clauseStarters } of collectLoadAnchors(
+      tokens,
+      firstTokenByLine(firstOnLine),
+    )) {
+      for (const t of headerStarts) {
+        anchored.add(t);
+      }
+
       for (const t of fieldStarts) {
         anchored.add(t);
       }

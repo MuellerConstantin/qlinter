@@ -546,10 +546,26 @@ they continue.
 ### Rule Details
 
 [block-indent](#block-indent) owns statement starts and [load-indent](#load-indent)
-owns the fields and clauses of a `Load`. What is left over are _continuation
-lines_: the lines inside a wrapped expression — a broken `&`-concatenation
-chain, a multi-line `Where` condition, the arguments of a call spread over
-several lines. This rule owns those.
+owns the header, field and clause lines of a `Load`. What is left over are
+_continuation lines_: the lines inside a wrapped expression — a broken
+`&`-concatenation chain, a multi-line `Where` condition, the arguments of a call
+spread over several lines. This rule owns those.
+
+A `Load` header torn across lines is explicitly **not** one of them. `Left
+Join(X)` on one line with its `Load` on the next is a statement head split in
+two, not a wrapped expression; hanging the `Load` one level in would put it at
+the same column as the fields it introduces. Those lines are anchors, owned by
+[load-indent](#load-indent) at the statement's own indent. A prefix whose
+_argument list_ is wrapped is a different matter and stays a continuation:
+
+```qlik
+[Tree]:
+Hierarchy(NodeId, ParentId,
+    NodeName)                  // continuation — one level, this rule
+Load                           // header line — base, load-indent
+    NodeId
+From [lib://qvd/tree.qvd] (qvd);
+```
 
 The expected indent hangs off the nearest preceding **anchor** — the statement
 start or field/clause line the continuation belongs to — plus one level for
@@ -872,7 +888,9 @@ The rule is intentionally narrow. It does **not**:
 - enforce one field per line — that is a separate concern;
 - enforce indentation of the field list — same;
 - require the `Load` header (`[NoConcatenate] Load [Distinct]`) to sit on a
-  single line — those are modifiers, not clauses;
+  single line — those are modifiers, not clauses. A header spread over several
+  lines is accepted; [load-indent](#load-indent) puts each of those lines at the
+  statement's own indent;
 - touch the bracketed data block that follows `Inline [...]`, which stays
   attached to its clause keyword and may span as many lines as it needs.
 
@@ -917,7 +935,8 @@ Where Year >= 2020
 Group By OrderId
 Order By OrderId;
 
-// Header torn apart — also accepted; the rule does not police modifiers.
+// Header torn apart — also accepted; the rule does not police modifiers. The
+// column those lines land in is load-indent's business, not this rule's.
 [Numbers]:
 NoConcatenate
 Load
@@ -1058,8 +1077,11 @@ Once a `LOAD` is broken across multiple lines (by
 convention for where each line begins horizontally. Without one, fields and
 clauses drift between flush-left and various tab stops in the same script and
 the visual shape of a LOAD stops carrying meaning. This rule pins down the
-two structural levels of the LOAD body:
+structural levels of the LOAD statement:
 
+- Every **header line** — a prefix broken off its `Load` (`Left Join(X)`,
+  `NoConcatenate`), the `Load` keyword itself, a `Distinct` pushed onto its own
+  line — sits at `base`.
 - Every line that **starts a new field** sits at `base + step`.
 - Every line that **starts a clause** (`From`, `Resident`, `Where`,
   `Group`, `Order`, ...) sits at `base`.
@@ -1067,12 +1089,35 @@ two structural levels of the LOAD body:
 `base` is the indent of the line that **opens the LOAD statement**, so a LOAD
 that lives inside a `Sub` (or any other [block-indent](#block-indent)-managed
 construct) inherits the surrounding indent automatically — fields land at
-"Sub body + one step", clauses land at "Sub body". When the `Load` keyword is a
-continuation of a prefixed statement (`Left Join(...) IntervalMatch(...)`, a
-`Hierarchy (...)`, or a `NoConcatenate` broken onto its own line), the base is
-taken from the opening line, not the continuation line the `Load` happens to sit
-on — that line's own indent is left to [block-indent](#block-indent) and never
-becomes the reference for the field list.
+"Sub body + one step", header and clauses land at "Sub body".
+
+The opening line itself belongs to [block-indent](#block-indent) and is never
+reported here, only measured. Everything the statement spends on its own head
+after that line is a header line: the base is taken from the opening line, so a
+misindented `Load` is pulled back into place instead of dragging the field list
+sideways with it.
+
+```qlik
+[MyTable]:
+Left Join(X)    // opens the statement — block-indent, base 0
+Load            // header line — base
+Distinct        // header line — base
+    Id          // field — base + step
+Resident Z;     // clause — base
+```
+
+Only header lines that _begin_ at parenthesis depth zero count. A prefix whose
+argument list is wrapped is a genuine continuation of an expression and stays
+with [continuation-indent](#continuation-indent):
+
+```qlik
+[Tree]:
+Hierarchy(NodeId, ParentId,
+    NodeName)   // continuation-indent, one level
+Load            // header line — base
+    NodeId
+From [lib://qvd/tree.qvd] (qvd);
+```
 
 The rule is deliberately narrow:
 
@@ -1081,17 +1126,21 @@ The rule is deliberately narrow:
   to [load-field-per-line](#load-field-per-line) to surface first.
 - **Continuation lines are not enforced.** A multi-line `If(...)` field, a
   long `&`-concatenation chain, a wrapped `Where` condition — anything that
-  is not itself a new field or a new clause keeps whatever indent the author
-  chose. Picking a continuation-indent convention is a separate concern that
-  would make this rule fight every reasonable style.
+  is not itself a header, a new field or a new clause keeps whatever indent the
+  author chose here; [continuation-indent](#continuation-indent) governs it
+  separately.
+- It says nothing about _where the header breaks_. `Left Join(X) Load Distinct`
+  on one line and the same header spread over three lines are both accepted;
+  the rule only fixes the horizontal position of whatever lines exist.
 - The wildcard placeholder exception from
   [load-field-per-line](#load-field-per-line) carries over: a lone `*` is
   never treated as a field, even when it sits on its own line.
 
-Like [block-indent](#block-indent), a field- or clause-start line is compared
-against the exact expected indent string, not just its width: a right-width run
-of the wrong character (tabs under the space style, or a tab/space mix) is still
-flagged, so `style` is enforced independently of any other rule.
+Like [block-indent](#block-indent), a header-, field- or clause-start line is
+compared against the exact expected indent string, not just its width: a
+right-width run of the wrong character (tabs under the space style, or a
+tab/space mix) is still flagged, so `style` is enforced independently of any
+other rule.
 
 The autofix replaces the leading whitespace of each offending line with the
 expected indent string (`step` repeated to the expected width). The indent
@@ -1117,6 +1166,14 @@ From X;
 Load
 ····Id
 ····From X;
+
+// Header lines indented as if they were continuations.
+[D]:
+Left Join([E])
+····Load
+····Distinct
+····Id
+From X;
 ```
 
 Examples of **correct** code for this rule:
@@ -1150,6 +1207,24 @@ Load
 ············as Label,
 ····Other
 From [lib://x.qvd] (qvd);
+
+// Header torn across lines — every header line sits at base, so the field
+// list one step deeper still reads as subordinate to it.
+[Torn]:
+Left Join([M])
+Load
+Distinct
+····Id
+Resident [Src];
+
+// Same, nested in a Sub — base is the Sub-body indent.
+Sub mapIt
+····Left Join([M]) IntervalMatch (Stichtag, PERNR)
+····Load
+········BEGDA,
+········PERNR
+····Resident [Src];
+End Sub
 ```
 
 ### Options

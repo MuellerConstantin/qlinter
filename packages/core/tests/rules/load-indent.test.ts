@@ -18,10 +18,10 @@ describe('load-indent', () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it('flags every misindented field-start and clause-start line', () => {
+  it('flags every misindented header-, field- and clause-start line', () => {
     const diagnostics = lintFixture('violation', loadIndent);
 
-    expect(diagnostics.map((d) => d.range.start.line)).toEqual([4, 10, 17, 23, 25, 32, 33, 39]);
+    expect(diagnostics.map((d) => d.range.start.line)).toEqual([4, 10, 17, 23, 25, 32, 33, 39, 46, 47]);
     for (const d of diagnostics) {
       expect(d.ruleId).toBe('load-indent');
       expect(d.severity).toBe('warning');
@@ -72,7 +72,12 @@ describe('load-indent', () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it('bases indent on the statement-start line, not a continuation line the LOAD lands on', () => {
+  /*
+   * The base comes from the line that opens the statement, never from the
+   * `Load` line itself — a misindented `Load` would otherwise drag the whole
+   * field list sideways with it instead of being pulled back into line.
+   */
+  it('bases indent on the statement-start line, not on the LOAD line it precedes', () => {
     const source = [
       '    Left Join([M]) IntervalMatch (Stichtag, PERNR)',
       '  Load',
@@ -86,11 +91,59 @@ describe('load-indent', () => {
     expect(result.output).toBe(
       [
         '    Left Join([M]) IntervalMatch (Stichtag, PERNR)',
-        '  Load',
+        '    Load',
         '        BEGDA,',
         '        PERNR',
         '    Resident [Src];',
       ].join('\n'),
+    );
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it('pins a torn-apart header to the statement indent instead of one level in', () => {
+    const source = ['[MyTable]:', 'Left Join(X)', '        Load', '        Distinct', 'A', 'Resident Z;'].join('\n');
+
+    const result = formatRule(source, loadIndent);
+
+    expect(result.output).toBe(['[MyTable]:', 'Left Join(X)', 'Load', 'Distinct', '    A', 'Resident Z;'].join('\n'));
+    expect(result.diagnostics).toEqual([]);
+    expect(result.fixed).toBe(3);
+  });
+
+  /*
+   * The opening line of the statement is block-indent's; load-indent measures
+   * from it but must never report it, or the two rules would flag it twice.
+   */
+  it('never reports the statement-opening line itself', () => {
+    const source = ['[MyTable]:', '  Left Join(X)', 'Load', '    A', 'Resident Z;'].join('\n');
+
+    const diagnostics = lintRule(source, loadIndent);
+
+    expect(diagnostics.map((d) => d.range.start.line)).toEqual([3, 4, 5]);
+  });
+
+  /*
+   * A prefix whose argument list is wrapped is a genuine continuation of an
+   * expression, not a header line — claiming it here would fight
+   * continuation-indent, which hangs it one level off the opening line.
+   */
+  it('does not claim a wrapped prefix argument list as a header line', () => {
+    const source = ['[Tree]:', 'Hierarchy(NodeId, ParentId,', '    NodeName)', 'Load', '    NodeId', 'From X;'].join(
+      '\n',
+    );
+
+    const diagnostics = lintRule(source, loadIndent);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('inherits the enclosing indent for header lines of a LOAD inside a Sub', () => {
+    const source = ['Sub s', '    Left Join(X)', 'Load', '        A', '    Resident Z;', 'End Sub'].join('\n');
+
+    const result = formatRule(source, loadIndent);
+
+    expect(result.output).toBe(
+      ['Sub s', '    Left Join(X)', '    Load', '        A', '    Resident Z;', 'End Sub'].join('\n'),
     );
     expect(result.diagnostics).toEqual([]);
   });
@@ -137,7 +190,7 @@ describe('load-indent', () => {
     const result = formatRule(readFixture('violation'), loadIndent);
 
     expect(result.diagnostics).toEqual([]);
-    expect(result.fixed).toBe(8);
+    expect(result.fixed).toBe(10);
   });
 
   it('emits a non-empty range even when the misindented line has no leading whitespace', () => {

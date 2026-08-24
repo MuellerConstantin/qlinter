@@ -27,3 +27,21 @@ Load * Inline [
 	a, b
 	1, 2
 ];
+
+// A torn-apart Load header is not a continuation — load-indent owns those
+// lines at the statement's own indent, so nothing is flagged here.
+[Torn]:
+Left Join([M])
+Load
+Distinct
+    Id
+From X;
+
+// A wrapped prefix argument list, on the other hand, *is* a continuation and
+// hangs one level off the line that opens the statement.
+[Tree]:
+Hierarchy(NodeId, ParentId,
+    NodeName)
+Load
+    NodeId
+From X;

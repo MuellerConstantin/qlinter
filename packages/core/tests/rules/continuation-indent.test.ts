@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blockIndent, continuationIndent, multilineCall } from '../../src/rules/index.js';
+import { blockIndent, continuationIndent, loadIndent, multilineCall } from '../../src/rules/index.js';
 import { lintFixture } from './helpers.js';
 import { formatRule, formatRules, lintRule } from '../support.js';
 
@@ -87,6 +87,52 @@ describe('continuation-indent', () => {
     const diagnostics = lintRule(source, continuationIndent);
 
     expect(diagnostics).toEqual([]);
+  });
+
+  /*
+   * A prefix torn off its `Load` is a statement head split across lines, not a
+   * wrapped expression. Indenting the `Load` would put it at the same column as
+   * the fields it introduces; those lines belong to load-indent at `base`.
+   */
+  it('does not claim the Load line of a prefixed statement', () => {
+    const source = ['[MyTable]:', 'Left Join(X)', 'Load', '    A', 'Resident Z;'].join('\n');
+
+    const diagnostics = lintRule(source, continuationIndent);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('does not claim a Distinct or NoConcatenate broken onto its own line', () => {
+    const source = ['[MyTable]:', 'NoConcatenate', 'Load', 'Distinct', '    A', 'Resident Z;'].join('\n');
+
+    const diagnostics = lintRule(source, continuationIndent);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('still hangs a wrapped prefix argument list one level off the opening line', () => {
+    const source = ['[Tree]:', 'Hierarchy(NodeId, ParentId,', 'NodeName)', 'Load', '    NodeId', 'From X;'].join('\n');
+
+    const result = formatRule(source, continuationIndent);
+
+    expect(result.output).toBe(
+      ['[Tree]:', 'Hierarchy(NodeId, ParentId,', '    NodeName)', 'Load', '    NodeId', 'From X;'].join('\n'),
+    );
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  /*
+   * The bug this split fixes: continuation-indent used to own the torn-apart
+   * header and push `Load` to base + one step, landing it on the same column as
+   * its own field list. Both rules together must leave the shape alone.
+   */
+  it('agrees with load-indent on a torn-apart header', () => {
+    const source = ['[MyTable]:', 'Left Join(X)', 'Load', 'Distinct', '    A', 'Resident Z;', ''].join('\n');
+
+    const result = formatRules(source, [blockIndent, continuationIndent, loadIndent]);
+
+    expect(result.output).toBe(source);
+    expect(result.diagnostics).toEqual([]);
   });
 
   describe('style option', () => {

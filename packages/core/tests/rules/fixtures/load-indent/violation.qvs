@@ -38,3 +38,12 @@ End Sub
 Load
 	Id
 From X;
+
+// Torn header indented as if it were a continuation — 2 findings (Load,
+// Distinct). The field below already sits at base + one step.
+[G]:
+Left Join([H])
+    Load
+    Distinct
+    Id
+From X;

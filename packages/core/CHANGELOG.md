@@ -65,3 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An unbracketed `lib://` path is no longer mangled. The scheme used to split
   into the `Lib` keyword plus a `//` line comment, which uppercased `LIB` and
   silently commented out the rest of the path. It now lexes as one token.
+- A `Load` header torn across lines is no longer indented as if it were a
+  continuation. `continuation-indent` used to claim the `Load`, `Distinct` and
+  `NoConcatenate` lines of a prefixed statement (`Left Join(X)` on one line, its
+  `Load` on the next) and push them one level in — landing them on the same
+  column as the field list they introduce. `load-indent` now owns those header
+  lines and pins them to the statement's own indent. A prefix whose argument
+  list is wrapped (`Hierarchy(NodeId, ParentId,\n    NodeName)`) is still a
+  continuation and keeps hanging one level off the opening line.
