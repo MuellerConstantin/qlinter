@@ -1,0 +1,24 @@
+// Every comma closes the line of the operand it follows.
+LOAD
+    OrderId,
+    CustomerId,
+    OrderDate
+FROM [lib://x/orders.qvd];
+
+// A comment between two fields does not pull the comma along.
+LOAD
+    Amount,
+    // net, not gross
+    Currency
+RESIDENT Sales;
+
+// Trailing commas in a function call argument list.
+LET vLabel = If(vTotal > 0,
+    'pos',
+    'neg');
+
+// Commas absorbed into a single token never reach this rule.
+LET vStr = 'a
+,b';
+Trace loading
+, a, b;

@@ -8,6 +8,7 @@
 | [builtin-function-case](#builtin-function-case)       | Enforce canonical casing for Qlik built-in functions.            |
 | [builtin-keyword-case](#builtin-keyword-case)         | Enforce canonical casing for Qlik keywords.                      |
 | [comma-space](#comma-space)                           | Require exactly one space after a comma when followed by code.   |
+| [comma-style](#comma-style)                           | Require a comma to close the line of the operand it follows.     |
 | [comment-space](#comment-space)                       | Require a space after `//` and inside `/* */`.                   |
 | [continuation-indent](#continuation-indent)           | Indent continuation lines one level per open parenthesis.        |
 | [eol-last](#eol-last)                                 | Require the file to end with exactly one newline.                |
@@ -460,6 +461,107 @@ Trace loading a,b,c;
 This rule has no options. "Exactly one space after a comma" is the universally
 expected convention; offering toggles for zero spaces or alignment runs would
 defeat the purpose of an opinionated linter.
+
+---
+
+## comma-style
+
+Require a comma to close the line of the operand it follows.
+
+### Rule Details
+
+A comma closes the operand before it, and a script reads that way when the comma
+stays on that operand's line. The leading-comma style puts it at the head of the
+next line instead:
+
+```qlik
+LOAD
+    OrderId
+    , CustomerId
+FROM [lib://x/orders.qvd];
+```
+
+Both forms are valid Qlik, and this rule picks the trailing one. That is not
+only taste: it is the shape [load-field-per-line](#load-field-per-line) and
+[multiline-call](#multiline-call) already produce when they break a jammed list
+apart, so the two styles cannot both survive a format pass anyway.
+
+The rule flags a comma that is the first token on its line, and nothing else.
+Its autofix relocates that one comma to the end of the previous operand's line,
+carrying the author's line break and indentation across unchanged — the
+surrounding shape survives, and the field list is not reflowed.
+
+The rule is intentionally narrow:
+
+- The space _after_ a comma belongs to [comma-space](#comma-space), the column
+  each line starts at to the indent rules, and whether a field earns its own
+  line at all to [load-field-per-line](#load-field-per-line).
+- Commas inside string literals, bracket identifiers (`[Order,Items]`), and
+  `Trace` bodies are absorbed by the lexer into a single token and never reach
+  this rule.
+- A comma that trails a token spanning several lines (`[Foo\nBar], X`) already
+  closes its operand and is left alone, even though it is technically the first
+  token whose own line is that one.
+
+Comments are carried, not dropped. A comment that sat between the operand and
+the comma keeps its line, and a comment trailing the operand stays on it:
+
+```qlik
+LOAD           LOAD
+    Amount         Amount,
+    // note   ->   // note
+    , Currency     Currency
+```
+
+A comma that sat alone on its line takes that line with it, since the break
+after it already separates the two operands.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+LOAD
+    OrderId
+    , CustomerId
+    , OrderDate
+FROM [lib://x/orders.qvd];
+
+LOAD
+    ProductId
+    ,
+    ProductName
+RESIDENT Products;
+
+LET vLabel = If(vTotal > 0
+    , 'pos'
+    , 'neg');
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+LOAD
+    OrderId,
+    CustomerId,
+    OrderDate
+FROM [lib://x/orders.qvd];
+
+LOAD
+    Amount,
+    // net, not gross
+    Currency
+RESIDENT Sales;
+
+LET vLabel = If(vTotal > 0,
+    'pos',
+    'neg');
+```
+
+### Options
+
+This rule has no options. Comma placement has exactly two defensible answers and
+an opinionated formatter has to pick one; the other rules that break lists apart
+already emit the trailing form, so a `leading` setting would only put this rule
+in a fight it cannot win. Set `severity: 'off'` to opt out entirely.
 
 ---
 

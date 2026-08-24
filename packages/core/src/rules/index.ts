@@ -5,6 +5,7 @@ import { blockIndent } from './block-indent.js';
 import { builtinFunctionCase } from './builtin-function-case.js';
 import { builtinKeywordCase } from './builtin-keyword-case.js';
 import { commaSpace } from './comma-space.js';
+import { commaStyle } from './comma-style.js';
 import { commentSpace } from './comment-space.js';
 import { continuationIndent } from './continuation-indent.js';
 import { eolLast } from './eol-last.js';
@@ -46,6 +47,7 @@ export const allRules = [
   builtinFunctionCase,
   builtinKeywordCase,
   commaSpace,
+  commaStyle,
   commentSpace,
   continuationIndent,
   eolLast,
@@ -144,6 +146,7 @@ export {
   builtinFunctionCase,
   builtinKeywordCase,
   commaSpace,
+  commaStyle,
   commentSpace,
   continuationIndent,
   eolLast,

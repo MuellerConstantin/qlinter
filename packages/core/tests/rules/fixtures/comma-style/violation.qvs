@@ -1,0 +1,25 @@
+// Leading comma in front of every field but the first.
+LOAD
+    OrderId
+    , CustomerId
+    , OrderDate
+FROM [lib://x/orders.qvd];
+
+// The comma sitting alone on its own line.
+LOAD
+    ProductId
+    ,
+    ProductName
+RESIDENT Products;
+
+// A comment between the field and the comma that follows it.
+LOAD
+    Amount
+    // net, not gross
+    , Currency
+RESIDENT Sales;
+
+// Leading commas in a function call argument list.
+LET vLabel = If(vTotal > 0
+    , 'pos'
+    , 'neg');
