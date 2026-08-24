@@ -119,4 +119,16 @@ describe('load-clause-newline', () => {
     expect(result.diagnostics).toEqual([]);
     expect(result.fixed).toBe(13);
   });
+
+  /*
+   * CRLF coverage lives in inline sources rather than a fixture: `core.autocrlf`
+   * decides what a checked-out `.qvs` actually holds, so a committed CRLF
+   * fixture would assert something different on each machine.
+   */
+  it('starts a clause with CRLF in a CRLF script', () => {
+    const result = formatRule('Load Id From X Where Active = 1;\r\n', loadClauseNewline);
+
+    expect(result.output).toBe('Load Id\r\nFrom X\r\nWhere Active = 1;\r\n');
+    expect(result.output).not.toMatch(/(?<!\r)\n/);
+  });
 });

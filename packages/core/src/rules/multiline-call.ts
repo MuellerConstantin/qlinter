@@ -2,6 +2,7 @@ import type { IToken } from 'chevrotain';
 import { builtinFunctionToken, commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { detectLineEnding } from './utils/lines.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
 export interface MultilineCallOptions {
@@ -64,6 +65,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
   defaultSeverity: 'warning',
   defaultOptions: { maxLineLength: 120 },
   check: ({ source, tokens }, { maxLineLength }) => {
+    const newline = detectLineEnding(source);
     const out: Finding[] = [];
     let i = 0;
 
@@ -123,7 +125,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
 
       args.push(source.slice(cursor, innerEnd).trim());
 
-      const replacement = '\n' + args.join(',\n') + '\n';
+      const replacement = newline + args.join(`,${newline}`) + newline;
 
       out.push({
         range: tokenRange(funcToken),

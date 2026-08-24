@@ -1,15 +1,12 @@
 import { blockCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { detectLineEnding } from './utils/lines.js';
 
 const ONLY_WHITESPACE = /^[ \t]*$/;
 const LEADING_WS = /^[ \t]*/;
 const TRAILING_WS = /[ \t]+$/;
 const CR_AT_END = /\r$/;
-
-function detectLineEnding(text: string): string {
-  return text.includes('\r\n') ? '\r\n' : '\n';
-}
 
 /*
  * Reformat a multi-line block comment into the canonical JSDoc-like shape:

@@ -1008,6 +1008,9 @@ keyword. The fix does not reindent the new line; that is left to
 Recognised clause-starter keywords: `From`, `From_Field`, `Resident`, `Inline`,
 `AutoGenerate`, `Extension`, `Where`, `While`, `Group`, `Order`.
 
+The break the autofix inserts matches the source's dominant line ending —
+`\r\n` if the file contains any CRLF, otherwise `\n`.
+
 Examples of **incorrect** code for this rule:
 
 ```qlik
@@ -1100,8 +1103,11 @@ this rule for [continuation-indent](#continuation-indent) to pick up by
 default.
 
 The autofix replaces the whitespace between the previous token and the
-offending field with a single `\n`, preserving any comment in the gap. The
-fix does not reindent the new line; that is left to the existing
+offending field with a single line break, preserving any comment in the gap.
+The break matches the source's dominant line ending — `\r\n` if the file
+contains any CRLF, otherwise `\n` — so formatting a Windows script does not
+leave it with mixed terminators. The fix does not reindent the new line; that
+is left to the existing
 [block-indent](#block-indent) rule and any future LOAD-body indent rule.
 
 This rule pairs naturally with [load-clause-newline](#load-clause-newline):
@@ -1473,8 +1479,10 @@ places the closing `)` on its own line. It writes no indentation of its own:
 the lines it creates are continuation lines, and
 [continuation-indent](#continuation-indent) indents them on the next format
 pass — one step deeper for the arguments, back under the call for the closing
-paren. Anything after the closing paren on the original line (e.g. `As Field`,
-an operator, a semicolon) is preserved verbatim.
+paren. The breaks it inserts match the source's dominant line ending — `\r\n`
+if the file contains any CRLF, otherwise `\n`. Anything after the closing paren
+on the original line (e.g. `As Field`, an operator, a semicolon) is preserved
+verbatim.
 
 Examples of **incorrect** code for this rule (with `maxLineLength: 80`):
 

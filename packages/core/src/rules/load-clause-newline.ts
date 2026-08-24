@@ -2,10 +2,11 @@ import type { IToken } from 'chevrotain';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
+import { detectLineEnding } from './utils/lines.js';
 import { findLoadIndex, isClauseStarter, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
-function checkStatement(tokens: IToken[], comments: IToken[]): Finding[] {
+function checkStatement(tokens: IToken[], comments: IToken[], newline: string): Finding[] {
   const loadIdx = findLoadIndex(tokens);
 
   if (loadIdx === -1) {
@@ -35,7 +36,7 @@ function checkStatement(tokens: IToken[], comments: IToken[]): Finding[] {
           message: `LOAD clause '${t.image}' should start on its own line.`,
           fix: {
             range: { start: fixStartOffset(prev, t, comments), end: t.startOffset },
-            replacement: '\n',
+            replacement: newline,
           },
         });
       }
@@ -51,12 +52,13 @@ export const loadClauseNewline: Rule<undefined, 'load-clause-newline'> = {
   id: 'load-clause-newline',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ tokens, comments }: RuleContext) => {
+  check: ({ source, tokens, comments }: RuleContext) => {
+    const newline = detectLineEnding(source);
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
     for (const stmt of stmts) {
-      out.push(...checkStatement(stmt, comments));
+      out.push(...checkStatement(stmt, comments, newline));
     }
 
     return out;

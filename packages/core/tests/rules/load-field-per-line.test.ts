@@ -134,6 +134,18 @@ describe('load-field-per-line', () => {
     expect(result.fixed).toBe(14);
   });
 
+  /*
+   * CRLF coverage lives in inline sources rather than a fixture: `core.autocrlf`
+   * decides what a checked-out `.qvs` actually holds, so a committed CRLF
+   * fixture would assert something different on each machine.
+   */
+  it('breaks fields apart with CRLF in a CRLF script', () => {
+    const result = formatRule('LOAD A, B\r\nFROM [lib://x/y.qvd];\r\n', loadFieldPerLine);
+
+    expect(result.output).toBe('LOAD\r\nA,\r\nB\r\nFROM [lib://x/y.qvd];\r\n');
+    expect(result.output).not.toMatch(/(?<!\r)\n/);
+  });
+
   it('composes with load-clause-newline so a fully jammed LOAD breaks down cleanly', async () => {
     const { loadClauseNewline } = await import('../../src/rules/index.js');
     const source = '[A]: Load Id, Name From X Where Active = 1 Order By Id;';

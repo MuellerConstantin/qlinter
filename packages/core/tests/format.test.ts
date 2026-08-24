@@ -119,6 +119,44 @@ describe('format', () => {
     });
   });
 
+  /*
+   * A rule that inserts a line break has to insert the one the file already
+   * uses. Three rules once hardcoded `\n`, so formatting a CRLF script left it
+   * with mixed terminators — invisible in a rule's own LF test, and loud in the
+   * diff of anyone on Windows.
+   *
+   * The sweep re-runs the whole fixture corpus with every ending flipped to
+   * CRLF, so the guard covers rules written after this one for free. Flipping
+   * in memory rather than committing CRLF fixtures keeps the assertion
+   * independent of what `core.autocrlf` hands the working tree.
+   */
+  describe('line endings', () => {
+    const BARE_LF = /(?<!\r)\n/;
+
+    for (const fixture of allFixtures()) {
+      it(`introduces no bare LF into the CRLF form of ${fixture}`, () => {
+        const source = readFileSync(join(FIXTURES, fixture), 'utf8').replace(/\r?\n/g, '\r\n');
+
+        const output = format(source, recommended).output;
+
+        expect(output).not.toMatch(BARE_LF);
+      });
+    }
+
+    it('leaves an LF script on LF', () => {
+      const output = format('LOAD A, B FROM [lib://x/y.qvd];\n', recommended).output;
+
+      expect(output).toBe('Load\n    A,\n    B\nFrom [lib://x/y.qvd];\n');
+    });
+
+    it('formats a CRLF script into the same shape as its LF twin', () => {
+      const lf = format('LOAD A, B FROM [lib://x/y.qvd];\n', recommended).output;
+      const crlf = format('LOAD A, B FROM [lib://x/y.qvd];\r\n', recommended).output;
+
+      expect(crlf).toBe(lf.replace(/\n/g, '\r\n'));
+    });
+  });
+
   describe('overlapping fixes', () => {
     it('applies only the first of two overlapping fixes within a single pass', () => {
       const fixA: Fix = { range: { start: 0, end: 3 }, replacement: 'XXX' };

@@ -83,3 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lines and pins them to the statement's own indent. A prefix whose argument
   list is wrapped (`Hierarchy(NodeId, ParentId,\n    NodeName)`) is still a
   continuation and keeps hanging one level off the opening line.
+- Formatting a CRLF script no longer leaves it with mixed line terminators.
+  `load-field-per-line`, `load-clause-newline` and `multiline-call` hardcoded
+  `\n` for every break they insert, so breaking up a jammed LOAD in a Windows
+  script scattered bare LFs through an otherwise CRLF file. All three now insert
+  the source's dominant ending, via a shared `detectLineEnding` helper that
+  `eol-last`, `one-statement-per-line` and `block-comment-stars` — which each
+  carried their own copy of the check — now share.

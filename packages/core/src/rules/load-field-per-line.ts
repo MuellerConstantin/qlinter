@@ -3,21 +3,22 @@ import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
+import { detectLineEnding } from './utils/lines.js';
 import { findFieldListBoundaries, findLoadIndex, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
-function makeFinding(prev: IToken, t: IToken, comments: IToken[]): Finding {
+function makeFinding(prev: IToken, t: IToken, comments: IToken[], newline: string): Finding {
   return {
     range: tokenRange(t),
     message: 'Each LOAD field should start on its own line.',
     fix: {
       range: { start: fixStartOffset(prev, t, comments), end: t.startOffset },
-      replacement: '\n',
+      replacement: newline,
     },
   };
 }
 
-function checkStatement(tokens: IToken[], comments: IToken[]): Finding[] {
+function checkStatement(tokens: IToken[], comments: IToken[], newline: string): Finding[] {
   const loadIdx = findLoadIndex(tokens);
 
   if (loadIdx === -1) {
@@ -35,7 +36,7 @@ function checkStatement(tokens: IToken[], comments: IToken[]): Finding[] {
   const firstField = tokens[start];
 
   if ((header.startLine ?? 1) === (firstField.startLine ?? 1)) {
-    out.push(makeFinding(header, firstField, comments));
+    out.push(makeFinding(header, firstField, comments, newline));
   }
 
   let depth = 0;
@@ -64,7 +65,7 @@ function checkStatement(tokens: IToken[], comments: IToken[]): Finding[] {
     }
 
     if ((next.startLine ?? 1) === (t.startLine ?? 1)) {
-      out.push(makeFinding(t, next, comments));
+      out.push(makeFinding(t, next, comments, newline));
     }
   }
 
@@ -75,12 +76,13 @@ export const loadFieldPerLine: Rule<undefined, 'load-field-per-line'> = {
   id: 'load-field-per-line',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ tokens, comments }: RuleContext) => {
+  check: ({ source, tokens, comments }: RuleContext) => {
+    const newline = detectLineEnding(source);
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
     for (const stmt of stmts) {
-      out.push(...checkStatement(stmt, comments));
+      out.push(...checkStatement(stmt, comments, newline));
     }
 
     return out;

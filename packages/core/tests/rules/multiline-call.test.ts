@@ -123,6 +123,18 @@ describe('multiline-call', () => {
     expect(diagnostics[0].message).toContain("'If(...)'");
   });
 
+  /*
+   * CRLF coverage lives in inline sources rather than a fixture: `core.autocrlf`
+   * decides what a checked-out `.qvs` actually holds, so a committed CRLF
+   * fixture would assert something different on each machine.
+   */
+  it('breaks arguments apart with CRLF in a CRLF script', () => {
+    const result = formatRule("LET x = If(aaa, 'yes', 'no');\r\n", multilineCall, { maxLineLength: 15 });
+
+    expect(result.output).toBe("LET x = If(\r\naaa,\r\n'yes',\r\n'no'\r\n);\r\n");
+    expect(result.output).not.toMatch(/(?<!\r)\n/);
+  });
+
   it('ignores commas inside string literals, bracket identifiers, and Trace bodies', () => {
     const diagnostics = lintRule(
       "LET vStr = 'a,b,c,d,e,f';\nLOAD [Order,Items,More] FROM [lib://x.qvd];\nTrace loading a,b,c,d,e,f;\n",

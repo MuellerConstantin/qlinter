@@ -1,6 +1,7 @@
 import { semicolonToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { detectLineEnding } from './utils/lines.js';
 
 export type LineEnding = 'auto' | 'lf' | 'crlf';
 
@@ -17,7 +18,7 @@ function resolveLineEnding(option: LineEnding, source: string): string {
     return '\r\n';
   }
 
-  return source.includes('\r\n') ? '\r\n' : '\n';
+  return detectLineEnding(source);
 }
 
 export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statement-per-line'> = {
