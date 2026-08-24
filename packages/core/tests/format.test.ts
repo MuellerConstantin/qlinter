@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { format, type Diagnostic, type Fix } from '../src/index.js';
@@ -10,6 +10,21 @@ const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
 
 function readFixture(ruleId: string, kind: 'violation' | 'clean'): string {
   return readFileSync(join(FIXTURES, ruleId, `${kind}.qvs`), 'utf8');
+}
+
+/*
+ * Every fixture in the repo as a `<rule-id>/<name>.qvs` path. Discovered rather
+ * than listed, so a fixture added for a new rule joins the sweep below without
+ * anyone remembering to register it.
+ */
+function allFixtures(): string[] {
+  return readdirSync(FIXTURES, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((dir) =>
+      readdirSync(join(FIXTURES, dir.name))
+        .filter((file) => file.endsWith('.qvs'))
+        .map((file) => `${dir.name}/${file}`),
+    );
 }
 
 describe('format', () => {
@@ -66,6 +81,41 @@ describe('format', () => {
       const byObject = format(violation, recommended);
 
       expect(byName.output).toBe(byObject.output);
+    });
+
+    /*
+     * Sweeps the whole fixture corpus under `recommended` and requires every
+     * file to reach a fixed point: a second `format` call must change nothing.
+     *
+     * What this guards is rule *composition*. Each fixture is written for one
+     * rule but is real Qlik script that the other twenty-odd rules also see, so
+     * the corpus doubles as a cheap cross-rule integration surface — far wider
+     * than any one rule's own test file reaches. Two rules with contradictory
+     * expectations for the same bytes rewrite each other on every pass until
+     * `runFormatLoop` gives up; here that surfaces as one named failing fixture
+     * rather than as a thrown error in a user's script.
+     *
+     * What it does not guard is whether the shape the rules settle on is the
+     * *right* one — two rules can converge perfectly happily on something nobody
+     * wants. Pinning a specific shape down is what a contract suite like
+     * `load-header.test.ts` is for.
+     */
+    describe('fixture corpus', () => {
+      it('discovers fixtures to sweep', () => {
+        expect(allFixtures().length).toBeGreaterThan(0);
+      });
+
+      for (const fixture of allFixtures()) {
+        it(`reaches a fixed point on ${fixture}`, () => {
+          const source = readFileSync(join(FIXTURES, fixture), 'utf8');
+
+          const first = format(source, recommended);
+          const second = format(first.output, recommended);
+
+          expect(second.output).toBe(first.output);
+          expect(second.fixed).toBe(0);
+        });
+      }
     });
   });
 
