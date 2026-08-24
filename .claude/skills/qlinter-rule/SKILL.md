@@ -146,7 +146,7 @@ A new or modified rule must **never** edit these files:
 - `packages/core/src/types.ts` — the shared type vocabulary: `Rule`, `RuleContext`, `Finding`, `Diagnostic`, `Fix`, `Range`, `Severity`, `Position`, `SeverityOrOff`, `RuleConfigEntry`, `AnyRule`, `RulesConfigOf`, `FormatResult`.
 - `packages/core/src/runner.ts` — `lint`, `format`, `applyFixes`, `runFormatLoop`.
 - `packages/core/src/token.ts` — `tokenRange`, `tokenFix`.
-- `packages/core/src/disableDirectives.ts` — disable wiring is automatic; rules need no participation.
+- `packages/core/src/disable-directives.ts` — disable wiring is automatic; rules need no participation.
 - `packages/core/src/config/` — `validateConfig` and `validateOptions`. A rule describes its options through its own `options` schema; the validator reads that schema and needs no per-rule knowledge.
 
 `packages/core/src/rules/index.ts` holds the rule **registry**, the `LintConfig` /
@@ -458,7 +458,7 @@ When invoked, walk this checklist in order. Skip steps that do not apply.
 2. **Bootstrap docs if missing.** If `packages/core/docs/rules.md` does not exist,
    create it and seed entries for the existing rules before proceeding.
 3. **Write/edit the rule file** following the templates above. Stay inside the
-   rule file — never touch `types.ts`, `runner.ts`, or `disableDirectives.ts`.
+   rule file — never touch `types.ts`, `runner.ts`, or `disable-directives.ts`.
 4. **Update `rules/index.ts`** with the four registration edits (alphabetical).
 5. **Write/edit the test file** with at least violation + clean assertions, plus
    a `format()` assertion if the rule has a fix.

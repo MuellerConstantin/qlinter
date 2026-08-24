@@ -80,6 +80,7 @@ The following sub-modules/projects exists:
 - **A rule's comments name no other rule.** Mentioning a neighbour couples the two in the reader's head even where the code is independent, and the note rots the moment the neighbour changes. Where two rules must genuinely agree on something, that agreement lives in `rules/utils/` and is explained there once.
 - **Examples belong in docs or tests, not in comments.** Those are checked; a comment is not. Keep an inline illustration to a single line or leave it out.
 - **Never transcribe a design discussion.** Record the conclusion in one sentence, or as a docs entry. If the justification needs a paragraph, it is a docs change.
+- **File names are kebab-case.** `disable-directives.ts`, `load-anchors.ts`, `rule-list.ts` — source and tests alike, in every package. Exported bindings stay camelCase (`collectDisabledLines`), so the file name and the symbol it holds differ on purpose; only the file is hyphenated.
 - **Explicit Blocks over Inline Statements**: Always use braces and a separate body line for control structures – `if (cond) {\n  doThing();\n}` instead of `if (cond) doThing();`. Explicit blocks prevent dangling-statement bugs, keep diffs clean when adding lines, and make control flow unambiguous.
 
 ## Versioning and Releases

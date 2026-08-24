@@ -1,6 +1,16 @@
 import { defineConfig } from 'tsdown';
 
-const ENTRIES = ['background', 'content', 'popup', 'options', 'main'];
+/*
+ * Keyed by output name so an entry can live in a folder without changing the
+ * emitted filename — options.html loads `options.js`, whatever its source path.
+ */
+const ENTRIES: Record<string, string> = {
+  background: 'src/background.ts',
+  content: 'src/content.ts',
+  popup: 'src/popup.ts',
+  options: 'src/options/index.ts',
+  main: 'src/main.ts',
+};
 
 /*
  * MV3 service workers forbid runtime import(); content scripts (including
@@ -12,8 +22,8 @@ const ENTRIES = ['background', 'content', 'popup', 'options', 'main'];
  * own config keeps every output self-contained.
  */
 export default defineConfig(
-  ENTRIES.map((name, index) => ({
-    entry: [`src/${name}.ts`],
+  Object.entries(ENTRIES).map(([name, path], index) => ({
+    entry: { [name]: path },
     format: 'esm' as const,
     platform: 'browser' as const,
     deps: { alwaysBundle: ['@qlinter/core', /^codemirror(\/|$)/] },
