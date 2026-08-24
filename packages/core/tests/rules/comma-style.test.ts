@@ -141,7 +141,10 @@ describe('comma-style', () => {
   });
 
   it('autofixes leading commas in a nested call without disturbing its indent', () => {
-    const result = formatRule("LOAD\n    If(1\n        , 'a'\n        , 'b') AS X\nFROM [lib://x/y.qvd];\n", commaStyle);
+    const result = formatRule(
+      "LOAD\n    If(1\n        , 'a'\n        , 'b') AS X\nFROM [lib://x/y.qvd];\n",
+      commaStyle,
+    );
 
     expect(result.output).toBe("LOAD\n    If(1,\n        'a',\n        'b') AS X\nFROM [lib://x/y.qvd];\n");
   });

@@ -1,7 +1,7 @@
 import { builtinFunctionToken, FUNCTIONS } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange, tokenFix } from '../token.js';
-import type { CaseStyle, CaseRuleOptions } from './types.js';
+import { CASE_OPTIONS_SCHEMA, type CaseStyle, type CaseRuleOptions } from './types.js';
 
 const canonicalFunctionByLower = new Map(FUNCTIONS.map((name) => [name.toLowerCase(), name]));
 
@@ -20,6 +20,7 @@ export const builtinFunctionCase: Rule<CaseRuleOptions, 'builtin-function-case'>
   id: 'builtin-function-case',
   defaultSeverity: 'warning',
   defaultOptions: { style: 'pascal' },
+  options: CASE_OPTIONS_SCHEMA,
   check: ({ tokens }, { style }) => {
     const out: Finding[] = [];
 

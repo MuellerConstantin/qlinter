@@ -64,6 +64,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
   id: 'multiline-call',
   defaultSeverity: 'warning',
   defaultOptions: { maxLineLength: 120 },
+  options: { maxLineLength: { type: 'number', min: 20, max: 1000 } },
   check: ({ source, tokens }, { maxLineLength }) => {
     const newline = detectLineEnding(source);
     const out: Finding[] = [];

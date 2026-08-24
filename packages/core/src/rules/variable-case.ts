@@ -2,7 +2,14 @@ import { identifierToken, keywordToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 
-export type VariableCaseStyle = 'camel' | 'pascal' | 'snake' | 'upperSnake';
+/**
+ * Naming styles for script variables. The array is the source; the union type is
+ * derived from it, so a new style is added in exactly one place and reaches the
+ * config validation and any options UI unbidden.
+ */
+export const VARIABLE_CASE_STYLES = ['camel', 'pascal', 'snake', 'upperSnake'] as const;
+
+export type VariableCaseStyle = (typeof VARIABLE_CASE_STYLES)[number];
 
 export interface VariableCaseOptions {
   style: VariableCaseStyle;
@@ -26,6 +33,7 @@ export const variableCase: Rule<VariableCaseOptions, 'variable-case'> = {
   id: 'variable-case',
   defaultSeverity: 'warning',
   defaultOptions: { style: 'camel' },
+  options: { style: { type: 'enum', values: VARIABLE_CASE_STYLES } },
   check: ({ tokens }, { style }) => {
     const out: Finding[] = [];
     const pattern = PATTERNS[style];

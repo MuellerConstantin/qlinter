@@ -1,4 +1,5 @@
 import type { AnyRule, RulesConfigOf } from '../types.js';
+export { CASE_STYLES } from './types.js';
 export type { CaseStyle, CaseRuleOptions } from './types';
 import { blockCommentStars } from './block-comment-stars.js';
 import { blockIndent } from './block-indent.js';
@@ -25,6 +26,9 @@ import { tableLabelBrackets } from './table-label-brackets.js';
 import { trailingWhitespace } from './trailing-whitespace.js';
 import { variableCase } from './variable-case.js';
 import { variableCharset } from './variable-charset.js';
+export { INDENT_STYLES } from './block-indent.js';
+export { LINE_ENDINGS } from './one-statement-per-line.js';
+export { VARIABLE_CASE_STYLES } from './variable-case.js';
 export type { BlockIndentOptions, IndentStyle } from './block-indent.js';
 export type { ContinuationIndentOptions } from './continuation-indent.js';
 export type { LoadIndentOptions } from './load-indent.js';

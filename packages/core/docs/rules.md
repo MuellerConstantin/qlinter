@@ -28,6 +28,13 @@
 | [variable-case](#variable-case)                       | Enforce a consistent casing style for user-defined vars.         |
 | [variable-charset](#variable-charset)                 | Restrict user-defined variables to a safe identifier charset.    |
 
+Every rule declares its options as a machine-readable schema, which is what
+`validateConfig` checks a config against and what host settings UIs render from.
+An option key that no rule declares, a value outside a listed enum, and a number
+outside the **Range** column below are all rejected with an error naming the rule
+and the option — a typo in a config fails loudly instead of quietly doing
+nothing.
+
 ---
 
 ## block-comment-stars
@@ -193,10 +200,10 @@ End Switch
 
 ### Options
 
-| Option  | Type               | Default   | Description                             |
-| :------ | :----------------- | :-------- | :-------------------------------------- |
-| `size`  | `number`           | `4`       | Number of indent units per block level. |
-| `style` | `'space' \| 'tab'` | `'space'` | Character used for one indent unit.     |
+| Option  | Type               | Default   | Range   | Description                             |
+| :------ | :----------------- | :-------- | :------ | :-------------------------------------- |
+| `size`  | `number`           | `4`       | `1`–`8` | Number of indent units per block level. |
+| `style` | `'space' \| 'tab'` | `'space'` | —       | Character used for one indent unit.     |
 
 - `size` — how many `style` units make up one indent level. With the default
   `style: 'space'`, `size: 4` is the qlinter default and matches how the Qlik
@@ -770,10 +777,10 @@ Let vName = ApplyMap('MapX',
 
 ### Options
 
-| Option  | Type               | Default   | Description                               |
-| :------ | :----------------- | :-------- | :---------------------------------------- |
-| `size`  | `number`           | `4`       | Spaces per level (ignored under `'tab'`). |
-| `style` | `'space' \| 'tab'` | `'space'` | Character each indent level is made of.   |
+| Option  | Type               | Default   | Range   | Description                               |
+| :------ | :----------------- | :-------- | :------ | :---------------------------------------- |
+| `size`  | `number`           | `4`       | `1`–`8` | Spaces per level (ignored under `'tab'`). |
+| `style` | `'space' \| 'tab'` | `'space'` | —       | Character each indent level is made of.   |
 
 Keep `size` and `style` in sync with [block-indent](#block-indent) and
 [load-indent](#load-indent) — a file whose statement lines are indented with
@@ -1355,10 +1362,10 @@ End Sub
 
 ### Options
 
-| Option  | Type               | Default   | Description                              |
-| :------ | :----------------- | :-------- | :--------------------------------------- |
-| `size`  | `number`           | `4`       | Number of `style` units per indent step. |
-| `style` | `'space' \| 'tab'` | `'space'` | Character used for one indent step.      |
+| Option  | Type               | Default   | Range   | Description                              |
+| :------ | :----------------- | :-------- | :------ | :--------------------------------------- |
+| `size`  | `number`           | `4`       | `1`–`8` | Number of `style` units per indent step. |
+| `style` | `'space' \| 'tab'` | `'space'` | —       | Character used for one indent step.      |
 
 The semantics mirror [block-indent](#block-indent): with the default
 `style: 'space'` the rule inserts ASCII spaces and `size` counts spaces per
@@ -1438,9 +1445,9 @@ From [lib://Sales/orders.qvd] (qvd);
 
 ### Options
 
-| Option | Type     | Default | Description                          |
-| :----- | :------- | :------ | :----------------------------------- |
-| `max`  | `number` | `120`   | Maximum allowed characters per line. |
+| Option | Type     | Default | Range       | Description                          |
+| :----- | :------- | :------ | :---------- | :----------------------------------- |
+| `max`  | `number` | `120`   | `20`–`1000` | Maximum allowed characters per line. |
 
 Example configuration:
 
@@ -1520,9 +1527,9 @@ LET vTotal = Sum(vRevenue);
 
 ### Options
 
-| Option          | Type     | Default | Description                                              |
-| :-------------- | :------- | :------ | :------------------------------------------------------- |
-| `maxLineLength` | `number` | `120`   | Threshold above which a single-line call must be broken. |
+| Option          | Type     | Default | Range       | Description                                              |
+| :-------------- | :------- | :------ | :---------- | :------------------------------------------------------- |
+| `maxLineLength` | `number` | `120`   | `20`–`1000` | Threshold above which a single-line call must be broken. |
 
 The rule has no indentation options. It decides _where_ the call is broken and
 emits bare newlines; [continuation-indent](#continuation-indent) owns the
@@ -1643,9 +1650,9 @@ SET vDay = 1;
 
 ### Options
 
-| Option | Type     | Default | Description                              |
-| :----- | :------- | :------ | :--------------------------------------- |
-| `max`  | `number` | `1`     | Maximum allowed consecutive empty lines. |
+| Option | Type     | Default | Range    | Description                              |
+| :----- | :------- | :------ | :------- | :--------------------------------------- |
+| `max`  | `number` | `1`     | `0`–`10` | Maximum allowed consecutive empty lines. |
 
 Example configuration:
 

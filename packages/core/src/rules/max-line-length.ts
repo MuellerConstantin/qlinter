@@ -8,6 +8,7 @@ export const maxLineLength: Rule<MaxLineLengthOptions, 'max-line-length'> = {
   id: 'max-line-length',
   defaultSeverity: 'warning',
   defaultOptions: { max: 120 },
+  options: { max: { type: 'number', min: 20, max: 1000 } },
   check: ({ source }, { max }) => {
     const out: Finding[] = [];
     const lines = source.split(/\r?\n/);

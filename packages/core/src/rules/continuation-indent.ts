@@ -1,6 +1,6 @@
 import type { IToken } from 'chevrotain';
 import type { Rule, Finding, RuleContext } from '../types.js';
-import { groupByLine, previousLineClosesStatement, type IndentStyle } from './block-indent.js';
+import { groupByLine, previousLineClosesStatement, INDENT_OPTIONS_SCHEMA, type IndentStyle } from './block-indent.js';
 import { collectLoadAnchors, firstTokenByLine, hasExpectedIndent, makeIndentFinding } from './load-indent.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
@@ -11,51 +11,6 @@ export interface ContinuationIndentOptions {
   style: IndentStyle;
 }
 
-/*
- * Owns the indentation of *continuation* lines — the lines left over once
- * `block-indent` has taken every statement start and `load-indent` every
- * header, field and clause line of a `Load`. Those are the lines inside a
- * wrapped expression: a broken `&`-chain, a multi-line `Where` condition, the
- * arguments of a call spread over several lines.
- *
- * A torn-apart `Load` header is explicitly *not* one of them. `Left Join(X)`
- * on one line and its `Load` on the next is a statement head split in two, not
- * a wrapped expression; hanging the `Load` one level in would put it at the
- * same column as the fields it introduces and flatten the very hierarchy
- * `load-indent` exists to draw. Those lines are anchors, owned by `load-indent`
- * at `base`.
- *
- * The expected indent hangs off the nearest preceding *anchor* — the statement
- * start or field/clause line the continuation belongs to — plus one level per
- * open parenthesis, so nesting is reflected instead of flattened:
- *
- *   Let vX = If(Status = 'A',      <- anchor, base 0
- *       If(Region = 'North',       <- depth 1
- *           1,                     <- depth 2
- *           2),
- *       0);
- *
- * A continuation that is not inside parentheses at all still gets one level,
- * which is what makes a broken `Where` condition or `&`-chain hang:
- *
- *   Where Quantity > 0             <- anchor (load-indent)
- *       And Status = 'open';       <- depth 0, still one level in
- *
- * A line that *starts* with a closing parenthesis is dedented by one level, so
- * the closer lands back under its anchor. This is also what keeps the rule in
- * agreement with `multiline-call`, which emits exactly that shape when it
- * breaks an over-long call apart.
- *
- * The anchor's *actual* indent is used, not its expected one — the same choice
- * `load-indent` makes for its `base`. When the anchor is itself misindented,
- * its owning rule fixes it and the autofix loop re-derives the continuations on
- * the next pass.
- *
- * Scope note: the check keys off the first *code* token of each line, so lines
- * carrying no token of their own — the interior of a block comment, a
- * multi-line string, or an `Inline [...]` data block (all single tokens) — are
- * never inspected, matching `block-indent` and `load-indent`.
- */
 /*
  * False when the first token of a line is preceded by anything other than
  * whitespace — which happens when a token that started on an earlier line ends
@@ -73,6 +28,7 @@ export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-i
   id: 'continuation-indent',
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
+  options: INDENT_OPTIONS_SCHEMA,
   check: ({ source, tokens, firstOnLine }: RuleContext, { size, style }): Finding[] => {
     const indentChar = style === 'tab' ? '\t' : ' ';
     const step = style === 'tab' ? 1 : size;

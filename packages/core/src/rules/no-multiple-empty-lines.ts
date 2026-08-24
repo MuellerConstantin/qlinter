@@ -32,6 +32,7 @@ export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multipl
   id: 'no-multiple-empty-lines',
   defaultSeverity: 'warning',
   defaultOptions: { max: 1 },
+  options: { max: { type: 'number', min: 0, max: 10 } },
   check: ({ source }, { max }) => {
     const out: Finding[] = [];
     const lines = splitLines(source);

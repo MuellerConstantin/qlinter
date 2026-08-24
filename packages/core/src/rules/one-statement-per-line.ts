@@ -3,7 +3,13 @@ import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 import { detectLineEnding } from './utils/lines.js';
 
-export type LineEnding = 'auto' | 'lf' | 'crlf';
+/**
+ * Line endings a fix may insert. The array is the source; {@link LineEnding} is
+ * derived from it.
+ */
+export const LINE_ENDINGS = ['auto', 'lf', 'crlf'] as const;
+
+export type LineEnding = (typeof LINE_ENDINGS)[number];
 
 export interface OneStatementPerLineOptions {
   lineEnding: LineEnding;
@@ -25,6 +31,7 @@ export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statemen
   id: 'one-statement-per-line',
   defaultSeverity: 'warning',
   defaultOptions: { lineEnding: 'auto' },
+  options: { lineEnding: { type: 'enum', values: LINE_ENDINGS } },
   check: ({ source, tokens }, { lineEnding }) => {
     const newline = resolveLineEnding(lineEnding, source);
     const out: Finding[] = [];

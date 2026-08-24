@@ -1,5 +1,7 @@
-import { registry, presetNames } from './rules/index.js';
-import type { LintConfig } from './rules/index.js';
+import { registry, presetNames } from '../rules/index.js';
+import type { LintConfig } from '../rules/index.js';
+import type { AnyRule } from '../types.js';
+import { validateOptions } from './options.js';
 
 const VALID_SEVERITIES = new Set(['error', 'warning', 'info', 'off']);
 const VALID_PRESETS = new Set<string>(presetNames);
@@ -9,10 +11,10 @@ const ALLOWED_KEYS = new Set(['presets', 'rules']);
  * Validates an untrusted, JSON-parsed value against the {@link LintConfig} shape
  * and returns it typed.
  *
- * Ensures the value is an object whose only key is `rules`, that every rule id is
- * known to the built-in registry, and that each entry is a valid severity or a
- * `[severity, options]` tuple. Intended for host integrations (the CLI `--config`
- * flag, the browser settings page) that load configuration from disk or storage.
+ * Ensures the value is an object whose only keys are `presets` and `rules`, that
+ * every rule id is known to the built-in registry, that each entry is a valid
+ * severity or a `[severity, options]` tuple, and that any options satisfy the
+ * schema the rule declares.
  *
  * @param value - The parsed JSON value to validate.
  * @param sourceLabel - Optional label (e.g. a file path) interpolated into error
@@ -47,10 +49,13 @@ export function validateConfig(value: unknown, sourceLabel?: string): LintConfig
   }
 
   for (const [ruleId, entry] of Object.entries(value.rules)) {
-    if (!registry.has(ruleId)) {
+    const rule = registry.get(ruleId);
+
+    if (!rule) {
       throw new Error(`Config${where} references unknown rule "${ruleId}".`);
     }
-    validateRuleEntry(ruleId, entry, where);
+
+    validateRuleEntry(rule, entry, where);
   }
 
   return value as LintConfig;
@@ -70,21 +75,22 @@ function validatePresets(value: unknown, where: string): void {
   }
 }
 
-function validateRuleEntry(ruleId: string, entry: unknown, where: string): void {
+function validateRuleEntry(rule: AnyRule, entry: unknown, where: string): void {
   if (typeof entry === 'string') {
-    assertSeverity(entry, ruleId, where);
+    assertSeverity(entry, rule.id, where);
     return;
   }
 
   if (Array.isArray(entry)) {
     if (entry.length < 1 || entry.length > 2) {
-      throw new Error(`Rule "${ruleId}"${where} must be [severity] or [severity, options].`);
+      throw new Error(`Rule "${rule.id}"${where} must be [severity] or [severity, options].`);
     }
-    assertSeverity(entry[0], ruleId, where);
+    assertSeverity(entry[0], rule.id, where);
+    validateOptions(rule, entry[1], where);
     return;
   }
 
-  throw new Error(`Rule "${ruleId}"${where} must be a severity string or an array.`);
+  throw new Error(`Rule "${rule.id}"${where} must be a severity string or an array.`);
 }
 
 function assertSeverity(value: unknown, ruleId: string, where: string): void {

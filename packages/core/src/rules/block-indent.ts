@@ -1,13 +1,29 @@
 import type { IToken } from 'chevrotain';
 import { keywordToken } from '../lexer.js';
-import type { Rule, Finding } from '../types.js';
+import type { Rule, Finding, OptionsSchemaOf } from '../types.js';
 
-export type IndentStyle = 'space' | 'tab';
+/**
+ * Indent characters shared by the three indent rules. The array is the source;
+ * {@link IndentStyle} is derived from it so the values survive into the bundle.
+ */
+export const INDENT_STYLES = ['space', 'tab'] as const;
+
+export type IndentStyle = (typeof INDENT_STYLES)[number];
 
 export interface BlockIndentOptions {
   size: number;
   style: IndentStyle;
 }
+
+/**
+ * Shared option schema for the three indent rules. The upper bound on `size` is
+ * a sanity limit, not a style statement — anything past it is a typo, and an
+ * options UI needs a range to render a bounded control.
+ */
+export const INDENT_OPTIONS_SCHEMA = {
+  size: { type: 'number', min: 1, max: 8 },
+  style: { type: 'enum', values: INDENT_STYLES },
+} as const satisfies OptionsSchemaOf<BlockIndentOptions>;
 
 /*
  * Tokens whose presence on the previous line forces the next line to be
@@ -130,6 +146,7 @@ export const blockIndent: Rule<BlockIndentOptions, 'block-indent'> = {
   id: 'block-indent',
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
+  options: INDENT_OPTIONS_SCHEMA,
   check: ({ source, tokens }, { size, style }) => {
     const out: Finding[] = [];
     const lines = groupByLine(tokens);

@@ -1,11 +1,14 @@
 export { lint, format } from './runner.js';
-export { validateConfig } from './config.js';
+export { validateConfig } from './config/index.js';
 export { resolveConfig } from './rules/index.js';
 export type {
   Diagnostic,
   Rule,
+  AnyRule,
   Severity,
   Fix,
+  OptionSchema,
+  OptionsSchemaOf,
   RulesConfigOf,
   RuleConfigEntry,
   SeverityOrOff,
@@ -16,6 +19,10 @@ export {
   allRules,
   recommended,
   presetNames,
+  CASE_STYLES,
+  INDENT_STYLES,
+  LINE_ENDINGS,
+  VARIABLE_CASE_STYLES,
   tableLabelBrackets,
   blockIndent,
   builtinFunctionCase,

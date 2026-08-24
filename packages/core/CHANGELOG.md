@@ -25,9 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already uses, so a CRLF script never comes back with mixed terminators.
 - `validateConfig(value, sourceLabel?)` API that validates an arbitrary
   JSON-parsed value against the `LintConfig` shape and returns it typed, throwing
-  readable errors for unknown rule ids, invalid severities, and malformed rule
-  entries. The optional `sourceLabel` is interpolated into error messages so host
-  integrations (CLI, browser, IDE) can point users at the offending source.
+  readable errors for unknown rule ids, invalid severities, malformed rule
+  entries, and rule options that violate the schema their rule declares — an
+  unknown option key, an enum value outside the declared set, or a number outside
+  its `min`/`max`. The optional `sourceLabel` is interpolated into error messages
+  so host integrations (CLI, browser, IDE) can point users at the offending
+  source.
 - Initial rule set covering layout (`block-indent`, `load-indent`,
   `continuation-indent`, `load-clause-newline`, `load-field-per-line`, `multiline-call`,
   `one-statement-per-line`, `max-line-length`, `no-multiple-empty-lines`,
@@ -55,10 +58,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   severity from the user config (if set) or from `rule.defaultSeverity`. Host
   integrations can read this field to surface the recommended severity next to
   per-rule controls.
+- `Rule.options` field describing each option of a rule as a machine-readable
+  `OptionSchema` — `{ type: 'number', min?, max? }` or
+  `{ type: 'enum', values }`. It is required by the type for any rule that has
+  options, so the description cannot fall out of step with the rule. Config
+  validation and host settings UIs both read it instead of keeping their own copy
+  of every rule's option shape. The allowed values of an enum option are exported
+  as `as const` arrays (`CASE_STYLES`, `INDENT_STYLES`, `LINE_ENDINGS`,
+  `VARIABLE_CASE_STYLES`) from which the corresponding union types are derived,
+  so they remain readable at runtime rather than being erased with the types.
 - Inline disable directives (`// qlinter-disable`, `// qlinter-disable-next-line`,
   `// qlinter-disable-line`) for opting individual lines or blocks out of
   linting.
-- Public TypeScript types: `Diagnostic`, `Rule`, `Severity`, `Fix`,
-  `LintConfig`, `RulesConfig`, `RuleId`, `PresetName`, `RulesConfigOf`,
-  `RuleConfigEntry`, `SeverityOrOff`, `FormatResult`, and per-rule option types.
-
+- Public TypeScript types: `Diagnostic`, `Rule`, `AnyRule`, `Severity`, `Fix`,
+  `OptionSchema`, `OptionsSchemaOf`, `LintConfig`, `RulesConfig`, `RuleId`,
+  `PresetName`, `RulesConfigOf`, `RuleConfigEntry`, `SeverityOrOff`,
+  `FormatResult`, and per-rule option types.

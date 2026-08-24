@@ -1,12 +1,7 @@
 import { lint, format } from '../src/index.js';
-import type { Diagnostic, FormatResult, LintConfig, RuleConfigEntry, Rule } from '../src/index.js';
+import type { AnyRule, Diagnostic, FormatResult, LintConfig, RuleConfigEntry } from '../src/index.js';
 
-/*
- * Rule is invariant in O, so the test helpers accept any
- * rule regardless of its option type.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyRule = Rule<any, string>;
+export type { AnyRule };
 
 function entry(rule: AnyRule, options?: object): RuleConfigEntry {
   return options === undefined ? rule.defaultSeverity : [rule.defaultSeverity, options];

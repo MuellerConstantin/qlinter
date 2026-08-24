@@ -106,6 +106,7 @@ A new or modified rule must **never** edit these files:
 - `packages/core/src/runner.ts` — `lint`, `format`, `applyFixes`, `runFormatLoop`.
 - `packages/core/src/token.ts` — `tokenRange`, `tokenFix`.
 - `packages/core/src/disableDirectives.ts` — disable wiring is automatic; rules need no participation.
+- `packages/core/src/config/` — `validateConfig` and `validateOptions`. A rule describes its options through its own `options` schema; the validator reads that schema and needs no per-rule knowledge.
 
 `packages/core/src/rules/index.ts` holds the rule **registry**, the `LintConfig` /
 `RulesConfig` / `RuleId` types, and the preset machinery (`recommended`, `PresetName`,
@@ -123,12 +124,14 @@ these files without explicit approval.
 The contract from [types.ts](../../../packages/core/src/types.ts):
 
 ```ts
-interface Rule<O = undefined, Id extends string = string> {
+type Rule<O = undefined, Id extends string = string> = {
   id: Id;
   defaultSeverity: Severity;
   defaultOptions?: O;
   check(ctx: RuleContext, options: O): Finding[];
-}
+} & ([O] extends [undefined] ? { options?: never } : { options: OptionsSchemaOf<O> });
+
+type OptionSchema = { type: 'number'; min?: number; max?: number } | { type: 'enum'; values: readonly string[] };
 
 interface RuleContext {
   source: string;
@@ -143,6 +146,27 @@ type Finding = Omit<Diagnostic, 'ruleId' | 'severity'>; // range, message, fix?
 Severity is declared once on the rule via `defaultSeverity` — the runner attaches it
 to every finding the rule emits (or overrides it from the user config). Findings
 themselves only carry location, message, and optional fix.
+
+A rule **with** options must also declare `options`, a per-key `OptionSchema` that
+`validateConfig` validates against and that host settings UIs (the Chrome extension's
+options page) render controls from. It is required by the type, so a rule with
+options cannot compile without it. A rule **without** options must leave it off.
+
+Enum values live in a `as const` array, and the union type is derived from it — never
+the other way round. Types are erased at runtime, so a hand-written union alone leaves
+the validator and the UI with no values to check or render:
+
+```ts
+export const MY_RULE_STYLES = ['a', 'b'] as const;
+export type MyRuleStyle = (typeof MY_RULE_STYLES)[number];
+```
+
+If an option needs a type `OptionSchema` has no variant for — a boolean, a nested
+object — the rule will not compile, and the error names the unsupported type. That is
+deliberate: extending the union means also extending its exhaustive consumers
+(`validateOptions` in `src/config/options.ts` and the extension's options renderer),
+and both fail to compile until you do. Prefer validating an exotic shape inside the
+rule's own `check` over widening the union.
 
 Helpers in [token.ts](../../../packages/core/src/token.ts):
 
@@ -180,7 +204,9 @@ import { keywordToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 
-export type MyRuleStyle = 'a' | 'b';
+export const MY_RULE_STYLES = ['a', 'b'] as const;
+
+export type MyRuleStyle = (typeof MY_RULE_STYLES)[number];
 
 export interface MyRuleOptions {
   style: MyRuleStyle;
@@ -190,6 +216,7 @@ export const myRule: Rule<MyRuleOptions, 'my-rule'> = {
   id: 'my-rule',
   defaultSeverity: 'warning',
   defaultOptions: { style: 'a' },
+  options: { style: { type: 'enum', values: MY_RULE_STYLES } },
   check: ({ tokens }, { style }) => {
     const out: Finding[] = [];
 
@@ -242,10 +269,14 @@ Four edits, alphabetical placement, in this order:
    ```ts
    import { myRule } from './my-rule.js';
    ```
-2. **Options type re-export** (only if the rule has options):
+2. **Options re-export** (only if the rule has options) — the types, plus the `as const`
+   value array so hosts can enumerate the allowed values at runtime:
    ```ts
+   export { MY_RULE_STYLES } from './my-rule.js';
    export type { MyRuleOptions, MyRuleStyle } from './my-rule.js';
    ```
+   Re-export both from `src/index.ts` as well; a value array that never reaches the
+   public entry point cannot be read by the CLI or either extension.
 3. **Add to the `allRules` array** (always — every existing rule is in this list). The
    registry and the `recommended` config both derive from `allRules`, so this single
    edit enables the rule everywhere.
@@ -335,11 +366,13 @@ For every new or modified rule, write or update its section using this template:
 - **Autofix:** yes | no
 - **Options:**
 
-  | Field   | Type         | Default | Description |
-  | ------- | ------------ | ------- | ----------- |
-  | `style` | `'a' \| 'b'` | `'a'`   | ...         |
+  | Field   | Type         | Default | Range | Description |
+  | ------- | ------------ | ------- | ----- | ----------- |
+  | `style` | `'a' \| 'b'` | `'a'`   | —     | ...         |
 
-  _(Omit the Options block entirely if the rule has no options.)_
+  _(Omit the Options block entirely if the rule has no options. The Range column
+  carries the `min`–`max` of a number option and `—` for anything else; it is the
+  documented face of what `validateConfig` enforces, so keep the two in step.)_
 
 **Violates:**
 

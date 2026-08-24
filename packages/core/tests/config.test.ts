@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateConfig } from '../src/config.js';
+import { validateConfig } from '../src/config/index.js';
 
 describe('validateConfig', () => {
   it('returns empty config when "rules" is missing', () => {

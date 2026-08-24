@@ -46,12 +46,45 @@ export interface RuleContext {
   comments: IToken[];
 }
 
-export interface Rule<O = undefined, Id extends string = string> {
+/**
+ * Runtime description of a single rule option, so a host can validate and render
+ * it without knowing the rule. Deliberately limited to the two shapes the
+ * built-in rules need: a rule wanting something else validates it in its own
+ * `check` rather than growing this union speculatively.
+ */
+export type OptionSchema = { type: 'number'; min?: number; max?: number } | { type: 'enum'; values: readonly string[] };
+
+/**
+ * The per-key schema for a rule's options type `O`. Being a mapped type, a
+ * missing, misspelled, or wrongly-typed key is a compile error.
+ *
+ * An option whose type has no {@link OptionSchema} counterpart resolves to a
+ * marker no literal can satisfy. Adding e.g. a boolean option therefore fails to
+ * compile naming the unsupported type, and stays failing until `OptionSchema`
+ * and its exhaustive consumers — `validateOptions` in `config/options.ts` and
+ * the Chrome extension's options renderer — have been extended too.
+ */
+export type OptionsSchemaOf<O> = {
+  [K in keyof O]-?: [O[K]] extends [number]
+    ? { type: 'number'; min?: number; max?: number }
+    : [O[K]] extends [string]
+      ? { type: 'enum'; values: readonly O[K][] }
+      : { __unsupported: ['no OptionSchema variant for', O[K]] };
+};
+
+interface RuleBase<O, Id extends string> {
   id: Id;
   defaultSeverity: Severity;
   defaultOptions?: O;
   check(ctx: RuleContext, options: O): Finding[];
 }
+
+/**
+ * A lint rule. A rule with options must describe them under `options` so hosts
+ * can validate and render them; a rule without options must leave it out.
+ */
+export type Rule<O = undefined, Id extends string = string> = RuleBase<O, Id> &
+  ([O] extends [undefined] ? { options?: never } : { options: OptionsSchemaOf<O> });
 
 /** A {@link Severity}, or `'off'` to disable a rule in a config entry. */
 export type SeverityOrOff = Severity | 'off';
@@ -66,14 +99,25 @@ export type RuleConfigEntry<O = unknown> = [O] extends [undefined]
   : SeverityOrOff | [SeverityOrOff] | [SeverityOrOff, Partial<O>];
 
 /*
- * Rule is invariant in O, so heterogeneous rule tuples can
- * only share a common element type via `any`.
+ * Rule is invariant in O, so heterogeneous rule tuples can only share a common
+ * element type via `any`. Spelled out rather than written as `Rule<any, string>`:
+ * the conditional in `Rule` distributes over `any` and produces a union that
+ * includes the `{ options?: never }` branch, which no rule with options fits.
+ * `options` is widened to a plain record here so consumers iterating a rule from
+ * the registry get `OptionSchema` back instead of `unknown`.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyRule = Rule<any, string>;
+export type AnyRule = RuleBase<any, string> & { options?: Readonly<Record<string, OptionSchema>> };
+
+/*
+ * Options are inferred from `check` rather than from `Rule<infer O, string>`,
+ * because inference through the intersection that `Rule` now is would depend on
+ * which member TypeScript picks.
+ */
+type OptionsOfRule<R> = R extends { check(ctx: RuleContext, options: infer O): Finding[] } ? O : never;
 
 export type RulesConfigOf<R extends readonly AnyRule[]> = {
-  [I in R[number]['id']]?: RuleConfigEntry<Extract<R[number], { id: I }> extends Rule<infer O, string> ? O : never>;
+  [I in R[number]['id']]?: RuleConfigEntry<OptionsOfRule<Extract<R[number], { id: I }>>>;
 };
 
 /**

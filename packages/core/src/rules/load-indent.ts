@@ -1,7 +1,7 @@
 import type { IToken } from 'chevrotain';
 import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
-import { groupByLine, previousLineClosesStatement, type IndentStyle } from './block-indent.js';
+import { groupByLine, previousLineClosesStatement, INDENT_OPTIONS_SCHEMA, type IndentStyle } from './block-indent.js';
 import { findFieldListBoundaries, findLoadIndex, isClauseStarter, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
@@ -265,6 +265,7 @@ export const loadIndent: Rule<LoadIndentOptions, 'load-indent'> = {
   id: 'load-indent',
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
+  options: INDENT_OPTIONS_SCHEMA,
   check: ({ source, tokens, firstOnLine }: RuleContext, { size, style }): Finding[] => {
     const indentChar = style === 'tab' ? '\t' : ' ';
     const step = style === 'tab' ? 1 : size;
