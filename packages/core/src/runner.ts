@@ -1,5 +1,5 @@
 import type { IToken } from 'chevrotain';
-import { collectDisabledLines, isDisabled } from './disableDirectives.js';
+import { collectDisabledLines, isDisabled } from './disable-directives.js';
 import { COMMENT_GROUP, lexer } from './lexer.js';
 import { registry, resolveConfig } from './rules/index.js';
 import type { LintConfig } from './rules/index.js';
