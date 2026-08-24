@@ -112,9 +112,11 @@ Where Active = 1
 Group By Region
 Order By Total desc;
 
-// 13. Inline with Wildcard field list (`Load * Inline [...]`).
+// 13. Inline with a wildcard field list. The `*` takes its own line like any
+//     field; this rule only cares that `Inline` starts one.
 [Inline2]:
-Load *
+Load
+	*
 Inline [
 	a, b
 	1, 2

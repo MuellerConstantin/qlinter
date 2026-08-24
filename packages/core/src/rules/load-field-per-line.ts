@@ -3,7 +3,7 @@ import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
-import { findFieldListBoundaries, findLoadIndex, isLoneWildcard, splitStatements } from './utils/statements.js';
+import { findFieldListBoundaries, findLoadIndex, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
 function makeFinding(prev: IToken, t: IToken, comments: IToken[]): Finding {
@@ -31,14 +31,11 @@ function checkStatement(tokens: IToken[], comments: IToken[]): Finding[] {
   }
 
   const out: Finding[] = [];
+  const header = tokens[start - 1];
+  const firstField = tokens[start];
 
-  if (!isLoneWildcard(tokens, start, end)) {
-    const header = tokens[start - 1];
-    const firstField = tokens[start];
-
-    if ((header.startLine ?? 1) === (firstField.startLine ?? 1)) {
-      out.push(makeFinding(header, firstField, comments));
-    }
+  if ((header.startLine ?? 1) === (firstField.startLine ?? 1)) {
+    out.push(makeFinding(header, firstField, comments));
   }
 
   let depth = 0;

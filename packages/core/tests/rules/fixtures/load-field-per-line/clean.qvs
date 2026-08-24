@@ -16,13 +16,17 @@ Load
 	OnlyField
 From [lib://x.qvd] (qvd);
 
-// 3. Wildcard LOAD — `*` is allowed on the header line.
+// 3. Wildcard LOAD — `*` is a field and takes its own line like any other.
 [Wildcard]:
-Load * From [lib://x.qvd] (qvd);
+Load
+	*
+From [lib://x.qvd] (qvd);
 
-// 4. Wildcard + Inline — same exception applies.
+// 4. Wildcard + Inline — same, the clause type makes no difference.
 [Inline2]:
-Load * Inline [
+Load
+	*
+Inline [
 	a, b
 	1, 2
 ];

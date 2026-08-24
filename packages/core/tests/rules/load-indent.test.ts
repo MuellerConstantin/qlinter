@@ -56,12 +56,18 @@ describe('load-indent', () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it('leaves a lone wildcard on its own line untouched', () => {
+  /*
+   * The wildcard is indented like any other field. While it was exempt here,
+   * nothing owned its line and `continuation-indent` claimed it — the two rules
+   * happened to agree on one step, so the gap stayed invisible.
+   */
+  it('indents a lone wildcard like a field', () => {
     const source = ['[A]:', 'Load', '*', 'From X;'].join('\n');
 
-    const diagnostics = lintRule(source, loadIndent);
+    const result = formatRule(source, loadIndent);
 
-    expect(diagnostics).toEqual([]);
+    expect(result.output).toBe(['[A]:', 'Load', '    *', 'From X;'].join('\n'));
+    expect(result.diagnostics).toEqual([]);
   });
 
   it('inherits the enclosing indent when the LOAD sits inside a Sub', () => {

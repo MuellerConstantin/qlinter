@@ -989,11 +989,13 @@ The rule enforces two things per LOAD:
 - After every top-level comma inside the field list, the next token starts a
   new line.
 
-A single exception covers the wildcard placeholder: `Load * From X` and
-`Load * Inline [...]` keep `*` on the LOAD header line — it is a placeholder,
-not a real field. As soon as a real field accompanies the wildcard
-(`Load *, Field1, ...`), `*` is treated like any other field and must take
-its own line.
+The wildcard `*` is a field like any other and takes its own line, whether it
+stands alone (`Load * From X`, `Load * Inline [...]`) or shares the list with
+real fields (`Load *, Field1, ...`). It used to be exempt when it made up the
+whole field list; that left `Load *` and `Load Id` — structurally the same
+statement — formatted two different ways, and left the `*` line unclaimed by
+this rule for [continuation-indent](#continuation-indent) to pick up by
+default.
 
 The autofix replaces the whitespace between the previous token and the
 offending field with a single `\n`, preserving any comment in the gap. The
@@ -1039,9 +1041,11 @@ Where Year >= 2020
 Group By OrderId
 Order By OrderId;
 
-// Wildcard placeholder stays on the Load header line.
+// The wildcard takes its own line like any other field.
 [Wildcard]:
-Load * From [lib://x.qvd] (qvd);
+Load
+    *
+From [lib://x.qvd] (qvd);
 
 // Multi-line field expressions are fine — only field starts are checked.
 [LongExpr]:
@@ -1132,9 +1136,9 @@ The rule is deliberately narrow:
 - It says nothing about _where the header breaks_. `Left Join(X) Load Distinct`
   on one line and the same header spread over three lines are both accepted;
   the rule only fixes the horizontal position of whatever lines exist.
-- The wildcard placeholder exception from
-  [load-field-per-line](#load-field-per-line) carries over: a lone `*` is
-  never treated as a field, even when it sits on its own line.
+- A `*` field list is indented like any other, matching
+  [load-field-per-line](#load-field-per-line), which breaks it onto its own
+  line in the first place.
 
 Like [block-indent](#block-indent), a header-, field- or clause-start line is
 compared against the exact expected indent string, not just its width: a

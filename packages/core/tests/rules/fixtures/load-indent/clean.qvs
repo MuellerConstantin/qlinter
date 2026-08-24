@@ -26,14 +26,18 @@ Load
     Other
 From [lib://x.qvd] (qvd);
 
-// 3. Lone wildcard on the LOAD header — not a field, not checked.
+// 3. Lone wildcard — a field like any other, so base + one step.
 [Wildcard]:
-Load * From [lib://x.qvd] (qvd);
+Load
+    *
+From [lib://x.qvd] (qvd);
 
 // 4. Wildcard + Inline, multi-line bracket data block — interior is one
 //    bracket token, not separate token lines, so nothing to indent-check.
 [Inline2]:
-Load * Inline [
+Load
+    *
+Inline [
     a, b
     1, 2
 ];

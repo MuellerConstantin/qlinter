@@ -1,6 +1,6 @@
 import type { IToken } from 'chevrotain';
 import { keywordToken, semicolonToken } from '../../lexer.js';
-import { isCloseParen, isKeyword, isOpenParen, isWildcard } from './tokens.js';
+import { isCloseParen, isKeyword, isOpenParen } from './tokens.js';
 
 /*
  * Keywords that close a LOAD field list and open the clause list. Each one must
@@ -134,43 +134,4 @@ export function findFieldListBoundaries(tokens: IToken[], loadIdx: number): { st
   }
 
   return { start, end };
-}
-
-/*
- * `Load * From X` and `Load * Inline [...]` use `*` as a wildcard
- * placeholder for the field list. It is not a field that benefits from
- * its own line, so leave it on the LOAD header line. As soon as a real
- * field shows up (`Load *, Field1, ...`) the wildcard is treated like any
- * other field and must take its own line.
- */
-export function isLoneWildcard(tokens: IToken[], start: number, end: number): boolean {
-  let depth = 0;
-  let topLevelCount = 0;
-  let wildcardSeen = false;
-
-  for (let i = start; i < end; i++) {
-    const t = tokens[i];
-
-    if (isOpenParen(t)) {
-      depth++;
-      continue;
-    }
-
-    if (isCloseParen(t)) {
-      depth--;
-      continue;
-    }
-
-    if (depth !== 0) {
-      continue;
-    }
-
-    topLevelCount++;
-
-    if (isWildcard(t)) {
-      wildcardSeen = true;
-    }
-  }
-
-  return wildcardSeen && topLevelCount === 1;
 }

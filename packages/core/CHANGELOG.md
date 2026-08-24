@@ -55,6 +55,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `LintConfig`, `RulesConfig`, `RuleId`, `PresetName`, `RulesConfigOf`,
   `RuleConfigEntry`, `SeverityOrOff`, `FormatResult`, and per-rule option types.
 
+### Changed
+
+- The `*` of a `Load` is now treated as a field in every position, so
+  `load-field-per-line` breaks it onto its own line and `load-indent` indents
+  it one step. It was previously exempt when it made up the whole field list,
+  which meant `Load * From X` and `Load Id From X` — structurally the same
+  statement — came out formatted two different ways, and left the `*` line
+  owned by no rule, so `continuation-indent` claimed it by default. Scripts
+  using `Load *` gain one line per statement when reformatted.
+
 ### Fixed
 
 - `$(Include=…)` / `$(Must_Include=…)` is no longer broken by `operator-spacing`.

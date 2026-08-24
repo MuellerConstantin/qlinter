@@ -57,7 +57,7 @@ describe('lib:// path tokenization', () => {
 
 describe('formatting an unbracketed lib:// path', () => {
   it('leaves the path untouched', () => {
-    const source = 'Load *\nFrom lib://DataFiles/abc.qvd (qvd);\n';
+    const source = 'Load\n    *\nFrom lib://DataFiles/abc.qvd (qvd);\n';
 
     const result = format(source, recommended);
 

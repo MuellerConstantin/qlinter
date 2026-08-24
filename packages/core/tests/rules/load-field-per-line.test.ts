@@ -79,12 +79,27 @@ describe('load-field-per-line', () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it('leaves a lone wildcard on the Load header line', () => {
+  /*
+   * The wildcard is a field like any other. It used to be exempt when it was
+   * the whole field list, which left `Load *` and `Load Id` — the same shape —
+   * formatted two different ways, and left the `*` line unowned by this rule
+   * for `continuation-indent` to pick up.
+   */
+  it('breaks a lone wildcard onto its own line', () => {
     const source = '[A]: Load * From X;';
 
     const diagnostics = lintRule(source, loadFieldPerLine);
 
-    expect(diagnostics).toEqual([]);
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].message).toContain('own line');
+  });
+
+  it('breaks a lone wildcard off a Distinct header too', () => {
+    const source = '[A]: Load Distinct * From X;';
+
+    const diagnostics = lintRule(source, loadFieldPerLine);
+
+    expect(diagnostics).toHaveLength(1);
   });
 
   it('treats a wildcard combined with real fields as a regular field', () => {

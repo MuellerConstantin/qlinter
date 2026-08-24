@@ -2,13 +2,7 @@ import type { IToken } from 'chevrotain';
 import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { groupByLine, previousLineClosesStatement, type IndentStyle } from './block-indent.js';
-import {
-  findFieldListBoundaries,
-  findLoadIndex,
-  isClauseStarter,
-  isLoneWildcard,
-  splitStatements,
-} from './utils/statements.js';
+import { findFieldListBoundaries, findLoadIndex, isClauseStarter, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
 export type { IndentStyle } from './block-indent.js';
@@ -23,11 +17,7 @@ function collectFieldStarts(tokens: IToken[], start: number, end: number): IToke
     return [];
   }
 
-  const out: IToken[] = [];
-
-  if (!isLoneWildcard(tokens, start, end)) {
-    out.push(tokens[start]);
-  }
+  const out: IToken[] = [tokens[start]];
 
   let depth = 0;
 

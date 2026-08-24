@@ -6,10 +6,6 @@ export function isKeyword(token: IToken, image: string): boolean {
   return token.tokenType === keywordToken && token.image.toLowerCase() === image;
 }
 
-export function isWildcard(token: IToken): boolean {
-  return token.tokenType === punctuationToken && token.image === '*';
-}
-
 export function isOpenParen(token: IToken): boolean {
   return token.tokenType === punctuationToken && token.image === '(';
 }
