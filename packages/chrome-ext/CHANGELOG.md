@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0]
+
+### Added
+
+- `comma-style` rule, which requires a comma to close the line of the operand it
+  follows rather than open the next one. Comes from the bundled Core engine, so a
+  configuration on the `recommended` preset picks it up without any change.
+- Per-rule option controls on the settings page. Every rule that takes options
+  now renders one control per option beneath its severity — a dropdown for an
+  enum option, a number input carrying the option's own `min`/`max` and showing
+  the rule's default as its placeholder. The controls are built from the option
+  schemas the bundled Core engine ships, so what the page offers cannot drift
+  from what the linter accepts. Setting an option no longer pins a severity on
+  the rule: the entry is written as `"block-indent": [null, { "size": 2 }]`, and
+  the rule keeps following whatever a preset or its own default gives it. An edit
+  the configuration rejects never reaches storage — the error from Core is shown
+  as it stands and the offending control resets itself.
+
+### Changed
+
+- Rule options are validated against the schema of the rule they belong to. An
+  unknown option key, an enum value outside the declared set, or a number outside
+  its `min`/`max` is now an error where it used to pass unnoticed. A stored
+  configuration carrying one no longer loads at all: the extension falls back to
+  an empty configuration — which lints nothing — and logs the reason to the
+  console. A configuration hand-written against 0.1.x is worth opening the
+  settings page for once.
+- `comma-space` claims the space before a comma as well, which must now be empty
+  (`Load A ,B` → `Load A, B`). It previously owned only the side after it.
+- The `*` wildcard in a LOAD field list is a field like any other and takes its
+  own line. It used to stay on the LOAD header line when it made up the whole
+  field list, which formatted `Load *` and `Load Id` — structurally the same
+  statement — two different ways.
+- `Then` is cased by `builtin-keyword-case` along with every other keyword.
+
+### Fixed
+
+- A line break inserted by an autofix uses the line ending the script already
+  uses, so a CRLF script no longer comes back with mixed terminators.
+- A LOAD header torn across lines is no longer indented as a continuation of
+  itself.
+
 ## [0.1.1]
 
 ### Added
