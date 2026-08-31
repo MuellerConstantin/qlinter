@@ -862,7 +862,17 @@ export const libPathToken = createToken({
   line_breaks: false,
 });
 
-export const bracketToken = createToken({ name: 'Bracket', pattern: /\[[^\]]*\]/ });
+/*
+ * A bracketed name, and also the two constructs that borrow the delimiter: an
+ * Inline data block and a bracketed path.
+ *
+ * Brackets escape asymmetrically — only the closing one doubles, so `]]` is a
+ * literal `]` and a lone `]` ends the token. Without that the reference's own
+ * example shatters into two tokens and a pair of lex errors.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/May2025/Subsystems/Hub/Content/Sense_Hub/Scripting/use-quotes-in-script.htm | Using quotation marks in the script}
+ */
+export const bracketToken = createToken({ name: 'Bracket', pattern: /\[(?:[^\]]|\]\])*\]/ });
 export const quotedIdentifierToken = createToken({
   name: 'QuotedIdentifier',
   pattern: /"(?:[^"]|"")*"/,
@@ -870,8 +880,9 @@ export const quotedIdentifierToken = createToken({
 
 /*
  * The third delimiter Qlik accepts for a field or table name, alongside `"` and
- * `[`. Modelled on bracketToken: it runs to the next accent, because the
- * reference documents no escape for one inside a name.
+ * `[`. It runs to the next accent: the reference lists the grave accent among
+ * the quoting characters but not among the escaping ones, so a name delimited
+ * this way carries no escape at all.
  *
  * @see {@link https://help.qlik.com/en-US/cloud-services/Subsystems/Hub/Content/Sense_Hub/Scripting/use-quotes-in-script.htm | Using quotation marks in the script}
  */

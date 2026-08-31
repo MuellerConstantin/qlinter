@@ -7,8 +7,8 @@ import { isKeyword } from './utils/tokens.js';
 
 /*
  * The name a delimited identifier stands for. Inside double quotes a doubled
- * quote counts as one; the reference documents no such escape for an accent, so
- * that form is taken literally.
+ * quote counts as one; the reference lists the grave accent among the quoting
+ * characters but not among the escaping ones, so that form is taken literally.
  */
 function nameOf(token: IToken): string {
   const inner = token.image.slice(1, -1);
@@ -24,6 +24,14 @@ function nameOf(token: IToken): string {
  */
 function isQlikLoad(tokens: IToken[]): boolean {
   return findLoadIndex(tokens) !== -1 && findAtTopLevel(tokens, (token) => isKeyword(token, 'select')) === -1;
+}
+
+/*
+ * The name written as a bracketed one. Brackets escape asymmetrically: only the
+ * closing bracket doubles, so a name carrying `]` still has a bracketed form.
+ */
+function bracketedForm(name: string): string {
+  return `[${name.replaceAll(']', ']]')}]`;
 }
 
 export const loadIdentifierBrackets: Rule<undefined, 'load-identifier-brackets'> = {
@@ -46,15 +54,17 @@ export const loadIdentifierBrackets: Rule<undefined, 'load-identifier-brackets'>
 
         const name = nameOf(token);
 
-        /* A bracket runs to the first `]` and an empty one names nothing: neither name has a bracket form. */
-        if (name.length === 0 || name.includes(']')) {
+        /* An empty name has nothing to delimit, so there is no bracketed form to move it to. */
+        if (name.length === 0) {
           continue;
         }
 
+        const bracketed = bracketedForm(name);
+
         out.push({
           range: tokenRange(token),
-          message: `The identifier ${token.image} should be enclosed in brackets: '[${name}]'.`,
-          fix: tokenFix(token, `[${name}]`),
+          message: `The identifier ${token.image} should be enclosed in brackets: '${bracketed}'.`,
+          fix: tokenFix(token, bracketed),
         });
       }
     }

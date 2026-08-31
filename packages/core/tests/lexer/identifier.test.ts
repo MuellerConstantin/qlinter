@@ -169,6 +169,51 @@ describe('identifier tokenization', () => {
       expect(tokens).toHaveLength(1);
       expect(tokens[0].tokenType).toBe(bracketToken);
     });
+
+    /*
+     * Brackets escape asymmetrically — only the closing one doubles. While the
+     * pattern ran to the first `]`, the reference's own example split into two
+     * tokens and a pair of lex errors.
+     *
+     * @see https://help.qlik.com/en-US/sense/May2025/Subsystems/Hub/Content/Sense_Hub/Scripting/use-quotes-in-script.htm
+     */
+    it('handles ]] as the escape inside a bracket identifier', () => {
+      const { tokens, errors } = lexer.tokenize('[a]]b]');
+
+      expect(errors).toEqual([]);
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].tokenType).toBe(bracketToken);
+      expect(tokens[0].image).toBe('[a]]b]');
+    });
+
+    it('keeps the reference example for a bracketed name in one token', () => {
+      const source = '[Michael said [It' + "'" + 's a "beautiful day]].]';
+
+      const { tokens, errors } = lexer.tokenize(source);
+
+      expect(errors).toEqual([]);
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].image).toBe(source);
+    });
+
+    it('still ends a bracket identifier at a lone closing bracket', () => {
+      const { tokens } = lexer.tokenize('[a]b');
+
+      expect(tokens.map((token) => token.image)).toEqual(['[a]', 'b']);
+    });
+
+    it('does not let the escape leak into an Inline block ending normally', () => {
+      const { tokens, errors } = lexer.tokenize('Load * Inline [\nId\n1\n];');
+
+      expect(errors).toEqual([]);
+      expect(tokens.map((token) => token.tokenType.name)).toEqual([
+        'Keyword',
+        'Punctuation',
+        'Inline',
+        'Bracket',
+        'Semicolon',
+      ]);
+    });
   });
 
   describe('built-in function interaction with #', () => {

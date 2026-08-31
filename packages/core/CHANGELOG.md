@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tokenizer for Qlik load script built on Chevrotain, covering keywords, builtin
   functions, variables, comments, string literals, and the LOAD/SELECT statement
   surface. A delimited field or table name lexes as one token in all three forms
-  Qlik accepts — brackets, double quotation marks and grave accents. Constructs whose interior is not Qlik expression syntax lex as a
+  Qlik accepts — brackets, double quotation marks and grave accents — including
+  the escapes each form carries, which for brackets means the doubled closing
+  bracket alone. Constructs whose interior is not Qlik expression syntax lex as a
   single opaque token, so no rule can rewrite their insides: `$(Include=…)` /
   `$(Must_Include=…)`, whose `=` Qlik forbids a space around, and unbracketed
   `lib://` paths, whose `//` would otherwise read as a line comment.

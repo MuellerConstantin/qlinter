@@ -176,17 +176,40 @@ describe('load-identifier-brackets', () => {
     });
   });
 
-  describe('names that have no bracket form', () => {
-    it('says nothing about a name carrying a closing bracket', () => {
-      expect(lintRule('Load "Order]Id" Resident Src;\n', loadIdentifierBrackets)).toEqual([]);
+  /*
+   * Brackets escape asymmetrically: only the closing one doubles. A name
+   * carrying `]` therefore has a bracketed form after all, and the round trip
+   * holds because the lexer reads `]]` back as one literal bracket.
+   */
+  describe('names carrying a closing bracket', () => {
+    it('doubles the closing bracket of a quoted name', () => {
+      const result = formatRule('Load "Order]Id" Resident Src;\n', loadIdentifierBrackets);
+
+      expect(result.output).toBe('Load [Order]]Id] Resident Src;\n');
+      expect(result.diagnostics).toEqual([]);
+    });
+
+    it('doubles the closing bracket of a backtick name', () => {
+      const result = formatRule('Load `Order]Id` Resident Src;\n', loadIdentifierBrackets);
+
+      expect(result.output).toBe('Load [Order]]Id] Resident Src;\n');
+    });
+
+    it('doubles every closing bracket in the name', () => {
+      const result = formatRule('Load "a]b]c" Resident Src;\n', loadIdentifierBrackets);
+
+      expect(result.output).toBe('Load [a]]b]]c] Resident Src;\n');
+    });
+
+    it('leaves the escaped form alone on a second pass', () => {
+      const source = 'Load [Order]]Id] Resident Src;\n';
+
+      expect(lintRule(source, loadIdentifierBrackets)).toEqual([]);
+      expect(formatRule(source, loadIdentifierBrackets).output).toBe(source);
     });
 
     it('says nothing about an empty name', () => {
       expect(lintRule('Load "" Resident Src;\n', loadIdentifierBrackets)).toEqual([]);
-    });
-
-    it('says nothing about a backtick name carrying a closing bracket', () => {
-      expect(lintRule('Load `Order]Id` Resident Src;\n', loadIdentifierBrackets)).toEqual([]);
     });
 
     it('leaves a backtick name outside a Load alone', () => {

@@ -1354,13 +1354,13 @@ quotes are string literals and are left alone for the same reason.
 A doubled quote inside a quoted name stands for one quote, and the autofix
 unescapes it accordingly — Qlik's reference gives `"Michael said ""It's a
 beautiful day"."` as loading the text with plain quotes around the sentence.
-Brackets carry no escape of their own, since a bracket simply runs to the first
-`]`, and the reference documents none for grave accents either, so the text
+A name carrying `]` keeps it: brackets escape asymmetrically, so only the
+closing bracket doubles and `"Order]Id"` becomes `[Order]]Id]`. Grave accents
+appear among the quoting characters but not among the escaping ones, so the text
 inside a pair of those is taken literally.
 
-**A name with no bracket form is not flagged.** A bracket runs to the first
-`]`, so a name carrying one has nowhere to move to and the quoted form is the
-only one it has; an empty name has none either.
+**An empty name is not flagged.** There is nothing to delimit, so there is no
+bracketed form to move it to.
 
 Examples of **incorrect** code for this rule:
 
