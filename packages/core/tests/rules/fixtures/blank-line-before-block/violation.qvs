@@ -1,0 +1,17 @@
+Let vRun = 1;
+Sub LoadSales
+
+    Let vCount = 0;
+
+End Sub
+// Products are handled separately.
+Sub LoadProducts
+
+    Let vCount = 0;
+
+End Sub
+If vRun Then
+
+    Let vDone = 1;
+
+End If

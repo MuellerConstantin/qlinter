@@ -108,3 +108,45 @@ export function tokenInteriorLines(tokens: IToken[], comments: IToken[]): Set<nu
 
   return out;
 }
+
+/** Lines carrying a comment and no code. */
+export function commentOnlyLines(comments: IToken[], tokens: IToken[]): Set<number> {
+  const code = new Set(tokens.map((token) => token.startLine ?? 1));
+  const out = new Set<number>();
+
+  for (const comment of comments) {
+    const first = comment.startLine ?? 1;
+    const last = comment.endLine ?? first;
+
+    for (let line = first; line <= last; line++) {
+      if (!code.has(line)) {
+        out.add(line);
+      }
+    }
+  }
+
+  return out;
+}
+
+/*
+ * Where the run of lines introducing `line` begins: `line` itself, or the top of
+ * an unbroken comment run directly above it. A comment introducing a statement
+ * belongs to it, so a rule asking for a blank line above has to ask above the
+ * comment rather than between the two.
+ */
+export function introductionStart(commented: ReadonlySet<number>, line: number): number {
+  let top = line;
+
+  while (top > 1 && commented.has(top - 1)) {
+    top--;
+  }
+
+  return top;
+}
+
+/** True when a blank line sits directly above `line`, or nothing does. */
+export function precededByBlankLine(text: string, spans: LineSpan[], line: number): boolean {
+  const above = spans[line - 2];
+
+  return above === undefined || isBlankLine(text, above);
+}

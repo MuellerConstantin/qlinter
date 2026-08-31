@@ -2,6 +2,7 @@
 
 | Rule                                                      | Description                                                      |
 | :-------------------------------------------------------- | :--------------------------------------------------------------- |
+| [blank-line-before-block](#blank-line-before-block)       | Require a blank line above each block a script opens.            |
 | [blank-line-before-table](#blank-line-before-table)       | Require a blank line above each table a script builds.           |
 | [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.        |
 | [block-indent](#block-indent)                             | Enforce consistent indentation for Qlik block constructs.        |
@@ -56,6 +57,90 @@ The rule then keeps whatever severity the preset — or its own default — give
 it, and follows along if that ever changes. Writing `["warning", { "size": 2 }]`
 instead pins the severity to `warning` forever, which is rarely what someone
 adjusting an indent width intends.
+
+---
+
+## blank-line-before-block
+
+Require a blank line above each block the script opens.
+
+### Rule Details
+
+A `Sub`, `If`, `For`, `Do` or `Switch` opens a stretch of script that stands on
+its own, often for dozens of lines. Butted straight against the statement above
+it, the reader has to find its start by reading rather than by looking. This
+rule gives every such header a blank line above it, the same separation
+[blank-line-before-table](#blank-line-before-table) gives a table.
+
+**Only a header that opens a block of its own.** `Else`, `ElseIf`, `Case` and
+`Default` bound a body from inside a block they did not open, and the gap above
+them is that body's edge — it belongs to [padded-blocks](#padded-blocks). The
+closing keywords are nobody's business here either.
+
+Three cases are exempt:
+
+- **The first statement in the file.** There is nothing above it to separate it
+  from.
+- **A block that opens another block's body.** A `Sub` nested directly inside a
+  `Sub`, or a `For` as the first statement of an `If`, needs no gap between
+  itself and the header it belongs to. This is also what keeps the rule from
+  fighting [padded-blocks](#padded-blocks) when that is set to `never`: the gap
+  under a header is that rule's to remove, and this one does not put it back.
+- **A comment introducing the block.** The comment belongs to the block, so the
+  blank line is required _above_ the comment rather than between comment and
+  header. Line and block comments are both walked.
+
+A block following a closing keyword is **not** exempt: `End Sub` ends a section,
+and the next `Sub` starts a new one.
+
+The autofix inserts a single line terminator — the one the file already uses —
+above the block, or above any comment introducing it.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Let vRun = 1;
+Sub LoadSales
+
+    Let vCount = 0;
+
+End Sub
+// Products are handled separately.
+Sub LoadProducts
+
+    Let vCount = 0;
+
+End Sub
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Let vRun = 1;
+
+Sub LoadSales
+
+    Let vCount = 0;
+
+    If vRun Then
+
+        Let vDone = 1;
+
+    End If
+
+End Sub
+
+// Products are handled separately.
+Sub LoadProducts
+
+    Let vCount = 0;
+
+End Sub
+```
+
+### Options
+
+This rule has no options.
 
 ---
 

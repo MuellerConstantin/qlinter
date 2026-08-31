@@ -1,29 +1,18 @@
-import { tokenMatcher, type IToken } from 'chevrotain';
-import { blockCloseToken, colonToken, semicolonToken, sourceClauseToken } from '../lexer.js';
+import { tokenMatcher } from 'chevrotain';
+import { colonToken, sourceClauseToken } from '../lexer.js';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
-import { detectLineEnding, insertLineBefore, isBlankLine, splitLines } from './utils/lines.js';
+import { classifyBlockLine, opensBody } from './utils/blocks.js';
+import {
+  commentOnlyLines,
+  detectLineEnding,
+  insertLineBefore,
+  introductionStart,
+  precededByBlankLine,
+  splitLines,
+} from './utils/lines.js';
 import { collectStatementSpans, findAtTopLevel, findLoadIndex, type StatementSpan } from './utils/statements.js';
 import { isKeyword } from './utils/tokens.js';
-
-/** Lines carrying a comment and no code, so a comment run above a table can be walked. */
-function commentOnlyLines(comments: IToken[], tokens: IToken[]): Set<number> {
-  const code = new Set(tokens.map((token) => token.startLine ?? 1));
-  const out = new Set<number>();
-
-  for (const comment of comments) {
-    const first = comment.startLine ?? 1;
-    const last = comment.endLine ?? first;
-
-    for (let line = first; line <= last; line++) {
-      if (!code.has(line)) {
-        out.add(line);
-      }
-    }
-  }
-
-  return out;
-}
 
 /** The table name when the statement opens with `<name>:`, else undefined. */
 function labelOf(statement: StatementSpan): string | undefined {
@@ -45,17 +34,6 @@ function isPrecedingLoad(statement: StatementSpan): boolean {
     findLoadIndex(statement.tokens) !== -1 &&
     findAtTopLevel(statement.tokens, (token) => tokenMatcher(token, sourceClauseToken)) === -1
   );
-}
-
-/*
- * Whether the statement is a header a body hangs off — `Sub f`, `If x Then`,
- * `Case 1`, `Else`. Those end without a semicolon; block closers do too, and are
- * excluded by their opening keyword.
- */
-function opensBlock(statement: StatementSpan): boolean {
-  const last = statement.tokens[statement.tokens.length - 1];
-
-  return !tokenMatcher(last, semicolonToken) && !tokenMatcher(statement.first, blockCloseToken);
 }
 
 export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = {
@@ -81,21 +59,14 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
         continue;
       }
 
-      /* A comment introducing the table belongs to it, so the gap goes above the comment. */
-      let top = statement.line;
+      const top = introductionStart(commented, statement.line);
 
-      while (top > 1 && commented.has(top - 1)) {
-        top--;
-      }
-
-      const above = spans[top - 2];
-      const start = spans[top - 1];
-
-      if (above === undefined || start === undefined || isBlankLine(source, above)) {
+      if (precededByBlankLine(source, spans, top)) {
         continue;
       }
 
-      if (previous !== undefined && opensBlock(previous)) {
+      /* The first statement of a block needs no gap between itself and the header it belongs to. */
+      if (previous !== undefined && opensBody(classifyBlockLine(previous.tokens))) {
         continue;
       }
 
