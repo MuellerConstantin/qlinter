@@ -79,8 +79,12 @@ export function splitStatements(tokens: IToken[]): IToken[][] {
   return stmts;
 }
 
-/** Index of the statement's `Load` keyword at parenthesis depth zero, or -1. */
-export function findLoadIndex(tokens: IToken[]): number {
+/*
+ * Index of the first token `match` accepts outside every parenthesis, or -1.
+ * The depth walk is what makes a scan "top level", and several rules need it
+ * against different tokens, so it is written once here.
+ */
+export function findAtTopLevel(tokens: IToken[], match: (token: IToken) => boolean): number {
   let depth = 0;
 
   for (let i = 0; i < tokens.length; i++) {
@@ -96,12 +100,17 @@ export function findLoadIndex(tokens: IToken[]): number {
       continue;
     }
 
-    if (depth === 0 && isKeyword(t, 'load')) {
+    if (depth === 0 && match(t)) {
       return i;
     }
   }
 
   return -1;
+}
+
+/** Index of the statement's `Load` keyword at parenthesis depth zero, or -1. */
+export function findLoadIndex(tokens: IToken[]): number {
+  return findAtTopLevel(tokens, (token) => isKeyword(token, 'load'));
 }
 
 /*

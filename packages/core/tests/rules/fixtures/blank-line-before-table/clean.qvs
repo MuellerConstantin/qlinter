@@ -1,0 +1,41 @@
+SET vYear = 2026;
+
+[Sales]:
+Load
+    OrderId,
+    Amount
+From [lib://qvd/sales.qvd] (qvd);
+
+// A comment introducing a table belongs to it, so the gap goes above the comment.
+[Customers]:
+Load
+    CustomerId,
+    Name
+From [lib://qvd/customers.qvd] (qvd);
+
+/*
+ * A preceding load reads from the statement below it. The two are one table
+ * and stay together.
+ */
+[Enriched]:
+Load
+    CustomerId,
+    Upper(Name) as NameUpper;
+Load
+    CustomerId,
+    Name
+Resident [Customers];
+
+Concatenate([Sales])
+Load
+    OrderId
+Resident [Enriched];
+
+Sub LoadProducts
+    [Products]:
+    Load
+        ProductId
+    From [lib://qvd/products.qvd] (qvd);
+End Sub
+
+Drop Table [Customers];

@@ -25,6 +25,7 @@ export {
   LINE_ENDINGS,
   VARIABLE_CASE_STYLES,
   tableLabelBrackets,
+  blankLineBeforeTable,
   blockIndent,
   builtinFunctionCase,
   builtinKeywordCase,

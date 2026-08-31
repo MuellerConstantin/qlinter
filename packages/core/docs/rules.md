@@ -2,6 +2,7 @@
 
 | Rule                                                  | Description                                                      |
 | :---------------------------------------------------- | :--------------------------------------------------------------- |
+| [blank-line-before-table](#blank-line-before-table)   | Require a blank line above each table a script builds.           |
 | [block-comment-stars](#block-comment-stars)           | Align multi-line block comments with a leading ` *` rail.        |
 | [block-indent](#block-indent)                         | Enforce consistent indentation for Qlik block constructs.        |
 | [table-label-brackets](#table-label-brackets)         | Require table labels to be enclosed in brackets.                 |
@@ -51,6 +52,99 @@ The rule then keeps whatever severity the preset — or its own default — give
 it, and follows along if that ever changes. Writing `["warning", { "size": 2 }]`
 instead pins the severity to `warning` forever, which is rarely what someone
 adjusting an indent width intends.
+
+---
+
+## blank-line-before-table
+
+Require a blank line above each table the script builds.
+
+### Rule Details
+
+A load script is read as a sequence of tables, and the blank line above a table
+is what makes that sequence visible at a glance. Without it a screenful of
+`Load` statements reads as one undifferentiated block, and finding where a
+table begins means parsing the script by eye. This rule is the lower bound on
+blank lines; the upper bound is a separate question and belongs to
+[no-multiple-empty-lines](#no-multiple-empty-lines).
+
+A **table label is optional in Qlik**. An unlabeled `Load` still builds a table
+— Qlik auto-names it, or auto-concatenates it onto a table with matching fields
+— and a prefixed one (`Concatenate(...) Load`, `Left Join(...) Load`,
+`Mapping Load`) builds or extends one too. The rule therefore keys off what the
+statement _does_, not off whether it was given a name: a labeled statement
+(`[Sales]:`, `Sales:`, `"Sales":`), any statement containing a top-level `Load`,
+and any `Select` all count as a table.
+
+Four cases are deliberately exempt:
+
+- **The first statement in the file.** There is nothing above it to separate it
+  from.
+- **The first statement in a block.** A table opening a `Sub`, `If`, `For`,
+  `Switch`, `Case` or `Else` body needs no gap between itself and the header it
+  belongs to. A table following the block's `End Sub` / `Next` / `End If` is
+  not exempt — that is a new section of the script.
+- **The source half of a preceding load.** A `Load` that names no source clause
+  (`From`, `Resident`, `Inline`, `AutoGenerate`, `From_Field`, `Extension`)
+  reads its rows from the statement directly below it. The two are one table,
+  and a blank line between them would say otherwise. A filter clause such as
+  `Where` or `Group By` is not a source and does not end the pair.
+- **A comment introducing the table.** The comment belongs to the table, so the
+  blank line is required _above_ the comment rather than between comment and
+  table. Line and block comments are both walked.
+
+The autofix inserts a single line terminator — the one the file already uses —
+at the top of the table's own lines, above any introducing comment.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Set vYear = 2026;
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);
+// Products are loaded next.
+Load
+    ProductId
+From [lib://qvd/products.qvd] (qvd);
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Set vYear = 2026;
+
+[Sales]:
+Load
+    OrderId,
+    Upper(Region) as Region;
+Load
+    OrderId,
+    Region
+From [lib://qvd/sales.qvd] (qvd);
+
+// Products are loaded next.
+Load
+    ProductId
+From [lib://qvd/products.qvd] (qvd);
+
+Sub LoadCustomers
+    [Customers]:
+    Load
+        CustomerId
+    From [lib://qvd/customers.qvd] (qvd);
+End Sub
+```
+
+### Options
+
+This rule has no options.
+
+This rule and [no-multiple-empty-lines](#no-multiple-empty-lines) at `max: 0`
+state opposite requirements for the same line. Formatting a script under both
+raises a non-convergence error rather than silently picking one; leave `max` at
+`1` or higher, or turn one of the two off.
 
 ---
 

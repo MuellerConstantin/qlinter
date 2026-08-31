@@ -1,0 +1,20 @@
+SET vYear = 2026;
+[Sales]:
+Load
+    OrderId,
+    Amount
+From [lib://qvd/sales.qvd] (qvd);
+[Customers]:
+Load
+    CustomerId,
+    Name
+From [lib://qvd/customers.qvd] (qvd);
+// An unlabeled table is still a table, and this comment introduces it.
+Load
+    ProductId
+From [lib://qvd/products.qvd] (qvd);
+Concatenate([Sales])
+Load
+    OrderId
+Resident [Customers];
+SQL Select Id From orders;

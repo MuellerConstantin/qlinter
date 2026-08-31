@@ -1,31 +1,8 @@
 import type { Rule, Finding } from '../types.js';
+import { isBlankLine, splitLines } from './utils/lines.js';
 
 export interface NoMultipleEmptyLinesOptions {
   max: number;
-}
-
-interface LineSpan {
-  start: number;
-  end: number;
-  terminator: string;
-}
-
-function splitLines(source: string): LineSpan[] {
-  const lines: LineSpan[] = [];
-  const re = /\r?\n/g;
-  let cursor = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = re.exec(source)) !== null) {
-    lines.push({ start: cursor, end: match.index, terminator: match[0] });
-    cursor = match.index + match[0].length;
-  }
-
-  if (cursor < source.length) {
-    lines.push({ start: cursor, end: source.length, terminator: '' });
-  }
-
-  return lines;
 }
 
 export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multiple-empty-lines'> = {
@@ -40,7 +17,7 @@ export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multipl
     let runStart = -1;
 
     for (let i = 0; i <= lines.length; i++) {
-      const blank = i < lines.length && source.slice(lines[i].start, lines[i].end).trim() === '';
+      const blank = i < lines.length && isBlankLine(source, lines[i]);
 
       if (blank && runStart === -1) {
         runStart = i;

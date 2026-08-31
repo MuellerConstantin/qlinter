@@ -6,6 +6,7 @@ import {
   clauseStarterToken,
   keywordToken,
   lexer,
+  sourceClauseToken,
   statementTerminatorToken,
 } from '../src/lexer.js';
 import { previousLineClosesStatement, splitStatements } from '../src/rules/utils/statements.js';
@@ -94,6 +95,23 @@ describe('statement boundaries', () => {
 
       expect(tokenMatcher(token, clauseStarterToken)).toBe(true);
       expect(tokenMatcher(token, keywordToken)).toBe(true);
+    });
+
+    it.each(['From', 'From_Field', 'Resident', 'Inline', 'AutoGenerate', 'Extension'])(
+      '%s names where a LOAD gets its rows',
+      (image) => {
+        const [token] = tokenize(image);
+
+        expect(tokenMatcher(token, sourceClauseToken)).toBe(true);
+        expect(tokenMatcher(token, clauseStarterToken)).toBe(true);
+      },
+    );
+
+    it.each(['Where', 'While', 'Group', 'Order'])('%s narrows a LOAD and names no source', (image) => {
+      const [token] = tokenize(image);
+
+      expect(tokenMatcher(token, sourceClauseToken)).toBe(false);
+      expect(tokenMatcher(token, clauseStarterToken)).toBe(true);
     });
 
     it('does not let From swallow the From_Field that starts with it', () => {

@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial rule set covering layout (`block-indent`, `load-indent`,
   `continuation-indent`, `load-clause-newline`, `load-field-per-line`, `multiline-call`,
   `one-statement-per-line`, `max-line-length`, `no-multiple-empty-lines`,
-  `comma-style`, `trailing-whitespace`, `eol-last`), casing (`builtin-function-case`,
+  `blank-line-before-table`, `comma-style`, `trailing-whitespace`, `eol-last`), casing (`builtin-function-case`,
   `builtin-keyword-case`, `variable-case`), spacing (`comma-space`,
   `comment-space`, `inline-comment-space`, `block-comment-stars`,
   `operator-spacing`, `paren-spacing`), and correctness

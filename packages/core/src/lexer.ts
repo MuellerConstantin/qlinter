@@ -794,13 +794,21 @@ const blockKeywordTokens = [
  */
 export const clauseStarterToken = createToken({ name: 'ClauseStarter', pattern: Lexer.NA });
 
+/**
+ * The subset of clause keywords that names where a LOAD gets its rows. Where /
+ * While / Group / Order narrow or reshape those rows and are deliberately not
+ * members: a LOAD carrying none of these is a preceding load, drawing from the
+ * statement below it rather than from a source of its own.
+ */
+export const sourceClauseToken = createToken({ name: 'SourceClause', pattern: Lexer.NA });
+
 const clauseKeywordTokens = [
-  structuralKeyword('From_Field', /From_Field\b/i, [clauseStarterToken]),
-  structuralKeyword('From', /From\b/i, [clauseStarterToken]),
-  structuralKeyword('Resident', /Resident\b/i, [clauseStarterToken]),
-  structuralKeyword('Inline', /Inline\b/i, [clauseStarterToken]),
-  structuralKeyword('AutoGenerate', /AutoGenerate\b/i, [clauseStarterToken]),
-  structuralKeyword('Extension', /Extension\b/i, [clauseStarterToken]),
+  structuralKeyword('From_Field', /From_Field\b/i, [clauseStarterToken, sourceClauseToken]),
+  structuralKeyword('From', /From\b/i, [clauseStarterToken, sourceClauseToken]),
+  structuralKeyword('Resident', /Resident\b/i, [clauseStarterToken, sourceClauseToken]),
+  structuralKeyword('Inline', /Inline\b/i, [clauseStarterToken, sourceClauseToken]),
+  structuralKeyword('AutoGenerate', /AutoGenerate\b/i, [clauseStarterToken, sourceClauseToken]),
+  structuralKeyword('Extension', /Extension\b/i, [clauseStarterToken, sourceClauseToken]),
   structuralKeyword('Where', /Where\b/i, [clauseStarterToken]),
   structuralKeyword('While', /While\b/i, [clauseStarterToken]),
   structuralKeyword('Group', /Group\b/i, [clauseStarterToken]),
