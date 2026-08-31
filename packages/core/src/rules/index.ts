@@ -19,6 +19,7 @@ import { loadIndent } from './load-indent.js';
 import { maxLineLength } from './max-line-length.js';
 import { multilineCall } from './multiline-call.js';
 import { noBlankLineInStatement } from './no-blank-line-in-statement.js';
+import { noLeadingBlankLines } from './no-leading-blank-lines.js';
 import { noLegacyPathVariables } from './no-legacy-path-variables.js';
 import { noMultipleEmptyLines } from './no-multiple-empty-lines.js';
 import { oneStatementPerLine } from './one-statement-per-line.js';
@@ -70,6 +71,7 @@ export const allRules = [
   maxLineLength,
   multilineCall,
   noBlankLineInStatement,
+  noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
   oneStatementPerLine,
@@ -172,6 +174,7 @@ export {
   maxLineLength,
   multilineCall,
   noBlankLineInStatement,
+  noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
   oneStatementPerLine,

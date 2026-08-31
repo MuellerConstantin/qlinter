@@ -21,6 +21,7 @@
 | [max-line-length](#max-line-length)                       | Limit how long a single line of script may be.                   |
 | [multiline-call](#multiline-call)                         | Break overlong single-line function calls across multiple lines. |
 | [no-blank-line-in-statement](#no-blank-line-in-statement) | Disallow a blank line inside a single statement.                 |
+| [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.            |
 | [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.              |
 | [no-multiple-empty-lines](#no-multiple-empty-lines)       | Limit how many consecutive empty lines may appear.               |
 | [one-statement-per-line](#one-statement-per-line)         | Require each statement to start on its own line.                 |
@@ -1729,6 +1730,57 @@ RegionId, RegionName
 
 2, South
 ];
+```
+
+### Options
+
+This rule has no options.
+
+---
+
+## no-leading-blank-lines
+
+Disallow blank lines above the first line of content.
+
+### Rule Details
+
+A script starts at its first statement, not after a run of empty rows. Leading
+blank lines carry nothing, cost a screenful at the top of every file, and show
+up in a diff the first time anyone tidies them. This rule is the counterpart at
+the top of the file to [eol-last](#eol-last) at the bottom.
+
+It owns only the run above the first line that holds something. A comment
+counts as content, so a blank line above a file header comment is flagged while
+the comment itself stays put. Whitespace-only lines count as blank.
+
+A file with no content at all — empty, or nothing but blank lines — is left
+alone. There is nothing for the blank lines to be leading, and deleting the
+entire file is not a formatting decision.
+
+Everything below the first content line belongs to another rule; see
+[no-multiple-empty-lines](#no-multiple-empty-lines) for the general limit.
+
+The autofix deletes the leading run.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+// The first line of the file holds content.
+
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);
 ```
 
 ### Options

@@ -1,0 +1,6 @@
+
+
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);

@@ -1,0 +1,6 @@
+// The first line of the file holds content.
+
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);
