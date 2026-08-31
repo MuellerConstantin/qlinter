@@ -78,3 +78,33 @@ export function deleteLineRange(spans: LineSpan[], from: number, to: number): Fi
 
   return { range: { start: first.start, end: last.end + last.terminator.length }, replacement: '' };
 }
+
+/*
+ * The lines held inside tokens that span more than one of them.
+ *
+ * The lexer keeps a construct whose interior is not Qlik expression syntax as a
+ * single opaque token — inline data, a block comment, a string literal running
+ * over a line break — precisely so no rule rewrites what is in it. A line in
+ * there looks blank but is content the script carries, and editing it changes
+ * what the script loads. Every rule that acts on blank lines has to agree on
+ * that, so the answer is derived once here.
+ */
+export function tokenInteriorLines(tokens: IToken[], comments: IToken[]): Set<number> {
+  const out = new Set<number>();
+
+  const collect = (source: IToken[]) => {
+    for (const token of source) {
+      const first = token.startLine ?? 1;
+      const last = token.endLine ?? first;
+
+      for (let line = first + 1; line <= last; line++) {
+        out.add(line);
+      }
+    }
+  };
+
+  collect(tokens);
+  collect(comments);
+
+  return out;
+}

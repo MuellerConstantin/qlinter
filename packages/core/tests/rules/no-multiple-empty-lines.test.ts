@@ -142,4 +142,41 @@ describe('no-multiple-empty-lines', () => {
     expect(result.output).toBe('SET a = 1;\r\n\r\nSET b = 2;\r\n');
     expect(result.fixed).toBe(1);
   });
+
+  /*
+   * Regression: the rule read the source line by line with no idea which of
+   * those lines a token had claimed, and trimmed runs out of the inside of
+   * constructs the lexer keeps opaque. For a string literal that changed the
+   * value the script loads.
+   */
+  describe('lines an opaque token carries', () => {
+    it('leaves a run inside a string literal alone', () => {
+      const source = "Load\n    'line one\n\n\nline two' as Note\nResident Src;\n";
+
+      expect(lintRule(source, noMultipleEmptyLines)).toEqual([]);
+      expect(formatRule(source, noMultipleEmptyLines).output).toBe(source);
+    });
+
+    it('leaves a run inside Inline data alone', () => {
+      const source = '[R]:\nLoad * Inline [\nId, Name\n1, a\n\n\n2, b\n];\n';
+
+      expect(lintRule(source, noMultipleEmptyLines)).toEqual([]);
+      expect(formatRule(source, noMultipleEmptyLines).output).toBe(source);
+    });
+
+    it('leaves a run inside a block comment alone', () => {
+      const source = 'Let x = 1;\n/*\n\n\n*/\nLet y = 2;\n';
+
+      expect(lintRule(source, noMultipleEmptyLines)).toEqual([]);
+    });
+
+    it('still trims a real run in a script that also carries one', () => {
+      const source = "Load 'a\n\n\nb' as T Resident S;\n\n\nLet y = 2;\n";
+
+      const result = formatRule(source, noMultipleEmptyLines);
+
+      expect(result.output).toBe("Load 'a\n\n\nb' as T Resident S;\n\nLet y = 2;\n");
+      expect(result.fixed).toBe(1);
+    });
+  });
 });

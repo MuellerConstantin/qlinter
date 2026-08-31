@@ -1804,6 +1804,12 @@ blank lines does not fuse them into one over-long run. CRLF and LF line
 endings are treated identically; the autofix preserves whichever ending the
 source uses.
 
+A blank line that a token carries is not counted and never trimmed. The lexer
+keeps a construct whose interior is not Qlik expression syntax as a single
+opaque token — inline data, a block comment, a string literal running over a
+line break — and a run inside one of those is content the script loads rather
+than spacing anyone chose. Trimming it would change the loaded value.
+
 The autofix collapses each over-long run down to the configured maximum by
 deleting the excess line terminators.
 

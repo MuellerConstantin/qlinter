@@ -1,5 +1,5 @@
 import type { Rule, Finding } from '../types.js';
-import { isBlankLine, splitLines } from './utils/lines.js';
+import { isBlankLine, splitLines, tokenInteriorLines } from './utils/lines.js';
 
 export interface NoMultipleEmptyLinesOptions {
   max: number;
@@ -10,14 +10,16 @@ export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multipl
   defaultSeverity: 'warning',
   defaultOptions: { max: 1 },
   options: { max: { type: 'number', min: 0, max: 10 } },
-  check: ({ source }, { max }) => {
+  check: ({ source, tokens, comments }, { max }) => {
     const out: Finding[] = [];
     const lines = splitLines(source);
+    const carried = tokenInteriorLines(tokens, comments);
 
     let runStart = -1;
 
     for (let i = 0; i <= lines.length; i++) {
-      const blank = i < lines.length && isBlankLine(source, lines[i]);
+      /* A line inside an opaque token carries content, so it breaks a run rather than joining one. */
+      const blank = i < lines.length && !carried.has(i + 1) && isBlankLine(source, lines[i]);
 
       if (blank && runStart === -1) {
         runStart = i;
