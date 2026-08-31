@@ -128,6 +128,43 @@ Shared vocabulary that is genuinely the rules' own lives in
 - `load-anchors.ts` — which lines of a LOAD are header, field, and clause anchors: the split `load-indent` enforces and `continuation-indent` takes the complement of.
 - `fixes.ts` — fix-range construction that preserves comments.
 
+### Qlik's semantics are looked up, never inferred
+
+A rule rewrites a language this project cannot run. Every claim about what Qlik
+does — what a keyword means, which delimiters a name accepts, how a construct
+escapes, where a rule of thumb stops applying — comes from the
+[Qlik Sense help](https://help.qlik.com/en-US/sense/), and is cited from the code
+or test that rests on it. Community threads and blog posts help you find the
+right page; they are never the answer.
+
+The failure mode is a claim that is _almost_ true: right in the common case,
+wrong at a boundary the reference spells out.
+
+Two habits follow.
+
+**Cite the page from the artifact that depends on it** — a `@see` beside the
+token in the lexer, or above the test that pins the behaviour. Whoever changes
+it next must not have to redo the research.
+
+**Check where the claim stops.** Qlik scopes its rules routinely: "inside a LOAD
+statement", "in places where Qlik Sense expects an expression". A sentence
+quoted without its scope is the usual way this goes wrong.
+
+### When it cannot be verified, do not transform
+
+Where the reference is silent or ambiguous, decline the construct: no finding,
+no fix. This is not timidity. The formatter rewrites files people reload against
+production data, so a wrong rewrite surfaces as a broken reload, not as a lint
+warning — and a rule that risks that is worse than no rule at all.
+
+The bar is not "probably fine". It is: **the reference says so, and the round
+trip holds** — whatever the fix emits must lex back to the thing it meant. A fix
+the tokenizer cannot read back is a fix that breaks on the next pass.
+
+Say in `docs/rules.md` which constructs a rule skips, and why. A documented gap
+reads as the decision it is; an undocumented one looks like an oversight and
+invites the next person to "fix" it.
+
 ## Naming contract
 
 For a rule named `my-rule`, all five identifiers share the same kebab-case stem:
@@ -456,16 +493,21 @@ When invoked, walk this checklist in order. Skip steps that do not apply.
    (see [Rule scope](#rule-scope)): what single question does it answer, which axis
    is it on, and which lines or tokens does it claim — and which does it leave to
    somebody else?
-2. **Bootstrap docs if missing.** If `packages/core/docs/rules.md` does not exist,
+2. **Check the Qlik reference for every semantic the rule leans on** — what the
+   construct means, which forms it takes, how it escapes, and where that stops
+   applying (see
+   [Qlik's semantics are looked up, never inferred](#qliks-semantics-are-looked-up-never-inferred)).
+   Anything you cannot confirm there, the rule declines rather than transforms.
+3. **Bootstrap docs if missing.** If `packages/core/docs/rules.md` does not exist,
    create it and seed entries for the existing rules before proceeding.
-3. **Write/edit the rule file** following the templates above. Stay inside the
+4. **Write/edit the rule file** following the templates above. Stay inside the
    rule file — never touch `types.ts`, `runner.ts`, or `disable-directives.ts`.
-4. **Update `rules/index.ts`** with the four registration edits (alphabetical).
-5. **Write/edit the test file** with at least violation + clean assertions, plus
+5. **Update `rules/index.ts`** with the four registration edits (alphabetical).
+6. **Write/edit the test file** with at least violation + clean assertions, plus
    a `format()` assertion if the rule has a fix.
-6. **Write/edit the fixtures** (`violation.qvs`, `clean.qvs`).
-7. **Write/edit the docs section** in `packages/core/docs/rules.md`.
-8. **Run the tests:** `npm test --workspace packages/core`. Fix any failures; do
+7. **Write/edit the fixtures** (`violation.qvs`, `clean.qvs`).
+8. **Write/edit the docs section** in `packages/core/docs/rules.md`.
+9. **Run the tests:** `npm test --workspace packages/core`. Fix any failures; do
    not declare the task complete with red tests.
 
 For **rename**, update all five artifacts (file, export, id literal, test file,
