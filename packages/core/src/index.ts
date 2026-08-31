@@ -22,6 +22,7 @@ export {
   presetNames,
   CASE_STYLES,
   INDENT_STYLES,
+  BLOCK_PADDING_STYLES,
   LINE_ENDINGS,
   VARIABLE_CASE_STYLES,
   tableLabelBrackets,
@@ -35,6 +36,7 @@ export {
   loadIndent,
   noLegacyPathVariables,
   noMultipleEmptyLines,
+  paddedBlocks,
   trailingWhitespace,
   variableCase,
 } from './rules/index.js';
@@ -45,6 +47,8 @@ export type {
   IndentStyle,
   LoadIndentOptions,
   NoMultipleEmptyLinesOptions,
+  BlockPaddingStyle,
+  PaddedBlocksOptions,
   VariableCaseStyle,
   VariableCaseOptions,
 } from './rules/index.js';

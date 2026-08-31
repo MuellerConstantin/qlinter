@@ -121,8 +121,9 @@ Shared vocabulary that is genuinely the rules' own lives in
 `packages/core/src/rules/utils/`:
 
 - `tokens.ts` — token-shape predicates (`isKeyword`, `isOpenParen`, ...).
-- `lines.ts` — the source's line ending, grouping tokens by line.
-- `statements.ts` — statement splitting, LOAD field-list boundaries, and whether a line closes its statement.
+- `lines.ts` — the source's line ending, grouping tokens by line, splitting it into spans and deciding which of those are blank.
+- `blocks.ts` — what a statement-start line does to the block structure around it: opens a body, closes one, or (for `Else`/`Case`) both.
+- `statements.ts` — statement splitting, statement line spans, LOAD field-list boundaries, and whether a line closes its statement.
 - `indent.ts` — indent style vocabulary and option schema, the shared indent check and finding builder.
 - `load-anchors.ts` — which lines of a LOAD are header, field, and clause anchors: the split `load-indent` enforces and `continuation-indent` takes the complement of.
 - `fixes.ts` — fix-range construction that preserves comments.

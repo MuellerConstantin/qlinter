@@ -22,6 +22,7 @@ import { noLegacyPathVariables } from './no-legacy-path-variables.js';
 import { noMultipleEmptyLines } from './no-multiple-empty-lines.js';
 import { oneStatementPerLine } from './one-statement-per-line.js';
 import { operatorSpacing } from './operator-spacing.js';
+import { paddedBlocks } from './padded-blocks.js';
 import { parenSpacing } from './paren-spacing.js';
 import { tableLabelBrackets } from './table-label-brackets.js';
 import { trailingWhitespace } from './trailing-whitespace.js';
@@ -29,6 +30,7 @@ import { variableCase } from './variable-case.js';
 import { variableCharset } from './variable-charset.js';
 export { INDENT_STYLES } from './utils/indent.js';
 export { LINE_ENDINGS } from './one-statement-per-line.js';
+export { BLOCK_PADDING_STYLES } from './padded-blocks.js';
 export { VARIABLE_CASE_STYLES } from './variable-case.js';
 export type { IndentStyle } from './utils/indent.js';
 export type { BlockIndentOptions } from './block-indent.js';
@@ -38,6 +40,7 @@ export type { MaxLineLengthOptions } from './max-line-length.js';
 export type { MultilineCallOptions } from './multiline-call.js';
 export type { NoMultipleEmptyLinesOptions } from './no-multiple-empty-lines.js';
 export type { LineEnding, OneStatementPerLineOptions } from './one-statement-per-line.js';
+export type { BlockPaddingStyle, PaddedBlocksOptions } from './padded-blocks.js';
 export type { VariableCaseStyle, VariableCaseOptions } from './variable-case.js';
 
 /**
@@ -69,6 +72,7 @@ export const allRules = [
   noMultipleEmptyLines,
   oneStatementPerLine,
   operatorSpacing,
+  paddedBlocks,
   parenSpacing,
   trailingWhitespace,
   variableCase,
@@ -169,6 +173,7 @@ export {
   noMultipleEmptyLines,
   oneStatementPerLine,
   operatorSpacing,
+  paddedBlocks,
   parenSpacing,
   tableLabelBrackets,
   trailingWhitespace,

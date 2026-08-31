@@ -1,0 +1,14 @@
+Sub LoadSales
+    [Sales]:
+    Load Id Resident Src;
+End Sub
+
+If vRun Then
+    Let vX = 1;
+Else
+    Let vX = 2;
+End If
+
+For i = 1 To 3
+    Let vY = i;
+Next

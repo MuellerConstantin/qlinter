@@ -6,6 +6,7 @@ import {
   semicolonToken,
   statementTerminatorToken,
 } from '../../lexer.js';
+import { groupByLine } from './lines.js';
 import { isCloseParen, isKeyword, isOpenParen } from './tokens.js';
 
 /** True when the token is a clause keyword that closes the LOAD field list. */
@@ -157,4 +158,45 @@ export function findFieldListBoundaries(tokens: IToken[], loadIdx: number): { st
   }
 
   return { start, end };
+}
+
+/** One statement, from the line that opens it through the line that closes it. */
+export interface StatementSpan {
+  first: IToken;
+  line: number;
+  lastLine: number;
+  tokens: IToken[];
+}
+
+function endsLabel(lineTokens: IToken[]): boolean {
+  return tokenMatcher(lineTokens[lineTokens.length - 1], colonToken);
+}
+
+/*
+ * Statements as the vertical-spacing rules need to see them: a label and the
+ * Load underneath it are one unit, so the statement starts at the label. The
+ * top-level split cuts at semicolons instead and would keep neither a label nor
+ * a block header apart from its body, which is exactly what those rules ask
+ * about.
+ */
+export function collectStatementSpans(tokens: IToken[]): StatementSpan[] {
+  const out: StatementSpan[] = [];
+  let previous: IToken[] | undefined;
+
+  for (const { line, tokens: lineTokens } of groupByLine(tokens)) {
+    const continues = previous !== undefined && (!previousLineClosesStatement(previous) || endsLabel(previous));
+
+    if (continues) {
+      const current = out[out.length - 1];
+
+      current.tokens.push(...lineTokens);
+      current.lastLine = line;
+    } else {
+      out.push({ first: lineTokens[0], line, lastLine: line, tokens: [...lineTokens] });
+    }
+
+    previous = lineTokens;
+  }
+
+  return out;
 }

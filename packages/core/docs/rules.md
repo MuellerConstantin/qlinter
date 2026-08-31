@@ -24,6 +24,7 @@
 | [no-multiple-empty-lines](#no-multiple-empty-lines)   | Limit how many consecutive empty lines may appear.               |
 | [one-statement-per-line](#one-statement-per-line)     | Require each statement to start on its own line.                 |
 | [operator-spacing](#operator-spacing)                 | Require exactly one space around binary operators.               |
+| [padded-blocks](#padded-blocks)                       | Pad the inside edges of a block with a blank line.               |
 | [paren-spacing](#paren-spacing)                       | Disallow function-call and inner-padding spaces around parens.   |
 | [trailing-whitespace](#trailing-whitespace)           | Disallow whitespace at the end of a line.                        |
 | [variable-case](#variable-case)                       | Enforce a consistent casing style for user-defined vars.         |
@@ -1961,6 +1962,100 @@ Resident [Raw];
 This rule has no options. "Exactly one space around a binary operator" is the
 universally expected convention; offering toggles for tight or aligned operators
 would defeat the purpose of an opinionated linter.
+
+---
+
+## padded-blocks
+
+Pad the inside edges of a block with a blank line.
+
+### Rule Details
+
+The right number of blank lines is not the same everywhere in a script, and a
+block's inside edges are one of the places where it is fixed rather than left to
+the author. This rule owns those two gaps: the one between a block header and
+the first line of its body, and the one between the last line of the body and
+the closing keyword.
+
+`Sub`, `If`, `For`, `Do` and `Switch` open a body; `End Sub`, `EndIf`, `Next`,
+`Loop` and `EndSwitch` close one. `Else`, `ElseIf`, `Case` and `Default` do
+both: they end the body above them and start the one below, so both of their
+gaps are edges.
+
+**A block with no body is never padded.** Where an opening edge and a closing
+edge are the same gap there is nothing between them to set off — an empty
+`Sub`, an empty `Then` branch, a `Switch` header meeting its first `Case`, or
+one `Case` following another. The rule leaves all of these alone under either
+setting.
+
+Under `always` the requirement is **at least one** blank line, not exactly one.
+How many blank lines may run consecutively is a different question and belongs
+to [no-multiple-empty-lines](#no-multiple-empty-lines); requiring an exact count
+here would have the two rewriting each other.
+
+A comment counts as body. The blank line therefore goes _above_ a comment that
+opens the body and _below_ one that closes it, which makes the two settings
+exact inverses of each other.
+
+The rule claims only those two gaps. The blank line _above_ a block header sits
+outside the block and is not its business, and neither are blank lines in the
+middle of a body.
+
+Examples of **incorrect** code for this rule (default `padding: 'always'`):
+
+```qlik
+Sub LoadSales
+    [Sales]:
+    Load
+        OrderId
+    Resident [Src];
+End Sub
+```
+
+Examples of **correct** code for this rule (default `padding: 'always'`):
+
+```qlik
+Sub LoadSales
+
+    [Sales]:
+    Load
+        OrderId
+    Resident [Src];
+
+End Sub
+
+Sub LoadArchive
+End Sub
+```
+
+### Options
+
+| Option    | Type                  | Default    | Range | Description                                     |
+| :-------- | :-------------------- | :--------- | :---- | :---------------------------------------------- |
+| `padding` | `'always' \| 'never'` | `'always'` | —     | Whether a block body is set off by blank lines. |
+
+Example configuration:
+
+```ts
+import { lint } from '@qlinter/core';
+
+lint(source, {
+  rules: {
+    'padded-blocks': ['warning', { padding: 'never' }],
+  },
+});
+```
+
+With `padding: 'never'`, the following is **correct**:
+
+```qlik
+Sub LoadSales
+    [Sales]:
+    Load
+        OrderId
+    Resident [Src];
+End Sub
+```
 
 ---
 
