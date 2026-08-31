@@ -1,7 +1,7 @@
 "Sales":
 Load
     "Order Id",
-    "Customer Id",
+    `Customer Id`,
     Sum("Amount") as Total
 Resident "Src"
 Group By "Order Id";

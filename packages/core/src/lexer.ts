@@ -719,7 +719,7 @@ const SYSTEM_VARIABLE_TOKEN_PATTERN = new RegExp(`(?:${SYSTEM_VARIABLES.join('|'
  * umlauts) get reported as lex errors. A custom exec wrapper
  * sidesteps the optimizer and runs the regex verbatim.
  */
-const IDENTIFIER_PATTERN = /^[^\s\d.+\-*/=<>&|!?%^(){}[\];,:'"][^\s+\-*/=<>&|!?%^(){}[\];,:'"]*/u;
+const IDENTIFIER_PATTERN = /^[^\s\d.+\-*/=<>&|!?%^(){}[\];,:'"`][^\s+\-*/=<>&|!?%^(){}[\];,:'"`]*/u;
 
 export const identifierToken = createToken({
   name: 'Identifier',
@@ -868,6 +868,15 @@ export const quotedIdentifierToken = createToken({
   pattern: /"(?:[^"]|"")*"/,
 });
 
+/*
+ * The third delimiter Qlik accepts for a field or table name, alongside `"` and
+ * `[`. Modelled on bracketToken: it runs to the next accent, because the
+ * reference documents no escape for one inside a name.
+ *
+ * @see {@link https://help.qlik.com/en-US/cloud-services/Subsystems/Hub/Content/Sense_Hub/Scripting/use-quotes-in-script.htm | Using quotation marks in the script}
+ */
+export const backtickIdentifierToken = createToken({ name: 'BacktickIdentifier', pattern: /`[^`]*`/ });
+
 export const stringLiteralToken = createToken({ name: 'StringLiteral', pattern: /'(?:[^']|'')*'/ });
 export const numberLiteralToken = createToken({
   name: 'NumberLiteral',
@@ -926,6 +935,7 @@ const defaultModeTokens = [
   libPathToken,
   bracketToken,
   quotedIdentifierToken,
+  backtickIdentifierToken,
   stringLiteralToken,
   numberLiteralToken,
   builtinFunctionToken,

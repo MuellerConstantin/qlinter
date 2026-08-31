@@ -1318,11 +1318,12 @@ Bracket a quoted name inside a LOAD instead of quoting it.
 
 ### Rule Details
 
-Qlik accepts two ways of writing a name that needs delimiting: `[Order Id]` and
-`"Order Id"` mean exactly the same thing. A script using both reads as if the
-two forms differed, and the reader spends attention deciding whether they do.
-This rule settles on brackets, the form [table-label-brackets](#table-label-brackets)
-already produces for table labels.
+Qlik accepts three ways of writing a name that needs delimiting inside a LOAD:
+square brackets, double quotation marks and grave accents. `[Order Id]`,
+`"Order Id"` and `` `Order Id` `` mean exactly the same thing. A script using
+more than one reads as if the forms differed, and the reader spends attention
+deciding whether they do. This rule settles on brackets, the form
+[table-label-brackets](#table-label-brackets) already produces for table labels.
 
 **Only inside a Qlik `Load`.** There the rule reaches a name wherever it
 appears: a field, a table label, a `Resident` table, an argument inside a
@@ -1343,17 +1344,19 @@ identifier that SQL Server, PostgreSQL, Oracle and SQLite all accept, while
 preceding load over SQL the `Load` half is rewritten and the `Select` below it
 is left as written.
 
-**Only double quotes are rewritten, never brackets.** The two forms are not
-mirror images: a double-quoted token is always a name, while bracketed text is
+**Quotes and accents are rewritten, never brackets.** The forms are not mirror
+images: a quoted or accented token is always a name, while bracketed text is
 not. Inline data (`Load * Inline [...]`) and a bracketed file path
 (`[lib://out/sales.qvd]`) are brackets meaning something else entirely, and
 rewriting them would change what the script loads or where it writes. Single
 quotes are string literals and are left alone for the same reason.
 
-A doubled quote inside the name stands for one quote, and the autofix unescapes
-it accordingly — Qlik's reference gives `"Michael said ""It's a beautiful day"."`
-as loading the text with plain quotes around the sentence. Brackets carry no
-escape of their own, since a bracket simply runs to the first `]`.
+A doubled quote inside a quoted name stands for one quote, and the autofix
+unescapes it accordingly — Qlik's reference gives `"Michael said ""It's a
+beautiful day"."` as loading the text with plain quotes around the sentence.
+Brackets carry no escape of their own, since a bracket simply runs to the first
+`]`, and the reference documents none for grave accents either, so the text
+inside a pair of those is taken literally.
 
 **A name with no bracket form is not flagged.** A bracket runs to the first
 `]`, so a name carrying one has nowhere to move to and the quoted form is the
@@ -1365,6 +1368,7 @@ Examples of **incorrect** code for this rule:
 "Sales":
 Load
     "Order Id",
+    `Customer Id`,
     Sum("Amount") as Total
 Resident "Src";
 ```
@@ -1375,6 +1379,7 @@ Examples of **correct** code for this rule:
 [Sales]:
 Load
     [Order Id],
+    [Customer Id],
     Sum([Amount]) as Total
 Resident [Src];
 
@@ -1391,9 +1396,6 @@ SQL Select "Order Id" From orders;
 This rule has no options. Brackets are the one form this project takes a
 position on; quoting every name instead would collide with what bracketed text
 means outside a name.
-
-Qlik accepts a third delimiter for names, the grave accent (`` ` ``). qlinter
-does not tokenize it yet, so this rule neither reports nor rewrites it.
 
 ---
 

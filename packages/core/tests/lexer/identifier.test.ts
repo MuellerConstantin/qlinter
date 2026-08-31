@@ -5,6 +5,7 @@ import {
   identifierToken,
   lexer,
   numberLiteralToken,
+  backtickIdentifierToken,
   quotedIdentifierToken,
 } from '../../src/lexer.js';
 
@@ -128,6 +129,37 @@ describe('identifier tokenization', () => {
       expect(tokens).toHaveLength(1);
       expect(tokens[0].tokenType).toBe(quotedIdentifierToken);
       expect(tokens[0].image).toBe('"a""b"');
+    });
+
+    /*
+     * The grave accent is the third delimiter Qlik accepts for a field or table
+     * name. Before it had a token of its own, `my field` split into two bare
+     * identifiers and `Name"5` raised a lex error, so every rule downstream saw
+     * a stream that did not match the script.
+     *
+     * @see https://help.qlik.com/en-US/cloud-services/Subsystems/Hub/Content/Sense_Hub/Scripting/use-quotes-in-script.htm
+     */
+    it('tokenizes `my field` as one backtick identifier', () => {
+      const { tokens, errors } = lexer.tokenize('`my field`');
+
+      expect(errors).toEqual([]);
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].tokenType).toBe(backtickIdentifierToken);
+      expect(tokens[0].image).toBe('`my field`');
+    });
+
+    it('keeps a double quote inside a backtick identifier', () => {
+      const { tokens, errors } = lexer.tokenize('`Name"5`');
+
+      expect(errors).toEqual([]);
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].image).toBe('`Name"5`');
+    });
+
+    it('treats a grave accent as a stop character for a bare identifier', () => {
+      const { tokens } = lexer.tokenize('`a`b`c`');
+
+      expect(tokens.map((token) => token.image)).toEqual(['`a`', 'b', '`c`']);
     });
 
     it('still tokenizes [my field] as one bracket identifier', () => {

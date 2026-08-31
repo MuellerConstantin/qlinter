@@ -1,13 +1,19 @@
 import { tokenMatcher, type IToken } from 'chevrotain';
-import { quotedIdentifierToken } from '../lexer.js';
+import { backtickIdentifierToken, quotedIdentifierToken } from '../lexer.js';
 import { tokenFix, tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
 import { collectStatementSpans, findAtTopLevel, findLoadIndex } from './utils/statements.js';
 import { isKeyword } from './utils/tokens.js';
 
-/* The name a quoted identifier stands for: the text between the quotes, a doubled quote counting as one. */
-function nameOf(image: string): string {
-  return image.slice(1, -1).replace(/""/g, '"');
+/*
+ * The name a delimited identifier stands for. Inside double quotes a doubled
+ * quote counts as one; the reference documents no such escape for an accent, so
+ * that form is taken literally.
+ */
+function nameOf(token: IToken): string {
+  const inner = token.image.slice(1, -1);
+
+  return tokenMatcher(token, quotedIdentifierToken) ? inner.replace(/""/g, '"') : inner;
 }
 
 /*
@@ -34,11 +40,11 @@ export const loadIdentifierBrackets: Rule<undefined, 'load-identifier-brackets'>
      */
     for (const statement of collectStatementSpans(tokens).filter((s) => isQlikLoad(s.tokens))) {
       for (const token of statement.tokens) {
-        if (!tokenMatcher(token, quotedIdentifierToken)) {
+        if (!tokenMatcher(token, quotedIdentifierToken) && !tokenMatcher(token, backtickIdentifierToken)) {
           continue;
         }
 
-        const name = nameOf(token.image);
+        const name = nameOf(token);
 
         /* A bracket runs to the first `]` and an empty one names nothing: neither name has a bracket form. */
         if (name.length === 0 || name.includes(']')) {

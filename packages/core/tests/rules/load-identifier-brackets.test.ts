@@ -46,6 +46,25 @@ describe('load-identifier-brackets', () => {
       expect(result.fixed).toBe(1);
     });
 
+    it('flags a name delimited by grave accents', () => {
+      const result = formatRule('Load `Order Id` Resident Src;\n', loadIdentifierBrackets);
+
+      expect(result.output).toBe('Load [Order Id] Resident Src;\n');
+      expect(result.fixed).toBe(1);
+    });
+
+    it('keeps a double quote carried inside a backtick name', () => {
+      const result = formatRule('Load `Name"5` Resident Src;\n', loadIdentifierBrackets);
+
+      expect(result.output).toBe('Load [Name"5] Resident Src;\n');
+    });
+
+    it('takes a backtick name literally, since no escape is documented for one', () => {
+      const result = formatRule('Load `a""b` Resident Src;\n', loadIdentifierBrackets);
+
+      expect(result.output).toBe('Load [a""b] Resident Src;\n');
+    });
+
     it('accepts an identifier already in brackets', () => {
       expect(lintRule('Load [Order Id] Resident [Src];\n', loadIdentifierBrackets)).toEqual([]);
     });
@@ -164,6 +183,16 @@ describe('load-identifier-brackets', () => {
 
     it('says nothing about an empty name', () => {
       expect(lintRule('Load "" Resident Src;\n', loadIdentifierBrackets)).toEqual([]);
+    });
+
+    it('says nothing about a backtick name carrying a closing bracket', () => {
+      expect(lintRule('Load `Order]Id` Resident Src;\n', loadIdentifierBrackets)).toEqual([]);
+    });
+
+    it('leaves a backtick name outside a Load alone', () => {
+      const source = 'Let vThreshold = `vOther` + 1;\n';
+
+      expect(formatRule(source, loadIdentifierBrackets).output).toBe(source);
     });
 
     it('unescapes a doubled quote when moving to brackets', () => {
