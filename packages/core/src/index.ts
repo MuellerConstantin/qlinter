@@ -33,6 +33,7 @@ export {
   commentSpace,
   loadClauseNewline,
   loadFieldPerLine,
+  loadIdentifierBrackets,
   loadIndent,
   noBlankLineInStatement,
   noLeadingBlankLines,

@@ -17,6 +17,7 @@
 | [inline-comment-space](#inline-comment-space)             | Require exactly one space between code and a trailing comment.   |
 | [load-clause-newline](#load-clause-newline)               | Require each LOAD clause keyword to start its own line.          |
 | [load-field-per-line](#load-field-per-line)               | Require each LOAD field to start on its own line.                |
+| [load-identifier-brackets](#load-identifier-brackets)     | Bracket a quoted name inside a LOAD instead of quoting it.       |
 | [load-indent](#load-indent)                               | Indent LOAD fields one step deeper than the LOAD keyword.        |
 | [max-line-length](#max-line-length)                       | Limit how long a single line of script may be.                   |
 | [multiline-call](#multiline-call)                         | Break overlong single-line function calls across multiple lines. |
@@ -1308,6 +1309,91 @@ From [lib://x.qvd] (qvd);
 ### Options
 
 This rule has no options.
+
+---
+
+## load-identifier-brackets
+
+Bracket a quoted name inside a LOAD instead of quoting it.
+
+### Rule Details
+
+Qlik accepts two ways of writing a name that needs delimiting: `[Order Id]` and
+`"Order Id"` mean exactly the same thing. A script using both reads as if the
+two forms differed, and the reader spends attention deciding whether they do.
+This rule settles on brackets, the form [table-label-brackets](#table-label-brackets)
+already produces for table labels.
+
+**Only inside a Qlik `Load`.** There the rule reaches a name wherever it
+appears: a field, a table label, a `Resident` table, an argument inside a
+function call, a `Where` comparison.
+
+Everywhere else a double-quoted name is left alone, because it does not mean the
+same thing. Qlik's reference is explicit: "Outside a LOAD statement, in places
+where Qlik Sense expects an expression, double quotation marks denote a variable
+reference and not a field reference." Bracketing `"vOther"` in `Let vX = "vOther"`
+would turn a variable reference into a field reference and silently change what
+the script does.
+
+**A `Select` is never touched either**, for a different reason: its text reaches
+the database untouched, so the delimiter for a name there follows that
+database's dialect rather than Qlik's. `"Order Id"` is the ANSI delimited
+identifier that SQL Server, PostgreSQL, Oracle and SQLite all accept, while
+`[Order Id]` is SQL Server's alone and a syntax error on the rest. In a
+preceding load over SQL the `Load` half is rewritten and the `Select` below it
+is left as written.
+
+**Only double quotes are rewritten, never brackets.** The two forms are not
+mirror images: a double-quoted token is always a name, while bracketed text is
+not. Inline data (`Load * Inline [...]`) and a bracketed file path
+(`[lib://out/sales.qvd]`) are brackets meaning something else entirely, and
+rewriting them would change what the script loads or where it writes. Single
+quotes are string literals and are left alone for the same reason.
+
+A doubled quote inside the name stands for one quote, and the autofix unescapes
+it accordingly — Qlik's reference gives `"Michael said ""It's a beautiful day"."`
+as loading the text with plain quotes around the sentence. Brackets carry no
+escape of their own, since a bracket simply runs to the first `]`.
+
+**A name with no bracket form is not flagged.** A bracket runs to the first
+`]`, so a name carrying one has nowhere to move to and the quoted form is the
+only one it has; an empty name has none either.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+"Sales":
+Load
+    "Order Id",
+    Sum("Amount") as Total
+Resident "Src";
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+[Sales]:
+Load
+    [Order Id],
+    Sum([Amount]) as Total
+Resident [Src];
+
+// Outside a Load a double-quoted name is a variable reference, not a field.
+Let vThreshold = "vDefaultThreshold" + 1;
+
+// A Select reaches the database as written, where "..." is the ANSI form.
+[Orders]:
+SQL Select "Order Id" From orders;
+```
+
+### Options
+
+This rule has no options. Brackets are the one form this project takes a
+position on; quoting every name instead would collide with what bracketed text
+means outside a name.
+
+Qlik accepts a third delimiter for names, the grave accent (`` ` ``). qlinter
+does not tokenize it yet, so this rule neither reports nor rewrites it.
 
 ---
 

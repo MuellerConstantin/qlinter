@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `comment-space`, `inline-comment-space`, `block-comment-stars`,
   `operator-spacing`, `paren-spacing`), and correctness
   (`include-no-spaces`, `no-legacy-path-variables`, `table-label-brackets`,
+  `load-identifier-brackets`,
   `variable-charset`). Each rule answers one question and claims its own lines
   or tokens: `comma-space` owns the whitespace on both sides of a comma,
   `comma-style` owns which line the comma sits on. See

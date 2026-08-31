@@ -15,6 +15,7 @@ import { includeNoSpaces } from './include-no-spaces.js';
 import { inlineCommentSpace } from './inline-comment-space.js';
 import { loadClauseNewline } from './load-clause-newline.js';
 import { loadFieldPerLine } from './load-field-per-line.js';
+import { loadIdentifierBrackets } from './load-identifier-brackets.js';
 import { loadIndent } from './load-indent.js';
 import { maxLineLength } from './max-line-length.js';
 import { multilineCall } from './multiline-call.js';
@@ -67,6 +68,7 @@ export const allRules = [
   inlineCommentSpace,
   loadClauseNewline,
   loadFieldPerLine,
+  loadIdentifierBrackets,
   loadIndent,
   maxLineLength,
   multilineCall,
@@ -170,6 +172,7 @@ export {
   inlineCommentSpace,
   loadClauseNewline,
   loadFieldPerLine,
+  loadIdentifierBrackets,
   loadIndent,
   maxLineLength,
   multilineCall,

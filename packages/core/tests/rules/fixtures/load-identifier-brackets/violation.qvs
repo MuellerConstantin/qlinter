@@ -1,0 +1,14 @@
+"Sales":
+Load
+    "Order Id",
+    "Customer Id",
+    Sum("Amount") as Total
+Resident "Src"
+Group By "Order Id";
+
+// Outside a Load a double-quoted name is a variable reference, not a field.
+Let vThreshold = "vDefaultThreshold" + 1;
+
+// A Select reaches the database as written, where "..." is the ANSI form.
+[Orders]:
+SQL Select "Order Id" From orders;

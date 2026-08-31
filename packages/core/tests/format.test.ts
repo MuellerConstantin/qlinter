@@ -3,7 +3,13 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { format, type Diagnostic, type Fix } from '../src/index.js';
 import { applyFixes, runFormatLoop } from '../src/runner.js';
-import { tableLabelBrackets, builtinFunctionCase, builtinKeywordCase, recommended } from '../src/rules/index.js';
+import {
+  tableLabelBrackets,
+  builtinFunctionCase,
+  builtinKeywordCase,
+  loadIdentifierBrackets,
+  recommended,
+} from '../src/rules/index.js';
 import { formatRule } from './support.js';
 
 const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
@@ -37,6 +43,16 @@ describe('format', () => {
 
       expect(result.output).toBe(expected);
       expect(result.fixed).toBe(1);
+      expect(result.diagnostics).toEqual([]);
+    });
+
+    it('rewrites quoted identifiers into the bracketed form', () => {
+      const violation = readFixture('load-identifier-brackets', 'violation');
+      const expected = readFixture('load-identifier-brackets', 'clean');
+
+      const result = formatRule(violation, loadIdentifierBrackets);
+
+      expect(result.output).toBe(expected);
       expect(result.diagnostics).toEqual([]);
     });
 
