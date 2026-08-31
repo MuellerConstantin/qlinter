@@ -2,7 +2,7 @@ import { tokenMatcher, type IToken } from 'chevrotain';
 import { blockCloseToken, colonToken, semicolonToken, sourceClauseToken } from '../lexer.js';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
-import { detectLineEnding, isBlankLine, splitLines } from './utils/lines.js';
+import { detectLineEnding, insertLineBefore, isBlankLine, splitLines } from './utils/lines.js';
 import { collectStatementSpans, findAtTopLevel, findLoadIndex, type StatementSpan } from './utils/statements.js';
 import { isKeyword } from './utils/tokens.js';
 
@@ -105,7 +105,7 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
           label === undefined
             ? 'A table should be preceded by a blank line.'
             : `Table '${label}' should be preceded by a blank line.`,
-        fix: { range: { start: start.start, end: start.start }, replacement: detectLineEnding(source) },
+        fix: insertLineBefore(spans, top, detectLineEnding(source)),
       });
     }
 

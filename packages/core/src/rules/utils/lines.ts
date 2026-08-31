@@ -1,4 +1,5 @@
 import type { IToken } from 'chevrotain';
+import type { Fix } from '../../types.js';
 
 /*
  * The line ending `text` is written in.
@@ -61,4 +62,19 @@ export function splitLines(text: string): LineSpan[] {
 /** True when the span holds nothing but whitespace. A comment does not count as blank. */
 export function isBlankLine(text: string, span: LineSpan): boolean {
   return text.slice(span.start, span.end).trim() === '';
+}
+
+/** Fix that inserts one `ending` at the top of `line`, pushing it down a row. */
+export function insertLineBefore(spans: LineSpan[], line: number, ending: string): Fix {
+  const offset = spans[line - 1].start;
+
+  return { range: { start: offset, end: offset }, replacement: ending };
+}
+
+/** Fix that removes lines `from` through `to` (1-based, inclusive) along with their terminators. */
+export function deleteLineRange(spans: LineSpan[], from: number, to: number): Fix {
+  const first = spans[from - 1];
+  const last = spans[to - 1];
+
+  return { range: { start: first.start, end: last.end + last.terminator.length }, replacement: '' };
 }

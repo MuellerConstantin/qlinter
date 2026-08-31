@@ -1,0 +1,24 @@
+[Sales]:
+Load
+    OrderId,
+    // The amount is already net.
+    Amount
+From [lib://qvd/sales.qvd] (qvd);
+
+[Regions]:
+Load * Inline [
+RegionId, RegionName
+1, North
+
+2, South
+];
+
+[Notes]:
+Load
+    Id,
+    /*
+     * A blank line inside a block comment is part of the comment.
+
+     */
+    Note
+Resident [Sales];

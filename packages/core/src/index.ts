@@ -34,6 +34,7 @@ export {
   loadClauseNewline,
   loadFieldPerLine,
   loadIndent,
+  noBlankLineInStatement,
   noLegacyPathVariables,
   noMultipleEmptyLines,
   paddedBlocks,

@@ -1,0 +1,18 @@
+[Sales]:
+Load
+    OrderId,
+
+    Amount
+From [lib://qvd/sales.qvd] (qvd);
+
+[Customers]:
+
+Load
+    CustomerId
+From [lib://qvd/customers.qvd] (qvd);
+
+[Products]:
+Load
+    ProductId
+
+From [lib://qvd/products.qvd] (qvd);

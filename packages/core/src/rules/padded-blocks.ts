@@ -1,7 +1,14 @@
 import { tokenRange } from '../token.js';
-import type { Fix, Finding, Rule } from '../types.js';
+import type { Finding, Rule } from '../types.js';
 import { classifyBlockLine, closesBody, opensBody } from './utils/blocks.js';
-import { detectLineEnding, isBlankLine, splitLines, type LineSpan } from './utils/lines.js';
+import {
+  deleteLineRange,
+  detectLineEnding,
+  insertLineBefore,
+  isBlankLine,
+  splitLines,
+  type LineSpan,
+} from './utils/lines.js';
 import { collectStatementSpans } from './utils/statements.js';
 
 export const BLOCK_PADDING_STYLES = ['always', 'never'] as const;
@@ -32,19 +39,6 @@ function contentAbove(source: string, spans: LineSpan[], from: number): number {
   }
 
   return line;
-}
-
-function insertBefore(spans: LineSpan[], line: number, ending: string): Fix {
-  const offset = spans[line - 1].start;
-
-  return { range: { start: offset, end: offset }, replacement: ending };
-}
-
-function deleteLines(spans: LineSpan[], from: number, to: number): Fix {
-  const first = spans[from - 1];
-  const last = spans[to - 1];
-
-  return { range: { start: first.start, end: last.end + last.terminator.length }, replacement: '' };
 }
 
 export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
@@ -83,7 +77,7 @@ export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
           message: wanted
             ? 'Block body should start with a blank line.'
             : 'Block body should not start with a blank line.',
-          fix: wanted ? insertBefore(spans, body, ending) : deleteLines(spans, above.lastLine + 1, body - 1),
+          fix: wanted ? insertLineBefore(spans, body, ending) : deleteLineRange(spans, above.lastLine + 1, body - 1),
         });
 
         continue;
@@ -99,7 +93,7 @@ export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
       out.push({
         range: tokenRange(below.first),
         message: wanted ? 'Block body should end with a blank line.' : 'Block body should not end with a blank line.',
-        fix: wanted ? insertBefore(spans, below.line, ending) : deleteLines(spans, body + 1, below.line - 1),
+        fix: wanted ? insertLineBefore(spans, below.line, ending) : deleteLineRange(spans, body + 1, below.line - 1),
       });
     }
 
