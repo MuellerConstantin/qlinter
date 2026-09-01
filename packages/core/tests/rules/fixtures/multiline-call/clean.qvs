@@ -10,3 +10,6 @@ LET vCategory = If(
 
 // A single-argument call cannot be meaningfully split, so it is never flagged.
 LET vAbsurdlyLongFieldNameThatWouldNormallyMakeThisLineExceedTheConfiguredLimit = Sum(vMonthlyRevenueAcrossEveryRegionThatWeReport);
+
+// A Let-less assignment is bound to one row, so it is never broken up.
+vCategory = If(vYear >= 2025 and vMonth >= 6 and vDay >= 15, 'in the late second half of the year 2025', 'before mid-June 2025');

@@ -9,8 +9,7 @@ import {
   sourceClauseToken,
   statementTerminatorToken,
 } from '../src/lexer.js';
-import { previousLineClosesStatement, splitStatements } from '../src/rules/utils/statements.js';
-import { groupByLine } from '../src/rules/utils/lines.js';
+import { isKeywordLessAssignment, splitStatements, statementStartLines } from '../src/rules/utils/statements.js';
 
 function tokenize(source: string) {
   return lexer.tokenize(source).tokens;
@@ -152,14 +151,50 @@ describe('statement boundaries', () => {
     it('keeps a parenthesised semicolon from splitting a statement', () => {
       expect(splitStatements(tokenize("Load Replace(x, ';', '') AS Y Resident S;\n"))).toHaveLength(1);
     });
+
+    it('ends a keyword-less assignment at the end of its row', () => {
+      const stmts = splitStatements(tokenize('vA = 1\nvB = 2\nTrace done;\n'));
+
+      expect(stmts).toHaveLength(3);
+      expect(stmts.map((stmt) => stmt[0].image)).toEqual(['vA', 'vB', 'Trace']);
+    });
+
+    it('keeps a keyword-less assignment that a semicolon already closed in one piece', () => {
+      expect(splitStatements(tokenize('vA = 1;\nTrace done;\n'))).toHaveLength(2);
+    });
+
+    it('does not cut a Let statement at a row end', () => {
+      expect(splitStatements(tokenize('Let vA = 1\n    + 2;\n'))).toHaveLength(1);
+    });
   });
 
-  describe('previousLineClosesStatement', () => {
-    const closes = (source: string) => {
-      const lines = groupByLine(tokenize(source));
+  /*
+   * Qlik lets the `Let` of an assignment be dropped, and binds what remains to
+   * a single script row. The rules read that off the statement's first two
+   * tokens, so both halves of the claim are pinned here.
+   */
+  describe('isKeywordLessAssignment', () => {
+    it.each([
+      ['vFlag = 1', 'a plain variable'],
+      ["ThousandSep = ','", 'a system variable'],
+      ['vFlag=1', 'no space around the equals sign'],
+    ])('recognises %s (%s)', (source) => {
+      expect(isKeywordLessAssignment(tokenize(source))).toBe(true);
+    });
 
-      return previousLineClosesStatement(lines[0].tokens);
-    };
+    it.each([
+      ['Let vFlag = 1', 'a Let statement'],
+      ['Set vFlag = 1', 'a Set statement'],
+      ['Load A From Src', 'a Load statement'],
+      ['vFlag', 'a bare identifier'],
+      ['[vFlag] = 1', 'a bracketed name, which the reference does not describe'],
+    ])('does not recognise %s (%s)', (source) => {
+      expect(isKeywordLessAssignment(tokenize(source))).toBe(false);
+    });
+  });
+
+  describe('statementStartLines', () => {
+    const closes = (source: string) => statementStartLines(tokenize(`${source}\nTrace after;\n`)).has(2);
 
     it.each([
       ['Let x = 1;', 'a semicolon'],
@@ -170,6 +205,7 @@ describe('statement boundaries', () => {
       ['End If', 'a block close'],
       ['Sub greet', 'a single-line Sub header'],
       ['Case 1', 'a Case header'],
+      ['vFlag = 1', 'a keyword-less assignment, which its row ends'],
     ])('%s closes its statement (%s)', (source) => {
       expect(closes(source)).toBe(true);
     });
@@ -178,8 +214,24 @@ describe('statement boundaries', () => {
       ['Load', 'a bare Load'],
       ['    A,', 'a field line'],
       ['Resident Src', 'a clause line'],
+      ['Let x = 1', 'an unterminated Let'],
     ])('%s does not close its statement (%s)', (source) => {
       expect(closes(source)).toBe(false);
+    });
+
+    it('reads a row-bound assignment as its own statement', () => {
+      expect([...statementStartLines(tokenize('vA = 1\nvB = 2\nTrace done;\n'))]).toEqual([1, 2, 3]);
+    });
+
+    /*
+     * `A = 1` heading a line only ends a statement where that line started one.
+     * Inside a broken-up call it is an argument, and reading it as a statement
+     * start would hand the lines below it to the wrong indent.
+     */
+    it('does not read an argument of a broken call as a statement start', () => {
+      const source = "Let vX = If(\n    A = 1,\n    'y',\n    'n'\n);\n";
+
+      expect([...statementStartLines(tokenize(source))]).toEqual([1]);
     });
   });
 });

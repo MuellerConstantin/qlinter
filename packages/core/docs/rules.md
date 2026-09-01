@@ -401,6 +401,19 @@ fields, a long `WHERE` clause — are intentionally **not** enforced; their layo
 is a separate concern. This keeps the rule focused on block structure and out of
 the way of formatting choices for long statements.
 
+Where one statement ends and the next begins is read from the tokens: a `;`, a
+table label's `:`, a block closer, or a header keyword that Qlik keeps on one
+row. An assignment written without `Let` also ends where its row does, with or
+without a `;` — Qlik reads such a statement as a control statement, and one
+"must be contained within a single script row and may be terminated either with
+a semicolon or end-of-line". So the second line below starts a statement of its
+own and is checked as one, rather than hanging off the first as a continuation:
+
+```qlik
+vFirst = 1
+vSecond = 2
+```
+
 Indentation rules for the supported constructs:
 
 - `Sub … End Sub`, `If … End If`, `For … Next`, `Do … Loop`, `Switch … End Switch`
@@ -1900,6 +1913,19 @@ broken, so each level is handled in turn without overlapping fixes.
 
 User-defined function calls (`MyFunc(a, b)`) and `Call myFunc(...)` syntax
 are intentionally out of scope — only built-in functions are considered.
+
+An assignment written without `Let` is skipped whole. Qlik accepts the short
+form, but the statement is then a control statement, and one "must be contained
+within a single script row and may be terminated either with a semicolon or
+end-of-line" — so a call broken across lines inside it would leave a script the
+Data Load Editor refuses. Written with `Let`, the same call is broken as usual.
+The line is still reported by [max-line-length](#max-line-length); there is
+simply nothing this rule can safely do about it.
+
+```qlik
+// Skipped: dropping Let binds the statement to this one row.
+vCategory = If(vYear >= 2025 and vMonth >= 6, 'late 2025 or later', 'before mid-2025');
+```
 
 The autofix replaces the parenthesised body with one argument per line and
 places the closing `)` on its own line. It writes no indentation of its own:

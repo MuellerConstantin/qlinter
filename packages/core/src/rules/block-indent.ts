@@ -3,7 +3,7 @@ import type { Rule, Finding } from '../types.js';
 import { hasExpectedIndent, makeIndentFinding, INDENT_OPTIONS_SCHEMA, type IndentStyle } from './utils/indent.js';
 import { classifyBlockLine } from './utils/blocks.js';
 import { groupByLine } from './utils/lines.js';
-import { previousLineClosesStatement } from './utils/statements.js';
+import { statementStartLines } from './utils/statements.js';
 
 export interface BlockIndentOptions {
   size: number;
@@ -47,13 +47,10 @@ export const blockIndent: Rule<BlockIndentOptions, 'block-indent'> = {
      * and closed by the next `Case`/`Default` or by `End Switch`.
      */
     const stack: ('block' | 'case')[] = [];
-    let prevTokens: IToken[] | undefined;
+    const starts = statementStartLines(tokens);
 
-    for (const { tokens: lineTokens } of lines) {
-      const isStart = prevTokens === undefined || previousLineClosesStatement(prevTokens);
-      prevTokens = lineTokens;
-
-      if (!isStart) {
+    for (const { line, tokens: lineTokens } of lines) {
+      if (!starts.has(line)) {
         continue;
       }
 

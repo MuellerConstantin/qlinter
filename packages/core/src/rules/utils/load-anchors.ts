@@ -5,8 +5,8 @@ import {
   findFieldListBoundaries,
   findLoadIndex,
   isClauseStarter,
-  previousLineClosesStatement,
   splitStatements,
+  statementStartLines,
 } from './statements.js';
 import { isCloseParen, isOpenParen } from './tokens.js';
 
@@ -97,7 +97,9 @@ function findStatementStartLine(tokens: IToken[], loadLine: number): number {
     return loadLine;
   }
 
-  while (idx > 0 && !previousLineClosesStatement(lines[idx - 1].tokens)) {
+  const starts = statementStartLines(tokens);
+
+  while (idx > 0 && !starts.has(lines[idx].line)) {
     idx--;
   }
 

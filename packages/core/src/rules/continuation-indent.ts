@@ -9,7 +9,7 @@ import {
 } from './utils/indent.js';
 import { groupByLine } from './utils/lines.js';
 import { collectLoadAnchors } from './utils/load-anchors.js';
-import { previousLineClosesStatement } from './utils/statements.js';
+import { statementStartLines } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
 export interface ContinuationIndentOptions {
@@ -60,14 +60,13 @@ export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-i
     }
 
     const out: Finding[] = [];
+    const starts = statementStartLines(tokens);
     let depth = 0;
     let anchorIndent = 0;
-    let prevTokens: IToken[] | undefined;
 
-    for (const { tokens: lineTokens } of groupByLine(tokens)) {
-      const isStatementStart = prevTokens === undefined || previousLineClosesStatement(prevTokens);
+    for (const { line, tokens: lineTokens } of groupByLine(tokens)) {
+      const isStatementStart = starts.has(line);
       const first = lineTokens[0];
-      prevTokens = lineTokens;
 
       /*
        * Every anchor sits at parenthesis depth 0 within its statement, so a

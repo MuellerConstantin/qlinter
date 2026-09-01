@@ -135,6 +135,24 @@ describe('multiline-call', () => {
     expect(result.output).not.toMatch(/(?<!\r)\n/);
   });
 
+  /*
+   * Qlik binds an assignment written without `Let` to a single script row, so
+   * breaking its call apart would leave the script unloadable.
+   */
+  it('leaves a keyword-less assignment on the one row Qlik allows it', () => {
+    const result = formatRule("vX = If(a, 'b', 'c');\n", multilineCall, { maxLineLength: 20 });
+
+    expect(result.output).toBe("vX = If(a, 'b', 'c');\n");
+    expect(result.fixed).toBe(0);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it('breaks the same call once it is written as a Let statement', () => {
+    const diagnostics = lintRule("Let vX = If(a, 'b', 'c');\n", multilineCall, { maxLineLength: 20 });
+
+    expect(diagnostics).toHaveLength(1);
+  });
+
   it('ignores commas inside string literals, bracket identifiers, and Trace bodies', () => {
     const diagnostics = lintRule(
       "LET vStr = 'a,b,c,d,e,f';\nLOAD [Order,Items,More] FROM [lib://x.qvd];\nTrace loading a,b,c,d,e,f;\n",

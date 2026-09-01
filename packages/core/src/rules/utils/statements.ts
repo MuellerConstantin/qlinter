@@ -3,6 +3,8 @@ import {
   blockCloseToken,
   clauseStarterToken,
   colonToken,
+  equalsToken,
+  identifierToken,
   semicolonToken,
   statementTerminatorToken,
 } from '../../lexer.js';
@@ -24,12 +26,38 @@ export function isClauseStarter(token: IToken): boolean {
 const SINGLE_LINE_HEADER = new Set(['sub', 'for', 'switch', 'case', 'elseif']);
 
 /*
- * Whether the line made of `prevTokens` ends its statement, so the line after
- * it starts a new one.
+ * An assignment written without `Let`. Qlik accepts the form, but the statement
+ * is then a control statement, and one "must be contained within a single
+ * script row and may be terminated either with a semicolon or end-of-line".
+ * Two consequences the rules have to agree on: the row's end terminates such a
+ * statement even without a `;`, and no fix may push part of it onto a second
+ * row, which would make the script unloadable.
+ *
+ * Only meaningful at the start of a statement: `A = 1` in a LOAD field list is
+ * an expression, not an assignment. The quoted sentence stands in the September
+ * 2020 reference; later revisions of the page dropped it, the behaviour intact.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/September2020/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/Let.htm | Let}
  */
-export function previousLineClosesStatement(prevTokens: IToken[]): boolean {
-  const first = prevTokens[0];
-  const last = prevTokens[prevTokens.length - 1];
+export function isKeywordLessAssignment(tokens: IToken[]): boolean {
+  const [name, equals] = tokens;
+
+  if (name === undefined || equals === undefined) {
+    return false;
+  }
+
+  return tokenMatcher(name, identifierToken) && tokenMatcher(equals, equalsToken);
+}
+
+/*
+ * Whether the line made of `lineTokens` ends its statement, so the line after
+ * it starts a new one. `startsStatement` says whether this line opened the
+ * statement it belongs to — a row-bound assignment can only be read off the
+ * line that starts one.
+ */
+function closesStatement(lineTokens: IToken[], startsStatement: boolean): boolean {
+  const first = lineTokens[0];
+  const last = lineTokens[lineTokens.length - 1];
 
   /* `;` ends any statement, `:` ends a table label, and the terminator keywords end theirs. */
   if (
@@ -44,11 +72,46 @@ export function previousLineClosesStatement(prevTokens: IToken[]): boolean {
     return true;
   }
 
+  if (startsStatement && isKeywordLessAssignment(lineTokens)) {
+    return true;
+  }
+
   return SINGLE_LINE_HEADER.has(first.image.toLowerCase());
 }
 
 /*
- * Split the token stream into statements at top-level semicolons.
+ * The lines that open a statement rather than continue the one above. Whether a
+ * line closes its statement can depend on whether that line started one, so the
+ * answer comes from folding the file top down; doing it here once keeps the
+ * rules that ask from each carrying their own copy of that state.
+ */
+export function statementStartLines(tokens: IToken[]): ReadonlySet<number> {
+  const out = new Set<number>();
+  let previous: { tokens: IToken[]; starts: boolean } | undefined;
+
+  for (const { line, tokens: lineTokens } of groupByLine(tokens)) {
+    const starts = previous === undefined || closesStatement(previous.tokens, previous.starts);
+
+    if (starts) {
+      out.add(line);
+    }
+
+    previous = { tokens: lineTokens, starts };
+  }
+
+  return out;
+}
+
+/** True when `token` opens a row below the one `current` has reached. */
+function startsNewRow(current: IToken[], token: IToken): boolean {
+  const last = current[current.length - 1];
+
+  return (token.startLine ?? 1) > (last.endLine ?? last.startLine ?? 1);
+}
+
+/*
+ * Split the token stream into statements at top-level semicolons, and at the
+ * row end of an assignment written without a keyword.
  * Parenthesised content keeps a `;` from terminating the statement; in
  * practice no Qlik construct puts `;` inside parens, but the depth check
  * keeps the splitter robust.
@@ -59,6 +122,11 @@ export function splitStatements(tokens: IToken[]): IToken[][] {
   let depth = 0;
 
   for (const t of tokens) {
+    if (depth === 0 && current.length > 0 && startsNewRow(current, t) && isKeywordLessAssignment(current)) {
+      stmts.push(current);
+      current = [];
+    }
+
     if (isOpenParen(t)) {
       depth++;
     } else if (isCloseParen(t)) {
@@ -180,11 +248,12 @@ function endsLabel(lineTokens: IToken[]): boolean {
  * about.
  */
 export function collectStatementSpans(tokens: IToken[]): StatementSpan[] {
+  const starts = statementStartLines(tokens);
   const out: StatementSpan[] = [];
   let previous: IToken[] | undefined;
 
   for (const { line, tokens: lineTokens } of groupByLine(tokens)) {
-    const continues = previous !== undefined && (!previousLineClosesStatement(previous) || endsLabel(previous));
+    const continues = previous !== undefined && (!starts.has(line) || endsLabel(previous));
 
     if (continues) {
       const current = out[out.length - 1];
