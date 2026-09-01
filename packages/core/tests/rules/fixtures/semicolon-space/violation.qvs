@@ -1,0 +1,9 @@
+Let vYear = 2026 ;
+
+[Sales]:
+Load
+    OrderId,
+    Amount
+Resident Src ;
+
+Drop Table Src	;

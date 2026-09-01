@@ -6,6 +6,7 @@
 | [blank-line-before-table](#blank-line-before-table)       | Require a blank line above each table a script builds.           |
 | [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.        |
 | [block-indent](#block-indent)                             | Enforce consistent indentation for Qlik block constructs.        |
+| [semicolon-space](#semicolon-space)                       | Disallow whitespace between a statement and its terminator.      |
 | [table-label-brackets](#table-label-brackets)             | Require table labels to be enclosed in brackets.                 |
 | [builtin-function-case](#builtin-function-case)           | Enforce canonical casing for Qlik built-in functions.            |
 | [builtin-keyword-case](#builtin-keyword-case)             | Enforce canonical casing for Qlik keywords.                      |
@@ -434,6 +435,61 @@ Sub greet
 →Trace hello;
 End Sub
 ```
+
+---
+
+## semicolon-space
+
+Disallow whitespace between a statement and its terminator.
+
+### Rule Details
+
+A `;` belongs to the statement it closes, and a gap in between makes it read as
+a token of its own. The counterpart on the other side of a comma is settled by
+[comma-space](#comma-space); this rule settles the terminator.
+
+The gap is measured **between the two tokens**, never by walking backwards
+through the source. That is what keeps the rule off characters a token owns: the
+body of a `Trace` runs all the way to its terminator, so the spaces before that
+`;` are message text and not spacing anyone chose. Reading the gap between
+tokens makes it empty there, and the rule has nothing to say.
+
+Two more gaps are left alone, for the same reason they are left alone elsewhere:
+
+- **A terminator that opens its own line.** Whatever stands before it is
+  indentation, and belongs to the indent rules.
+- **A gap carrying a comment.** Closing it would mean taking over comment
+  placement.
+
+The autofix deletes the whitespace.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Let vYear = 2026 ;
+
+[Sales]:
+Load
+    OrderId
+Resident Src ;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Let vYear = 2026;
+
+[Sales]:
+Load
+    OrderId
+Resident Src;
+
+Trace loading sales   ;
+```
+
+### Options
+
+This rule has no options.
 
 ---
 

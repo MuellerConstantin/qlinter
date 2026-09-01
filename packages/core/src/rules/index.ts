@@ -28,6 +28,7 @@ import { oneStatementPerLine } from './one-statement-per-line.js';
 import { operatorSpacing } from './operator-spacing.js';
 import { paddedBlocks } from './padded-blocks.js';
 import { parenSpacing } from './paren-spacing.js';
+import { semicolonSpace } from './semicolon-space.js';
 import { tableLabelBrackets } from './table-label-brackets.js';
 import { trailingWhitespace } from './trailing-whitespace.js';
 import { variableCase } from './variable-case.js';
@@ -82,6 +83,7 @@ export const allRules = [
   operatorSpacing,
   paddedBlocks,
   parenSpacing,
+  semicolonSpace,
   trailingWhitespace,
   variableCase,
   variableCharset,
@@ -187,6 +189,7 @@ export {
   operatorSpacing,
   paddedBlocks,
   parenSpacing,
+  semicolonSpace,
   tableLabelBrackets,
   trailingWhitespace,
   variableCase,

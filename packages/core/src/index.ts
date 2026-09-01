@@ -40,6 +40,7 @@ export {
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
+  semicolonSpace,
   paddedBlocks,
   trailingWhitespace,
   variableCase,

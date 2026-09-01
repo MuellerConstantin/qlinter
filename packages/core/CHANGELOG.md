@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `blank-line-before-table`, `blank-line-before-block`, `padded-blocks`, `no-blank-line-in-statement`,
   `no-leading-blank-lines`, `comma-style`, `trailing-whitespace`, `eol-last`),
   casing (`builtin-function-case`,
-  `builtin-keyword-case`, `variable-case`), spacing (`comma-space`,
+  `builtin-keyword-case`, `variable-case`), spacing (`comma-space`, `semicolon-space`,
   `comment-space`, `inline-comment-space`, `block-comment-stars`,
   `operator-spacing`, `paren-spacing`), and correctness
   (`include-no-spaces`, `no-legacy-path-variables`, `table-label-brackets`,
