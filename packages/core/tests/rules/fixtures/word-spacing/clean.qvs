@@ -1,0 +1,10 @@
+Let vYear = 2026;
+
+[Sales]:
+NoConcatenate Load Distinct
+    OrderId,
+    Amount
+Resident Src
+Group By OrderId;
+
+Drop Table Src;

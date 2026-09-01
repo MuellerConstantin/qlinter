@@ -44,6 +44,7 @@ export {
   paddedBlocks,
   trailingWhitespace,
   variableCase,
+  wordSpacing,
 } from './rules/index.js';
 export type {
   BlockIndentOptions,

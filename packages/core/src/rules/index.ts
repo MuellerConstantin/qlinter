@@ -33,6 +33,7 @@ import { tableLabelBrackets } from './table-label-brackets.js';
 import { trailingWhitespace } from './trailing-whitespace.js';
 import { variableCase } from './variable-case.js';
 import { variableCharset } from './variable-charset.js';
+import { wordSpacing } from './word-spacing.js';
 export { INDENT_STYLES } from './utils/indent.js';
 export { LINE_ENDINGS } from './one-statement-per-line.js';
 export { BLOCK_PADDING_STYLES } from './padded-blocks.js';
@@ -87,6 +88,7 @@ export const allRules = [
   trailingWhitespace,
   variableCase,
   variableCharset,
+  wordSpacing,
 ] as const;
 
 /**
@@ -194,4 +196,5 @@ export {
   trailingWhitespace,
   variableCase,
   variableCharset,
+  wordSpacing,
 };

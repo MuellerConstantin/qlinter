@@ -34,6 +34,7 @@
 | [trailing-whitespace](#trailing-whitespace)               | Disallow whitespace at the end of a line.                        |
 | [variable-case](#variable-case)                           | Enforce a consistent casing style for user-defined vars.         |
 | [variable-charset](#variable-charset)                     | Restrict user-defined variables to a safe identifier charset.    |
+| [word-spacing](#word-spacing)                             | Require exactly one space between two adjacent words.            |
 
 Every rule declares its options as a machine-readable schema, which is what
 `validateConfig` checks a config against and what host settings UIs render from.
@@ -2678,3 +2679,67 @@ configurable would invite every project to redefine "valid identifier", which
 defeats the point of an opinionated linter.
 
 ---
+
+---
+
+## word-spacing
+
+Require exactly one space between two adjacent words.
+
+### Rule Details
+
+`Let    vY` and `Load  Distinct` read as though the extra room meant something.
+This rule narrows every such gap to a single space.
+
+A **word** is anything that is not punctuation: a keyword, a name in any of its
+delimited forms, a literal. That boundary is what keeps the rule off gaps other
+rules already own — the space around a comma belongs to
+[comma-space](#comma-space), around a binary operator to
+[operator-spacing](#operator-spacing), around a call's parentheses to
+[paren-spacing](#paren-spacing), and before a terminator to
+[semicolon-space](#semicolon-space).
+
+**The arithmetic characters `+ - * /` stay outside this rule as well**, and that
+is a decision rather than an oversight. `operator-spacing` declines them because
+the same character is unary in `= -1`, binary in `a - b`, and the field wildcard
+in `Load *`, and the tokenizer cannot tell those apart. Taking the gaps over
+here would quietly undo that.
+
+**The fix only ever narrows a gap, never opens one.** Two words with no space at
+all would have lexed as a single token, so there is no separation for the rule
+to invent — it sees a run of whitespace or it sees nothing. A single tab counts
+as a run: it is whitespace, but it is not one space.
+
+Read between the two tokens rather than backwards through the source, the gap
+excludes anything a token owns, so the spacing inside a `Trace` message, inside
+`Inline` data and inside a string literal is out of reach. A gap carrying a line
+break is left to the indent rules, and one carrying a comment to whoever placed
+the comment.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Let    vYear = 2026;
+
+[Sales]:
+NoConcatenate  Load  Distinct
+    OrderId
+Resident    Src
+Group   By OrderId;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Let vYear = 2026;
+
+[Sales]:
+NoConcatenate Load Distinct
+    OrderId
+Resident Src
+Group By OrderId;
+```
+
+### Options
+
+This rule has no options.

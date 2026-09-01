@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   casing (`builtin-function-case`,
   `builtin-keyword-case`, `variable-case`), spacing (`comma-space`, `semicolon-space`,
   `comment-space`, `inline-comment-space`, `block-comment-stars`,
-  `operator-spacing`, `paren-spacing`), and correctness
+  `operator-spacing`, `paren-spacing`, `word-spacing`), and correctness
   (`include-no-spaces`, `no-legacy-path-variables`, `table-label-brackets`,
   `load-identifier-brackets`,
   `variable-charset`). Each rule answers one question and claims its own lines
