@@ -1,6 +1,12 @@
 import type { IToken } from 'chevrotain';
 import type { Rule, Finding } from '../types.js';
-import { hasExpectedIndent, makeIndentFinding, INDENT_OPTIONS_SCHEMA, type IndentStyle } from './utils/indent.js';
+import {
+  hasExpectedIndent,
+  indentAnchor,
+  makeIndentFinding,
+  INDENT_OPTIONS_SCHEMA,
+  type IndentStyle,
+} from './utils/indent.js';
 import { classifyBlockLine } from './utils/blocks.js';
 import { groupByLine } from './utils/lines.js';
 import { statementStartLines } from './utils/statements.js';
@@ -29,7 +35,7 @@ export const blockIndent: Rule<BlockIndentOptions, 'block-indent'> = {
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
   options: INDENT_OPTIONS_SCHEMA,
-  check: ({ source, tokens }, { size, style }) => {
+  check: ({ source, tokens, comments }, { size, style }) => {
     const out: Finding[] = [];
     const lines = groupByLine(tokens);
 
@@ -82,9 +88,10 @@ export const blockIndent: Rule<BlockIndentOptions, 'block-indent'> = {
       }
 
       const expectedWidth = expectedDepth * step;
+      const anchor = indentAnchor(source, first, comments);
 
-      if (!hasExpectedIndent(source, first, expectedWidth, indentChar)) {
-        out.push(makeIndentFinding(first, expectedWidth, indentChar, unitLabel));
+      if (anchor && !hasExpectedIndent(source, anchor, expectedWidth, indentChar)) {
+        out.push(makeIndentFinding(anchor, expectedWidth, indentChar, unitLabel));
       }
 
       switch (kind) {

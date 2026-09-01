@@ -3,6 +3,7 @@ import type { Rule, Finding, RuleContext } from '../types.js';
 import {
   firstTokenByLine,
   hasExpectedIndent,
+  indentAnchor,
   makeIndentFinding,
   INDENT_OPTIONS_SCHEMA,
   type IndentStyle,
@@ -17,25 +18,12 @@ export interface ContinuationIndentOptions {
   style: IndentStyle;
 }
 
-/*
- * False when the first token of a line is preceded by anything other than
- * whitespace — which happens when a token that started on an earlier line ends
- * on this one (`Inline [...]`, a multi-line string, a block comment). There is
- * no indentation to speak of on such a line: the leading characters belong to
- * the previous token, and rewriting them would corrupt it.
- */
-function isIndentable(source: string, first: IToken): boolean {
-  const lineStart = first.startOffset - ((first.startColumn ?? 1) - 1);
-
-  return /^[ \t]*$/.test(source.slice(lineStart, first.startOffset));
-}
-
 export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-indent'> = {
   id: 'continuation-indent',
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
   options: INDENT_OPTIONS_SCHEMA,
-  check: ({ source, tokens, firstOnLine }: RuleContext, { size, style }): Finding[] => {
+  check: ({ source, tokens, firstOnLine, comments }: RuleContext, { size, style }): Finding[] => {
     const indentChar = style === 'tab' ? '\t' : ' ';
     const step = style === 'tab' ? 1 : size;
     const unitLabel = style === 'tab' ? 'tab' : 'space';
@@ -80,12 +68,13 @@ export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-i
 
       if (isStatementStart || anchored.has(first)) {
         anchorIndent = (first.startColumn ?? 1) - 1;
-      } else if (isIndentable(source, first)) {
+      } else {
+        const anchor = indentAnchor(source, first, comments);
         const level = isCloseParen(first) ? depth - 1 : Math.max(depth, 1);
         const expectedWidth = anchorIndent + Math.max(0, level) * step;
 
-        if (!hasExpectedIndent(source, first, expectedWidth, indentChar)) {
-          out.push(makeIndentFinding(first, expectedWidth, indentChar, unitLabel));
+        if (anchor && !hasExpectedIndent(source, anchor, expectedWidth, indentChar)) {
+          out.push(makeIndentFinding(anchor, expectedWidth, indentChar, unitLabel));
         }
       }
 

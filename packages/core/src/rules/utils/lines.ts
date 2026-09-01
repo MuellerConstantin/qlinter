@@ -109,6 +109,27 @@ export function tokenInteriorLines(tokens: IToken[], comments: IToken[]): Set<nu
   return out;
 }
 
+/*
+ * The byte spans of the tokens that run across more than one line, in source
+ * order. Only such a token can hold a line ending, so only such a token can
+ * hold whitespace that looks trailing while being content the script carries.
+ *
+ * The line-based answer above cannot serve here: it starts at the token's
+ * second line, and whitespace at the end of its *first* line is inside the
+ * token just the same.
+ */
+export function multiLineTokenSpans(tokens: IToken[], comments: IToken[]): { start: number; end: number }[] {
+  const out: { start: number; end: number }[] = [];
+
+  for (const token of [...tokens, ...comments]) {
+    if ((token.endLine ?? token.startLine ?? 1) > (token.startLine ?? 1)) {
+      out.push({ start: token.startOffset, end: (token.endOffset ?? token.startOffset) + 1 });
+    }
+  }
+
+  return out.sort((a, b) => a.start - b.start);
+}
+
 /** Lines carrying a comment and no code. */
 export function commentOnlyLines(comments: IToken[], tokens: IToken[]): Set<number> {
   const code = new Set(tokens.map((token) => token.startLine ?? 1));

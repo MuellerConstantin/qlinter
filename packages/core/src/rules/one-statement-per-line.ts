@@ -2,6 +2,7 @@ import { tokenMatcher } from 'chevrotain';
 import { semicolonToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { fixStartOffset } from './utils/fixes.js';
 import { detectLineEnding } from './utils/lines.js';
 
 /**
@@ -54,7 +55,7 @@ export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statemen
         range: tokenRange(next),
         message: 'Each statement must start on its own line.',
         fix: {
-          range: { start: (token.endOffset ?? token.startOffset) + 1, end: next.startOffset },
+          range: { start: fixStartOffset(token, next, source), end: next.startOffset },
           replacement: newline,
         },
       });

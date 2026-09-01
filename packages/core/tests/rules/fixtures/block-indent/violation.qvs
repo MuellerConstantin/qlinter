@@ -16,3 +16,7 @@ Trace mode A;
 Default
       Trace unknown;
 End Switch
+
+Sub commented
+/* why */ Trace annotated;
+End Sub

@@ -475,6 +475,15 @@ Switch vMode
 End Switch
 ```
 
+A line may open with a comment ahead of its first keyword. Indentation is then
+measured and rewritten from the comment, so the comment travels with the line
+instead of being replaced by it.
+
+Where the characters ahead of a line's first content belong to a construct that
+opened further up — inline data, a multi-line string, a block comment — the line
+is skipped. Those characters are content the script carries rather than
+indentation, and rewriting them would corrupt the construct that owns them.
+
 ### Options
 
 | Option  | Type               | Default   | Range   | Description                             |
@@ -1106,6 +1115,13 @@ Let vName = ApplyMap('MapX',
     'unknown'
 );
 ```
+
+A continuation line may open with a comment. Indentation is then measured and
+rewritten from the comment rather than from the first code token behind it.
+
+A line whose leading characters belong to a construct opened further up — inline
+data, a multi-line string, a block comment — carries no indentation to speak of
+and is skipped.
 
 ### Options
 
@@ -1779,6 +1795,14 @@ Sub mapIt
 End Sub
 ```
 
+A header, field or clause line may open with a comment. Indentation is then
+measured and rewritten from the comment, so the comment keeps its place on the
+line instead of being replaced by the indent.
+
+A line whose leading characters belong to a construct opened further up — inline
+data, a multi-line string, a block comment — is skipped: there is no indentation
+on such a line, only content that happens to sit at the start of it.
+
 ### Options
 
 | Option  | Type               | Default   | Range   | Description                              |
@@ -2295,6 +2319,13 @@ End Sub
 SET vDone = 1;
 ```
 
+The autofix replaces the whitespace between the terminator and the statement
+after it, and nothing else. The run is consumed backwards from that statement,
+so whatever else sits in the gap stays where it is — a comment, or a character
+the lexer could not read in a script that is already broken elsewhere. Where the
+gap holds nothing but such content, the fix reduces to a line break inserted
+ahead of the statement.
+
 ### Options
 
 | Option       | Type                       | Default  | Description                                         |
@@ -2625,6 +2656,13 @@ SET vMonth = 6;
 SET vDay = 1;
 LET vHour = 12;
 ```
+
+Whitespace inside a construct the lexer keeps as a single token is not trailing
+whitespace. Inline data, a multi-line string literal and a block comment all
+carry their own line endings, and the spaces before those endings are content the
+script loads rather than layout. Lines ending inside such a construct are
+skipped, the line it opens on included. Whitespace past its end is flagged as
+usual.
 
 ### Options
 

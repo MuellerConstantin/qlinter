@@ -5,3 +5,5 @@ Load
     Field1,
     Field2
 Resident [Source]; SET vDone = 1;
+
+LET vA = 1; /* mid */ LET vB = 2;

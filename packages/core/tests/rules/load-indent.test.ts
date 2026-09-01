@@ -240,4 +240,12 @@ describe('load-indent', () => {
     );
     expect(result.diagnostics).toEqual([]);
   });
+
+  it('indents a field line by the comment opening it rather than dropping the comment', () => {
+    const result = formatRule('Load\n/* why */ A,\n    B\nFrom [lib://x/y.qvd];\n', loadIndent);
+
+    expect(result.output).toBe('Load\n    /* why */ A,\n    B\nFrom [lib://x/y.qvd];\n');
+    expect(result.fixed).toBe(1);
+    expect(result.diagnostics).toEqual([]);
+  });
 });

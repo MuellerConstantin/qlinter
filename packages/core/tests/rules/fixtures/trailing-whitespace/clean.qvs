@@ -2,3 +2,17 @@ SET vYear = 2026;
 SET vMonth = 6;
 SET vDay = 1;
 LET vHour = 12;
+
+LOAD * INLINE [
+Name, Value
+Alice, 1   
+Bob, 2
+];
+
+LET vNote = 'first line   
+second line';
+
+/*
+ * a rail line carrying trailing space   
+ */
+LET vDone = 1;

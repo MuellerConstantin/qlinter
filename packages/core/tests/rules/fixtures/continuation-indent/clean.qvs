@@ -45,3 +45,9 @@ Hierarchy(NodeId, ParentId,
 Load
     NodeId
 From X;
+
+// A comment may open a continuation line; the indent is measured from it.
+Let vTotal = RangeSum(
+    /* first */ 1,
+    2
+);

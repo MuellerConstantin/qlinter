@@ -11,3 +11,6 @@ Sub greet
     Trace hello;
 End Sub
 SET vDone = 1;
+
+LET vA = 1; /* mid */
+LET vB = 2;

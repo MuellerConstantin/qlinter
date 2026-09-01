@@ -12,6 +12,17 @@ function readFixture(kind: 'violation' | 'clean'): string {
 }
 
 describe('load-field-per-line', () => {
+  /*
+   * The gap before a field is consumed by walking its whitespace backwards, so
+   * content the token stream does not carry survives without the rule knowing
+   * what it is. A character the lexer skipped is the case that reaches this today.
+   */
+  it('keeps a character the lexer could not read out of the gap', () => {
+    const result = formatRule('LOAD "Field FROM [lib://x/y.qvd];\n', loadFieldPerLine);
+
+    expect(result.output).toBe('LOAD "\nField FROM [lib://x/y.qvd];\n');
+  });
+
   it('does not flag any clean LOAD shape', () => {
     const diagnostics = lintFixture('clean', loadFieldPerLine);
 

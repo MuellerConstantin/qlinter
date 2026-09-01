@@ -195,4 +195,12 @@ describe('continuation-indent', () => {
       expect(result.output).toBe(['[A]:', 'Load', '  Total', '    & Region', 'From X;'].join('\n'));
     });
   });
+
+  it('indents a continuation line by the comment opening it rather than dropping the comment', () => {
+    const result = formatRule('Let x = RangeSum(\n/* why */ 1,\n    2\n);\n', continuationIndent);
+
+    expect(result.output).toBe('Let x = RangeSum(\n    /* why */ 1,\n    2\n);\n');
+    expect(result.fixed).toBe(1);
+    expect(result.diagnostics).toEqual([]);
+  });
 });

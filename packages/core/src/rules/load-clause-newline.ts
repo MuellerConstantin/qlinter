@@ -6,7 +6,7 @@ import { detectLineEnding } from './utils/lines.js';
 import { findLoadIndex, isClauseStarter, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
-function checkStatement(tokens: IToken[], comments: IToken[], newline: string): Finding[] {
+function checkStatement(tokens: IToken[], source: string, newline: string): Finding[] {
   const loadIdx = findLoadIndex(tokens);
 
   if (loadIdx === -1) {
@@ -35,7 +35,7 @@ function checkStatement(tokens: IToken[], comments: IToken[], newline: string): 
           range: tokenRange(t),
           message: `LOAD clause '${t.image}' should start on its own line.`,
           fix: {
-            range: { start: fixStartOffset(prev, t, comments), end: t.startOffset },
+            range: { start: fixStartOffset(prev, t, source), end: t.startOffset },
             replacement: newline,
           },
         });
@@ -52,13 +52,13 @@ export const loadClauseNewline: Rule<undefined, 'load-clause-newline'> = {
   id: 'load-clause-newline',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments }: RuleContext) => {
+  check: ({ source, tokens }: RuleContext) => {
     const newline = detectLineEnding(source);
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
     for (const stmt of stmts) {
-      out.push(...checkStatement(stmt, comments, newline));
+      out.push(...checkStatement(stmt, source, newline));
     }
 
     return out;

@@ -33,7 +33,7 @@ describe('one-statement-per-line', () => {
   it('flags two statements separated by a semicolon on the same line', () => {
     const diagnostics = lintFixture('violation', oneStatementPerLine);
 
-    expect(diagnostics).toHaveLength(2);
+    expect(diagnostics).toHaveLength(3);
     expect(diagnostics[0]).toMatchObject({
       ruleId: 'one-statement-per-line',
       severity: 'warning',
@@ -60,8 +60,9 @@ describe('one-statement-per-line', () => {
 
     expect(result.output).toContain('SET vYear = 2026;\nLET vMonth = 6;');
     expect(result.output).toContain('Resident [Source];\nSET vDone = 1;');
+    expect(result.output).toContain('LET vA = 1; /* mid */\nLET vB = 2;');
     expect(result.diagnostics).toEqual([]);
-    expect(result.fixed).toBe(2);
+    expect(result.fixed).toBe(3);
   });
 
   it('uses LF newlines by default when the source has no CRLF', () => {
@@ -90,5 +91,24 @@ describe('one-statement-per-line', () => {
       range: { start: 10, end: 13 },
       replacement: '\n',
     });
+  });
+
+  it('keeps a comment sitting between the two statements it splits', () => {
+    const result = formatRule('Let x = 1; /* mid */ Let y = 2;\n', oneStatementPerLine);
+
+    expect(result.output).toBe('Let x = 1; /* mid */\nLet y = 2;\n');
+    expect(result.fixed).toBe(1);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  /*
+   * The gap is consumed by walking its whitespace backwards, so content the
+   * token stream does not carry survives without the rule knowing what it is.
+   * A character the lexer skipped is the case that reaches this today.
+   */
+  it('keeps a character the lexer could not read out of the gap', () => {
+    const result = formatRule('Let x = 1; " Let y = 2;\n', oneStatementPerLine);
+
+    expect(result.output).toBe('Let x = 1; "\nLet y = 2;\n');
   });
 });

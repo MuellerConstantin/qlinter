@@ -22,7 +22,7 @@ describe('block-indent', () => {
     const diagnostics = lintFixture('violation', blockIndent);
     const lines = diagnostics.map((d) => d.range.start.line);
 
-    expect(lines).toEqual([2, 3, 6, 7, 8, 9, 10, 14, 15, 16, 17]);
+    expect(lines).toEqual([2, 3, 6, 7, 8, 9, 10, 14, 15, 16, 17, 21]);
     for (const d of diagnostics) {
       expect(d.ruleId).toBe('block-indent');
       expect(d.severity).toBe('warning');
@@ -55,6 +55,10 @@ describe('block-indent', () => {
         '    Default',
         '        Trace unknown;',
         'End Switch',
+        '',
+        'Sub commented',
+        '    /* why */ Trace annotated;',
+        'End Sub',
         '',
       ].join('\n'),
     );
@@ -210,5 +214,27 @@ describe('block-indent', () => {
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].range.start.line).toBe(2);
     expect(diagnostics[0].message).toMatch(/use tabs/);
+  });
+
+  describe('comments', () => {
+    it('indents a line by the comment opening it rather than dropping the comment', () => {
+      const result = formatRule('If 1 = 1 Then\n/* why */ Trace a;\nEnd If\n', blockIndent);
+
+      expect(result.output).toBe('If 1 = 1 Then\n    /* why */ Trace a;\nEnd If\n');
+      expect(result.fixed).toBe(1);
+      expect(result.diagnostics).toEqual([]);
+    });
+
+    it('anchors on the first of several comments opening a line', () => {
+      const result = formatRule('If 1 = 1 Then\n/* a */ /* b */ Trace x;\nEnd If\n', blockIndent);
+
+      expect(result.output).toBe('If 1 = 1 Then\n    /* a */ /* b */ Trace x;\nEnd If\n');
+    });
+
+    it('leaves a line whose leading characters belong to a token opened above it', () => {
+      const diagnostics = lintRule('Load\n    *\nInline [\nA, B\n1, 2\n];\n', blockIndent);
+
+      expect(diagnostics).toEqual([]);
+    });
   });
 });

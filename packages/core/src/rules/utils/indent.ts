@@ -44,6 +44,35 @@ export function hasExpectedIndent(source: string, token: IToken, expectedWidth: 
   return source.slice(lineStart, token.startOffset) === indentChar.repeat(expectedWidth);
 }
 
+/*
+ * The token a line's indentation may be rewritten against: the comment opening
+ * the line when one does, otherwise the line's first code token. Anchoring on
+ * the comment keeps it inside the line the fix rewrites — the leading run is
+ * replaced wholesale, so a comment left out of the anchor is a comment deleted.
+ *
+ * Undefined when the characters ahead of the anchor are not whitespace. They
+ * then belong to a token that opened on an earlier line — inline data, a
+ * multi-line string, a block comment — where there is no indentation to speak
+ * of and rewriting the run would corrupt the token carrying it.
+ */
+export function indentAnchor(source: string, first: IToken, comments: readonly IToken[]): IToken | undefined {
+  let anchor = first;
+
+  for (const comment of comments) {
+    if (comment.startOffset >= first.startOffset) {
+      break;
+    }
+
+    if ((comment.startLine ?? 1) === (first.startLine ?? 1) && comment.startOffset < anchor.startOffset) {
+      anchor = comment;
+    }
+  }
+
+  const lineStart = anchor.startOffset - ((anchor.startColumn ?? 1) - 1);
+
+  return /^[ \t]*$/.test(source.slice(lineStart, anchor.startOffset)) ? anchor : undefined;
+}
+
 export function makeIndentFinding(
   token: IToken,
   expectedWidth: number,

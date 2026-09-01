@@ -44,3 +44,15 @@ Sub outer
         Next
     End If
 End Sub
+
+Sub commented
+    /* why */ Trace annotated;
+    // a comment owning its line is left where it sits
+    Trace plain;
+End Sub
+
+[Rows]:
+Load * Inline [
+Name, Value
+Alice, 1
+];

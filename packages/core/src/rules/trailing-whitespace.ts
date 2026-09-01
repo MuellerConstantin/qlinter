@@ -1,17 +1,23 @@
 import type { Rule, Finding } from '../types.js';
+import { multiLineTokenSpans } from './utils/lines.js';
 
 export const trailingWhitespace: Rule<undefined, 'trailing-whitespace'> = {
   id: 'trailing-whitespace',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source }) => {
+  check: ({ source, tokens, comments }) => {
     const out: Finding[] = [];
+    const interior = multiLineTokenSpans(tokens, comments);
     const re = /\r?\n/g;
     let lineStart = 0;
     let lineNumber = 1;
     let match: RegExpExecArray | null;
 
     const scan = (lineEnd: number): void => {
+      if (interior.some((span) => span.start < lineEnd && lineEnd < span.end)) {
+        return;
+      }
+
       let trimEnd = lineEnd;
 
       while (trimEnd > lineStart && (source[trimEnd - 1] === ' ' || source[trimEnd - 1] === '\t')) {

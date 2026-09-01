@@ -122,4 +122,37 @@ describe('trailing-whitespace', () => {
     expect(result.output).toBe('SET a = 1;\n\nSET b = 2;\n');
     expect(result.diagnostics).toEqual([]);
   });
+
+  describe('multi-line tokens', () => {
+    it('leaves whitespace inside an inline data block', () => {
+      const diagnostics = lintRule('Load * Inline [\nName, Value\nAlice, 1   \n];\n', trailingWhitespace);
+
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('leaves whitespace inside a multi-line string literal', () => {
+      const diagnostics = lintRule("Let x = 'one   \ntwo';\n", trailingWhitespace);
+
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('leaves whitespace inside a multi-line block comment', () => {
+      const diagnostics = lintRule('/*\n * text   \n */\nLet x = 1;\n', trailingWhitespace);
+
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('leaves whitespace on the line a multi-line token opens', () => {
+      const diagnostics = lintRule('Load * Inline [   \nA, B\n1, 2\n];\n', trailingWhitespace);
+
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('still flags whitespace past the end of a multi-line token', () => {
+      const result = formatRule('Load * Inline [\nA, B\n1, 2\n];   \n', trailingWhitespace);
+
+      expect(result.output).toBe('Load * Inline [\nA, B\n1, 2\n];\n');
+      expect(result.fixed).toBe(1);
+    });
+  });
 });

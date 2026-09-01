@@ -121,3 +121,11 @@ Sub mapIt
         PERNR
     Resident [Src];
 End Sub
+
+// 14. A comment may open a field line. The indent is measured from the comment,
+//     so it travels with the line instead of being replaced by the indent.
+[Commented]:
+Load
+    /* keep */ Id,
+    Name
+From X;
