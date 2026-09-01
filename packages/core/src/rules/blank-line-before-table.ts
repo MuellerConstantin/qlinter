@@ -11,21 +11,19 @@ import {
   precededByBlankLine,
   splitLines,
 } from './utils/lines.js';
-import { collectStatementSpans, findAtTopLevel, findLoadIndex, type StatementSpan } from './utils/statements.js';
-import { isKeyword } from './utils/tokens.js';
+import {
+  collectStatementSpans,
+  findAtTopLevel,
+  findLoadIndex,
+  opensTable,
+  type StatementSpan,
+} from './utils/statements.js';
 
 /** The table name when the statement opens with `<name>:`, else undefined. */
 function labelOf(statement: StatementSpan): string | undefined {
   const second = statement.tokens[1];
 
   return second !== undefined && tokenMatcher(second, colonToken) ? statement.first.image : undefined;
-}
-
-function producesTable(statement: StatementSpan): boolean {
-  return (
-    findLoadIndex(statement.tokens) !== -1 ||
-    findAtTopLevel(statement.tokens, (token) => isKeyword(token, 'select')) !== -1
-  );
 }
 
 /* A Load naming no source reads from the statement below it, which is therefore no table of its own. */
@@ -51,7 +49,7 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
       const previous = statements[index - 1];
       const label = labelOf(statement);
 
-      if (label === undefined && !producesTable(statement)) {
+      if (label === undefined && !opensTable(statement.tokens)) {
         continue;
       }
 

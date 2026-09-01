@@ -200,3 +200,21 @@ export function collectStatementSpans(tokens: IToken[]): StatementSpan[] {
 
   return out;
 }
+
+/*
+ * Whether the statement opens a data section: it carries a label, or a
+ * top-level `Load` or `Select`.
+ *
+ * One rule asks for a blank line above such a statement and another for one
+ * below what precedes it. Were they to disagree about which statements these
+ * are, the same gap would be filled twice or not at all.
+ */
+export function opensTable(tokens: IToken[]): boolean {
+  const second = tokens[1];
+
+  if (second !== undefined && tokenMatcher(second, colonToken)) {
+    return true;
+  }
+
+  return findLoadIndex(tokens) !== -1 || findAtTopLevel(tokens, (token) => isKeyword(token, 'select')) !== -1;
+}

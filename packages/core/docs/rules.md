@@ -2,6 +2,7 @@
 
 | Rule                                                      | Description                                                      |
 | :-------------------------------------------------------- | :--------------------------------------------------------------- |
+| [blank-line-after-block](#blank-line-after-block)         | Require a blank line below each block a script closes.           |
 | [blank-line-before-block](#blank-line-before-block)       | Require a blank line above each block a script opens.            |
 | [blank-line-before-table](#blank-line-before-table)       | Require a blank line above each table a script builds.           |
 | [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.        |
@@ -59,6 +60,67 @@ The rule then keeps whatever severity the preset — or its own default — give
 it, and follows along if that ever changes. Writing `["warning", { "size": 2 }]`
 instead pins the severity to `warning` forever, which is rarely what someone
 adjusting an indent width intends.
+
+---
+
+## blank-line-after-block
+
+Require a blank line below each block the script closes.
+
+### Rule Details
+
+`End Sub`, `EndIf`, `Next`, `Loop` and `EndSwitch` finish a stretch of script
+that stood on its own. Butted straight against whatever follows, the closer
+reads as part of the next thought rather than the end of the last one. This rule
+is the counterpart to
+[blank-line-before-block](#blank-line-before-block) on the other side.
+
+**It only fires where nothing else already asks for that gap.** Three cases are
+therefore exempt:
+
+- **The end of the file.** There is nothing below to separate.
+- **Another closer, an `Else` or a `Case` following.** That is the end of a nest
+  or the boundary of a branch, not the end of a section, and the gap there
+  belongs to [padded-blocks](#padded-blocks).
+- **A statement that opens a section of its own** — another block, or a table.
+  Those already ask for a blank line above themselves; claiming the gap here as
+  well would fill it twice, and it would come out two lines wide.
+
+A comment introducing what follows belongs to it, so the blank line goes _above_
+the comment rather than between comment and statement.
+
+The autofix inserts a single line terminator — the one the file already uses.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Sub LoadSales
+
+    Let vCount = 0;
+
+End Sub
+Let vDone = 1;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Sub LoadSales
+
+    If vRun Then
+
+        Let vCount = 0;
+
+    End If
+
+End Sub
+
+Let vDone = 1;
+```
+
+### Options
+
+This rule has no options.
 
 ---
 

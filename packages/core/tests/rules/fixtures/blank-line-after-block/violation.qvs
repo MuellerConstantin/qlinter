@@ -1,0 +1,14 @@
+Sub LoadSales
+
+    Let vCount = 0;
+
+End Sub
+Let vDone = 1;
+
+If vRun Then
+
+    Let vX = 1;
+
+End If
+// The count is reported afterwards.
+Trace done;
