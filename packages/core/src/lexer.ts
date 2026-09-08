@@ -908,8 +908,23 @@ export const commaToken = createToken({ name: 'Comma', pattern: /,/ });
 export const equalsToken = createToken({ name: 'Equals', pattern: /=/ });
 export const punctuationToken = createToken({ name: 'Punctuation', pattern: /[(){}+\-*/<>.@&|?!%^]/ });
 
-const whitespaceToken = createToken({ name: 'Whitespace', pattern: /[ \t]+/, group: Lexer.SKIPPED });
-const newlineToken = createToken({ name: 'Newline', pattern: /\r?\n/, group: Lexer.SKIPPED, line_breaks: true });
+/*
+ * Whitespace is routed to a group instead of being skipped, for the same reason
+ * comments are. A skipped token is discarded outright, so the gap between two
+ * tokens is knowable only by measuring offsets against the raw source — which is
+ * how a rule ends up doing arithmetic over text it cannot see all of. Grouped,
+ * the gap is a token like any other: it stays out of the main token stream, and
+ * a rule that wants to rewrite it can name it instead of computing it.
+ */
+export const WHITESPACE_GROUP = 'whitespace';
+
+const whitespaceToken = createToken({ name: 'Whitespace', pattern: /[ \t]+/, group: WHITESPACE_GROUP });
+export const newlineToken = createToken({
+  name: 'Newline',
+  pattern: /\r?\n/,
+  group: WHITESPACE_GROUP,
+  line_breaks: true,
+});
 
 /*
  * Comments are routed to the 'comments' group instead of being skipped, so they

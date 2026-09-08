@@ -9,12 +9,12 @@ export const noLeadingBlankLines: Rule<undefined, 'no-leading-blank-lines'> = {
   id: 'no-leading-blank-lines',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source }) => {
+  check: ({ source, whitespaces }) => {
     const out: Finding[] = [];
     const spans = splitLines(source);
     let first = 0;
 
-    while (first < spans.length && isBlankLine(source, spans[first])) {
+    while (first < spans.length && isBlankLine(whitespaces, spans[first])) {
       first++;
     }
 

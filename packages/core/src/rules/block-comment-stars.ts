@@ -1,9 +1,9 @@
 import { blockCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
 import { detectLineEnding } from './utils/lines.js';
 
-const ONLY_WHITESPACE = /^[ \t]*$/;
 const LEADING_WS = /^[ \t]*/;
 const TRAILING_WS = /[ \t]+$/;
 const CR_AT_END = /\r$/;
@@ -72,7 +72,7 @@ export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {
   id: 'block-comment-stars',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, comments }) => {
+  check: ({ source, comments, whitespaces }) => {
     const out: Finding[] = [];
 
     for (const token of comments) {
@@ -90,17 +90,13 @@ export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {
       const startOffset = token.startOffset;
       const endOffset = (token.endOffset ?? startOffset) + 1;
 
-      let lineStart = startOffset;
-
-      while (lineStart > 0 && source[lineStart - 1] !== '\n') {
-        lineStart--;
-      }
-
-      const beforeOpen = source.slice(lineStart, startOffset);
-
-      if (!ONLY_WHITESPACE.test(beforeOpen)) {
+      /* A comment sharing its line with code has no rail to align. */
+      if (!opensLine(whitespaces, token)) {
         continue;
       }
+
+      const indent = runEndingAt(whitespaces, startOffset);
+      const beforeOpen = indent === undefined || isLineBreak(indent) ? '' : indent.image;
 
       const text = source.slice(startOffset, endOffset);
       const normalized = normalizeBlockComment(text, beforeOpen);

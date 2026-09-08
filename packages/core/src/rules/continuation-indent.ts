@@ -23,7 +23,7 @@ export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-i
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
   options: INDENT_OPTIONS_SCHEMA,
-  check: ({ source, tokens, firstOnLine, comments }: RuleContext, { size, style }): Finding[] => {
+  check: ({ tokens, firstOnLine, comments, whitespaces }: RuleContext, { size, style }): Finding[] => {
     const indentChar = style === 'tab' ? '\t' : ' ';
     const step = style === 'tab' ? 1 : size;
     const unitLabel = style === 'tab' ? 'tab' : 'space';
@@ -69,11 +69,11 @@ export const continuationIndent: Rule<ContinuationIndentOptions, 'continuation-i
       if (isStatementStart || anchored.has(first)) {
         anchorIndent = (first.startColumn ?? 1) - 1;
       } else {
-        const anchor = indentAnchor(source, first, comments);
+        const anchor = indentAnchor(whitespaces, first, comments);
         const level = isCloseParen(first) ? depth - 1 : Math.max(depth, 1);
         const expectedWidth = anchorIndent + Math.max(0, level) * step;
 
-        if (anchor && !hasExpectedIndent(source, anchor, expectedWidth, indentChar)) {
+        if (anchor && !hasExpectedIndent(whitespaces, anchor, expectedWidth, indentChar)) {
           out.push(makeIndentFinding(anchor, expectedWidth, indentChar, unitLabel));
         }
       }

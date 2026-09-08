@@ -20,7 +20,7 @@ export const loadIndent: Rule<LoadIndentOptions, 'load-indent'> = {
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
   options: INDENT_OPTIONS_SCHEMA,
-  check: ({ source, tokens, firstOnLine, comments }: RuleContext, { size, style }): Finding[] => {
+  check: ({ tokens, firstOnLine, comments, whitespaces }: RuleContext, { size, style }): Finding[] => {
     const indentChar = style === 'tab' ? '\t' : ' ';
     const step = style === 'tab' ? 1 : size;
     const unitLabel = style === 'tab' ? 'tab' : 'space';
@@ -33,9 +33,9 @@ export const loadIndent: Rule<LoadIndentOptions, 'load-indent'> = {
         return;
       }
 
-      const anchor = indentAnchor(source, t, comments);
+      const anchor = indentAnchor(whitespaces, t, comments);
 
-      if (anchor && !hasExpectedIndent(source, anchor, expectedWidth, indentChar)) {
+      if (anchor && !hasExpectedIndent(whitespaces, anchor, expectedWidth, indentChar)) {
         out.push(makeIndentFinding(anchor, expectedWidth, indentChar, unitLabel));
       }
     };

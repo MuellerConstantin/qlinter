@@ -1,5 +1,6 @@
 import type { IToken } from 'chevrotain';
 import type { Finding, OptionsSchemaOf } from '../../types.js';
+import { isLineBreak, runEndingAt, runsSpanning } from './whitespace.js';
 
 /**
  * Indent characters the indent rules choose between. The array is the source;
@@ -32,16 +33,22 @@ export function firstTokenByLine(firstOnLine: IToken[]): Map<number, IToken> {
 }
 
 /*
- * True when the token's leading whitespace is exactly `expectedWidth` copies
- * of `indentChar`. Compares the actual characters, not just the column count,
- * so a run of the wrong whitespace (tabs where spaces are expected, or a
- * tab/space mix) that happens to match the expected width is still rejected.
+ * True when the run of whitespace opening the token's line is exactly
+ * `expectedWidth` copies of `indentChar`. Compares the characters the lexer
+ * reported, not just their count, so a run of the wrong whitespace (tabs where
+ * spaces are expected, or a mix) that happens to land on the right column is
+ * still rejected.
  */
-export function hasExpectedIndent(source: string, token: IToken, expectedWidth: number, indentChar: string): boolean {
-  const actualWidth = (token.startColumn ?? 1) - 1;
-  const lineStart = token.startOffset - actualWidth;
+export function hasExpectedIndent(
+  whitespaces: IToken[],
+  token: IToken,
+  expectedWidth: number,
+  indentChar: string,
+): boolean {
+  const run = runEndingAt(whitespaces, token.startOffset);
+  const indent = run === undefined || isLineBreak(run) ? '' : run.image;
 
-  return source.slice(lineStart, token.startOffset) === indentChar.repeat(expectedWidth);
+  return indent === indentChar.repeat(expectedWidth);
 }
 
 /*
@@ -55,7 +62,7 @@ export function hasExpectedIndent(source: string, token: IToken, expectedWidth: 
  * multi-line string, a block comment — where there is no indentation to speak
  * of and rewriting the run would corrupt the token carrying it.
  */
-export function indentAnchor(source: string, first: IToken, comments: readonly IToken[]): IToken | undefined {
+export function indentAnchor(whitespaces: IToken[], first: IToken, comments: readonly IToken[]): IToken | undefined {
   let anchor = first;
 
   for (const comment of comments) {
@@ -70,7 +77,7 @@ export function indentAnchor(source: string, first: IToken, comments: readonly I
 
   const lineStart = anchor.startOffset - ((anchor.startColumn ?? 1) - 1);
 
-  return /^[ \t]*$/.test(source.slice(lineStart, anchor.startOffset)) ? anchor : undefined;
+  return runsSpanning(whitespaces, lineStart, anchor.startOffset) !== undefined ? anchor : undefined;
 }
 
 export function makeIndentFinding(

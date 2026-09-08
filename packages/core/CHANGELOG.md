@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Whitespace is reported by the lexer instead of discarded, and the rules ask it
+  what whitespace is rather than each deciding for itself. Spaces, tabs and line
+  breaks now lex into a group of their own and reach a rule through
+  `RuleContext.whitespaces`, the way comments already did. Every spacing, indent
+  and blank-line rule reads those runs; the character walks and whitespace
+  patterns they each used to carry are gone, and with them a dozen separate
+  definitions of the same thing. Two consequences are visible from outside: a gap
+  holding anything the lexer routed elsewhere — a comment, or input it could not
+  read — is left alone by the spacing rules rather than measured across, and a
+  line inside a construct the lexer keeps whole (inline data, a block comment, a
+  multi-line string) no longer counts as a blank line.
+
 ### Added
 
 - Tokenizer for Qlik load script built on Chevrotain, covering keywords, builtin

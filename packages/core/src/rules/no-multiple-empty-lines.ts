@@ -10,7 +10,7 @@ export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multipl
   defaultSeverity: 'warning',
   defaultOptions: { max: 1 },
   options: { max: { type: 'number', min: 0, max: 10 } },
-  check: ({ source, tokens, comments }, { max }) => {
+  check: ({ source, tokens, comments, whitespaces }, { max }) => {
     const out: Finding[] = [];
     const lines = splitLines(source);
     const carried = tokenInteriorLines(tokens, comments);
@@ -19,7 +19,7 @@ export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multipl
 
     for (let i = 0; i <= lines.length; i++) {
       /* A line inside an opaque token carries content, so it breaks a run rather than joining one. */
-      const blank = i < lines.length && !carried.has(i + 1) && isBlankLine(source, lines[i]);
+      const blank = i < lines.length && !carried.has(i + 1) && isBlankLine(whitespaces, lines[i]);
 
       if (blank && runStart === -1) {
         runStart = i;

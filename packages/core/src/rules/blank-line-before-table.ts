@@ -38,7 +38,7 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
   id: 'blank-line-before-table',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments }) => {
+  check: ({ source, tokens, comments, whitespaces }) => {
     const out: Finding[] = [];
     const spans = splitLines(source);
     const commented = commentOnlyLines(comments, tokens);
@@ -59,7 +59,7 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
 
       const top = introductionStart(commented, statement.line);
 
-      if (precededByBlankLine(source, spans, top)) {
+      if (precededByBlankLine(whitespaces, spans, top)) {
         continue;
       }
 

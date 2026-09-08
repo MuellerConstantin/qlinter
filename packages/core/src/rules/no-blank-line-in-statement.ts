@@ -6,7 +6,7 @@ export const noBlankLineInStatement: Rule<undefined, 'no-blank-line-in-statement
   id: 'no-blank-line-in-statement',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments }) => {
+  check: ({ source, tokens, comments, whitespaces }) => {
     const out: Finding[] = [];
     const spans = splitLines(source);
     const carried = tokenInteriorLines(tokens, comments);
@@ -16,7 +16,7 @@ export const noBlankLineInStatement: Rule<undefined, 'no-blank-line-in-statement
 
       /* Runs the closing line as well, so a run ending against it still gets flushed. */
       for (let line = statement.line + 1; line <= statement.lastLine; line++) {
-        const blank = line < statement.lastLine && !carried.has(line) && isBlankLine(source, spans[line - 1]);
+        const blank = line < statement.lastLine && !carried.has(line) && isBlankLine(whitespaces, spans[line - 1]);
 
         if (blank) {
           if (runStart === -1) {

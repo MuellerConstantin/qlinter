@@ -1,23 +1,13 @@
 import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
-
-/** Offset of the first character after the run of spaces and tabs at `from`. */
-function skipBlanks(source: string, from: number): number {
-  let cursor = from;
-
-  while (cursor < source.length && (source[cursor] === ' ' || source[cursor] === '\t')) {
-    cursor++;
-  }
-
-  return cursor;
-}
+import { horizontalEndAfter, runEndingAt, whitespaceStartBefore } from './utils/whitespace.js';
 
 export const commaStyle: Rule<undefined, 'comma-style'> = {
   id: 'comma-style',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, firstOnLine }: RuleContext): Finding[] => {
+  check: ({ source, tokens, firstOnLine, whitespaces }: RuleContext): Finding[] => {
     const firstOnLineSet = new Set(firstOnLine);
     const out: Finding[] = [];
 
@@ -71,10 +61,19 @@ export const commaStyle: Rule<undefined, 'comma-style'> = {
         message: "Expected ',' at the end of the previous line.",
         fix: operandFollowsOnLine
           ? {
-              range: { start: gapStart, end: /\s$/.test(gap) ? skipBlanks(source, after) : after },
+              range: {
+                start: gapStart,
+                end:
+                  runEndingAt(whitespaces, token.startOffset) === undefined
+                    ? after
+                    : horizontalEndAfter(whitespaces, after),
+              },
               replacement: `,${gap}`,
             }
-          : { range: { start: gapStart, end: after }, replacement: `,${gap.trimEnd()}` },
+          : {
+              range: { start: gapStart, end: after },
+              replacement: `,${source.slice(gapStart, whitespaceStartBefore(whitespaces, token.startOffset))}`,
+            },
       });
     }
 

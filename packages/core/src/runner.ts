@@ -1,6 +1,6 @@
 import type { IToken } from 'chevrotain';
 import { collectDisabledLines, isDisabled } from './disable-directives.js';
-import { COMMENT_GROUP, lexer } from './lexer.js';
+import { COMMENT_GROUP, WHITESPACE_GROUP, lexer } from './lexer.js';
 import { registry, resolveConfig } from './rules/index.js';
 import type { LintConfig } from './rules/index.js';
 import type { Rule, Fix, Diagnostic, RuleContext, RuleConfigEntry, SeverityOrOff, FormatResult } from './types.js';
@@ -70,6 +70,7 @@ export function lint(source: string, config: LintConfig): Diagnostic[] {
     tokens: result.tokens,
     firstOnLine: firstTokenPerLine(result.tokens),
     comments: result.groups[COMMENT_GROUP] ?? [],
+    whitespaces: result.groups[WHITESPACE_GROUP] ?? [],
   };
 
   const disabled = collectDisabledLines(source);

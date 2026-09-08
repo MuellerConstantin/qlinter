@@ -2,7 +2,7 @@ import type { IToken } from 'chevrotain';
 import { builtinFunctionToken, commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { detectLineEnding } from './utils/lines.js';
+import { detectLineEnding, splitLines } from './utils/lines.js';
 import { isKeywordLessAssignment, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
@@ -47,8 +47,10 @@ function topLevelCommas(tokens: IToken[], openIdx: number, closeIdx: number): IT
 }
 
 function lineLengthAt(source: string, line: number): number {
-  const lines = source.split(/\r?\n/);
-  return lines[line - 1]?.length ?? 0;
+  const lines = splitLines(source);
+  const span = lines[line - 1];
+
+  return span === undefined ? 0 : span.end - span.start;
 }
 
 /*

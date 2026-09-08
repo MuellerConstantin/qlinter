@@ -34,7 +34,7 @@ export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statemen
   defaultSeverity: 'warning',
   defaultOptions: { lineEnding: 'auto' },
   options: { lineEnding: { type: 'enum', values: LINE_ENDINGS } },
-  check: ({ source, tokens }, { lineEnding }) => {
+  check: ({ source, tokens, whitespaces }, { lineEnding }) => {
     const newline = resolveLineEnding(lineEnding, source);
     const out: Finding[] = [];
 
@@ -55,7 +55,7 @@ export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statemen
         range: tokenRange(next),
         message: 'Each statement must start on its own line.',
         fix: {
-          range: { start: fixStartOffset(token, next, source), end: next.startOffset },
+          range: { start: fixStartOffset(whitespaces, token, next), end: next.startOffset },
           replacement: newline,
         },
       });

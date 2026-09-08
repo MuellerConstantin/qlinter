@@ -15,7 +15,7 @@ export const blankLineAfterBlock: Rule<undefined, 'blank-line-after-block'> = {
   id: 'blank-line-after-block',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments }) => {
+  check: ({ source, tokens, comments, whitespaces }) => {
     const out: Finding[] = [];
     const spans = splitLines(source);
     const commented = commentOnlyLines(comments, tokens);
@@ -46,7 +46,7 @@ export const blankLineAfterBlock: Rule<undefined, 'blank-line-after-block'> = {
 
       const top = introductionStart(commented, next.line);
 
-      if (precededByBlankLine(source, spans, top)) {
+      if (precededByBlankLine(whitespaces, spans, top)) {
         continue;
       }
 

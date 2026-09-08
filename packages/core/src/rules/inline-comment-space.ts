@@ -1,12 +1,13 @@
 import { blockCommentToken, lineCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { opensLine, runEndingAt } from './utils/whitespace.js';
 
 export const inlineCommentSpace: Rule<undefined, 'inline-comment-space'> = {
   id: 'inline-comment-space',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, comments }) => {
+  check: ({ comments, whitespaces }) => {
     const out: Finding[] = [];
 
     for (const token of comments) {
@@ -14,18 +15,17 @@ export const inlineCommentSpace: Rule<undefined, 'inline-comment-space'> = {
         continue;
       }
 
-      const start = token.startOffset;
-      let cursor = start - 1;
-
-      while (cursor >= 0 && (source[cursor] === ' ' || source[cursor] === '\t')) {
-        cursor--;
-      }
-
-      if (cursor < 0 || source[cursor] === '\n' || source[cursor] === '\r') {
+      /* A comment opening its line trails nothing, so there is no gap to size. */
+      if (opensLine(whitespaces, token)) {
         continue;
       }
 
-      const gap = source.slice(cursor + 1, start);
+      /*
+       * At most one run can end here: the lexer matches a stretch of spaces and
+       * tabs as a single token, so two of them never meet.
+       */
+      const run = runEndingAt(whitespaces, token.startOffset);
+      const gap = run === undefined ? '' : run.image;
 
       if (gap === ' ') {
         continue;
@@ -37,7 +37,10 @@ export const inlineCommentSpace: Rule<undefined, 'inline-comment-space'> = {
         range: tokenRange(token),
         message:
           gap.length === 0 ? `Expected a space before '${marker}'.` : `Expected exactly one space before '${marker}'.`,
-        fix: { range: { start: cursor + 1, end: start }, replacement: ' ' },
+        fix: {
+          range: { start: run === undefined ? token.startOffset : run.startOffset, end: token.startOffset },
+          replacement: ' ',
+        },
       });
     }
 

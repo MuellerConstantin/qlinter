@@ -2,84 +2,78 @@ import type { IToken } from 'chevrotain';
 import { commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { closesLine, gapRuns, horizontalGap, opensLine } from './utils/whitespace.js';
 
-/** Whitespace between the comma and the code before it on the same line. */
-function spaceBefore(source: string, token: IToken): Finding | null {
-  const start = token.startOffset;
-  let cursor = start;
-
-  while (cursor > 0 && (source[cursor - 1] === ' ' || source[cursor - 1] === '\t')) {
-    cursor--;
-  }
-
-  if (cursor === start) {
-    return null;
-  }
-
-  /*
-   * Nothing but whitespace back to the line break (or the start of the file):
-   * the comma opens its line, and where a comma sits is not this rule's concern.
-   */
-  if (cursor === 0 || source[cursor - 1] === '\n' || source[cursor - 1] === '\r') {
-    return null;
-  }
-
-  return {
-    range: tokenRange(token),
-    message: "Unexpected space before ','.",
-    fix: { range: { start: cursor, end: start }, replacement: '' },
-  };
-}
-
-/** Whitespace between the comma and the code after it on the same line. */
-function spaceAfter(source: string, token: IToken): Finding | null {
-  const after = (token.endOffset ?? token.startOffset) + 1;
-  let cursor = after;
-
-  while (cursor < source.length && (source[cursor] === ' ' || source[cursor] === '\t')) {
-    cursor++;
-  }
-
-  if (cursor >= source.length || source[cursor] === '\n' || source[cursor] === '\r') {
-    return null;
-  }
-
-  const gap = source.slice(after, cursor);
-
-  if (gap === ' ') {
-    return null;
-  }
-
-  return {
-    range: tokenRange(token),
-    message: gap.length === 0 ? "Expected a space after ','." : "Expected exactly one space after ','.",
-    fix: { range: { start: after, end: cursor }, replacement: ' ' },
-  };
+/*
+ * Tokens and comments in one stream, by position.
+ *
+ * A comma is separated from whatever stands next to it, and a comment counts:
+ * `Load A,/* why *\/ B` is as unseparated as `Load A,B`. Reading only the token
+ * stream would step over the comment and measure the gap to `B` instead.
+ */
+function contentInOrder(tokens: IToken[], comments: IToken[]): IToken[] {
+  return [...tokens, ...comments].sort((a, b) => a.startOffset - b.startOffset);
 }
 
 export const commaSpace: Rule<undefined, 'comma-space'> = {
   id: 'comma-space',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens }) => {
+  check: ({ source, tokens, comments, whitespaces }) => {
     const out: Finding[] = [];
+    const content = contentInOrder(tokens, comments);
 
-    for (const token of tokens) {
+    for (let index = 0; index < content.length; index++) {
+      const token = content[index];
+
       if (token.tokenType !== commaToken) {
         continue;
       }
 
-      const before = spaceBefore(source, token);
+      const prev = content[index - 1];
+      const next = content[index + 1];
 
-      if (before !== null) {
-        out.push(before);
+      /*
+       * A comma opening its line is left alone: where a comma sits is not this
+       * rule's concern, and what stands before it there is indentation.
+       */
+      if (prev !== undefined && !opensLine(whitespaces, token)) {
+        const runs = horizontalGap(whitespaces, prev, token);
+
+        if (runs !== undefined) {
+          out.push({
+            range: tokenRange(token),
+            message: "Unexpected space before ','.",
+            fix: { range: { start: runs[0].startOffset, end: token.startOffset }, replacement: '' },
+          });
+        }
       }
 
-      const after = spaceAfter(source, token);
-
-      if (after !== null) {
-        out.push(after);
+      /* A comma closing its line has nothing after it to be separated from. */
+      if (next === undefined || closesLine(whitespaces, token, source.length)) {
+        continue;
       }
+
+      const runs = gapRuns(whitespaces, token, next);
+
+      if (runs === undefined) {
+        continue;
+      }
+
+      const gap = runs.map((run) => run.image).join('');
+
+      if (gap === ' ') {
+        continue;
+      }
+
+      out.push({
+        range: tokenRange(token),
+        message: gap.length === 0 ? "Expected a space after ','." : "Expected exactly one space after ','.",
+        fix: {
+          range: { start: (token.endOffset ?? token.startOffset) + 1, end: next.startOffset },
+          replacement: ' ',
+        },
+      });
     }
 
     return out;

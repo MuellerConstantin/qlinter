@@ -1,4 +1,5 @@
 import type { Rule, Finding } from '../types.js';
+import { splitLines } from './utils/lines.js';
 
 export interface MaxLineLengthOptions {
   max: number;
@@ -11,10 +12,10 @@ export const maxLineLength: Rule<MaxLineLengthOptions, 'max-line-length'> = {
   options: { max: { type: 'number', min: 20, max: 1000 } },
   check: ({ source }, { max }) => {
     const out: Finding[] = [];
-    const lines = source.split(/\r?\n/);
+    const lines = splitLines(source);
 
     for (let index = 0; index < lines.length; index++) {
-      const length = lines[index].length;
+      const length = lines[index].end - lines[index].start;
 
       if (length <= max) {
         continue;

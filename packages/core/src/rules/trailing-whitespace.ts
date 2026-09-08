@@ -1,50 +1,46 @@
 import type { Rule, Finding } from '../types.js';
-import { multiLineTokenSpans } from './utils/lines.js';
+import { isLineBreak, runStartingAt } from './utils/whitespace.js';
 
 export const trailingWhitespace: Rule<undefined, 'trailing-whitespace'> = {
   id: 'trailing-whitespace',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments }) => {
+  check: ({ source, whitespaces }) => {
     const out: Finding[] = [];
-    const interior = multiLineTokenSpans(tokens, comments);
-    const re = /\r?\n/g;
-    let lineStart = 0;
-    let lineNumber = 1;
-    let match: RegExpExecArray | null;
 
-    const scan = (lineEnd: number): void => {
-      if (interior.some((span) => span.start < lineEnd && lineEnd < span.end)) {
-        return;
+    for (const run of whitespaces) {
+      if (isLineBreak(run)) {
+        continue;
       }
 
-      let trimEnd = lineEnd;
+      const end = (run.endOffset ?? run.startOffset) + 1;
+      const following = runStartingAt(whitespaces, end);
 
-      while (trimEnd > lineStart && (source[trimEnd - 1] === ' ' || source[trimEnd - 1] === '\t')) {
-        trimEnd--;
+      /*
+       * A horizontal run is trailing when a line break follows it, or when the
+       * file ends there. Anything else after it is content, which makes the run
+       * a gap between two things rather than the tail of a line.
+       *
+       * Whitespace inside a construct the lexer keeps whole is never reported as
+       * a run, so a line ending inside inline data or a block comment cannot
+       * reach this loop at all.
+       */
+      if (end !== source.length && (following === undefined || !isLineBreak(following))) {
+        continue;
       }
 
-      if (trimEnd === lineEnd) {
-        return;
-      }
+      const line = run.startLine ?? 1;
+      const column = run.startColumn ?? 1;
 
       out.push({
         range: {
-          start: { line: lineNumber, column: trimEnd - lineStart + 1 },
-          end: { line: lineNumber, column: lineEnd - lineStart + 1 },
+          start: { line, column },
+          end: { line, column: column + run.image.length },
         },
         message: 'Trailing whitespace.',
-        fix: { range: { start: trimEnd, end: lineEnd }, replacement: '' },
+        fix: { range: { start: run.startOffset, end }, replacement: '' },
       });
-    };
-
-    while ((match = re.exec(source)) !== null) {
-      scan(match.index);
-      lineStart = match.index + match[0].length;
-      lineNumber++;
     }
-
-    scan(source.length);
 
     return out;
   },

@@ -1,3 +1,4 @@
+import type { IToken } from 'chevrotain';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
 import { classifyBlockLine, closesBody, opensBody } from './utils/blocks.js';
@@ -20,10 +21,10 @@ export interface PaddedBlocksOptions {
 }
 
 /** First line at or below `from` that holds something. Comments count as content. */
-function contentBelow(source: string, spans: LineSpan[], from: number): number {
+function contentBelow(whitespaces: IToken[], spans: LineSpan[], from: number): number {
   let line = from;
 
-  while (line <= spans.length && isBlankLine(source, spans[line - 1])) {
+  while (line <= spans.length && isBlankLine(whitespaces, spans[line - 1])) {
     line++;
   }
 
@@ -31,10 +32,10 @@ function contentBelow(source: string, spans: LineSpan[], from: number): number {
 }
 
 /** Last line at or above `from` that holds something. Comments count as content. */
-function contentAbove(source: string, spans: LineSpan[], from: number): number {
+function contentAbove(whitespaces: IToken[], spans: LineSpan[], from: number): number {
   let line = from;
 
-  while (line >= 1 && isBlankLine(source, spans[line - 1])) {
+  while (line >= 1 && isBlankLine(whitespaces, spans[line - 1])) {
     line--;
   }
 
@@ -46,7 +47,7 @@ export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
   defaultSeverity: 'warning',
   defaultOptions: { padding: 'always' },
   options: { padding: { type: 'enum', values: BLOCK_PADDING_STYLES } },
-  check: ({ source, tokens }, { padding }) => {
+  check: ({ source, tokens, whitespaces }, { padding }) => {
     const out: Finding[] = [];
     const spans = splitLines(source);
     const statements = collectStatementSpans(tokens);
@@ -65,7 +66,7 @@ export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
       }
 
       if (opening) {
-        const body = contentBelow(source, spans, above.lastLine + 1);
+        const body = contentBelow(whitespaces, spans, above.lastLine + 1);
         const padded = body > above.lastLine + 1;
 
         if (padded === wanted) {
@@ -83,7 +84,7 @@ export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
         continue;
       }
 
-      const body = contentAbove(source, spans, below.line - 1);
+      const body = contentAbove(whitespaces, spans, below.line - 1);
       const padded = body < below.line - 1;
 
       if (padded === wanted) {

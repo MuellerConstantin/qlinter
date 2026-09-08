@@ -1,5 +1,6 @@
 import type { IToken } from 'chevrotain';
 import type { Fix } from '../../types.js';
+import { runsSpanning } from './whitespace.js';
 
 /*
  * The line ending `text` is written in.
@@ -59,9 +60,15 @@ export function splitLines(text: string): LineSpan[] {
   return lines;
 }
 
-/** True when the span holds nothing but whitespace. A comment does not count as blank. */
-export function isBlankLine(text: string, span: LineSpan): boolean {
-  return text.slice(span.start, span.end).trim() === '';
+/*
+ * True when the span holds nothing but whitespace the lexer reported.
+ *
+ * A comment does not count as blank, and neither does a line inside a construct
+ * the lexer keeps whole: those bytes belong to a token rather than to the gaps
+ * between tokens, so the walk across the span stops at them.
+ */
+export function isBlankLine(whitespaces: IToken[], span: LineSpan): boolean {
+  return runsSpanning(whitespaces, span.start, span.end) !== undefined;
 }
 
 /** Fix that inserts one `ending` at the top of `line`, pushing it down a row. */
@@ -166,8 +173,8 @@ export function introductionStart(commented: ReadonlySet<number>, line: number):
 }
 
 /** True when a blank line sits directly above `line`, or nothing does. */
-export function precededByBlankLine(text: string, spans: LineSpan[], line: number): boolean {
+export function precededByBlankLine(whitespaces: IToken[], spans: LineSpan[], line: number): boolean {
   const above = spans[line - 2];
 
-  return above === undefined || isBlankLine(text, above);
+  return above === undefined || isBlankLine(whitespaces, above);
 }

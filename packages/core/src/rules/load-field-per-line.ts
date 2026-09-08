@@ -7,18 +7,18 @@ import { detectLineEnding } from './utils/lines.js';
 import { findFieldListBoundaries, findLoadIndex, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
-function makeFinding(prev: IToken, t: IToken, source: string, newline: string): Finding {
+function makeFinding(prev: IToken, t: IToken, whitespaces: IToken[], newline: string): Finding {
   return {
     range: tokenRange(t),
     message: 'Each LOAD field should start on its own line.',
     fix: {
-      range: { start: fixStartOffset(prev, t, source), end: t.startOffset },
+      range: { start: fixStartOffset(whitespaces, prev, t), end: t.startOffset },
       replacement: newline,
     },
   };
 }
 
-function checkStatement(tokens: IToken[], source: string, newline: string): Finding[] {
+function checkStatement(tokens: IToken[], whitespaces: IToken[], newline: string): Finding[] {
   const loadIdx = findLoadIndex(tokens);
 
   if (loadIdx === -1) {
@@ -36,7 +36,7 @@ function checkStatement(tokens: IToken[], source: string, newline: string): Find
   const firstField = tokens[start];
 
   if ((header.startLine ?? 1) === (firstField.startLine ?? 1)) {
-    out.push(makeFinding(header, firstField, source, newline));
+    out.push(makeFinding(header, firstField, whitespaces, newline));
   }
 
   let depth = 0;
@@ -65,7 +65,7 @@ function checkStatement(tokens: IToken[], source: string, newline: string): Find
     }
 
     if ((next.startLine ?? 1) === (t.startLine ?? 1)) {
-      out.push(makeFinding(t, next, source, newline));
+      out.push(makeFinding(t, next, whitespaces, newline));
     }
   }
 
@@ -76,13 +76,13 @@ export const loadFieldPerLine: Rule<undefined, 'load-field-per-line'> = {
   id: 'load-field-per-line',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens }: RuleContext) => {
+  check: ({ source, tokens, whitespaces }: RuleContext) => {
     const newline = detectLineEnding(source);
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
     for (const stmt of stmts) {
-      out.push(...checkStatement(stmt, source, newline));
+      out.push(...checkStatement(stmt, whitespaces, newline));
     }
 
     return out;

@@ -35,7 +35,7 @@ export const blockIndent: Rule<BlockIndentOptions, 'block-indent'> = {
   defaultSeverity: 'warning',
   defaultOptions: { size: 4, style: 'space' },
   options: INDENT_OPTIONS_SCHEMA,
-  check: ({ source, tokens, comments }, { size, style }) => {
+  check: ({ tokens, comments, whitespaces }, { size, style }) => {
     const out: Finding[] = [];
     const lines = groupByLine(tokens);
 
@@ -88,9 +88,9 @@ export const blockIndent: Rule<BlockIndentOptions, 'block-indent'> = {
       }
 
       const expectedWidth = expectedDepth * step;
-      const anchor = indentAnchor(source, first, comments);
+      const anchor = indentAnchor(whitespaces, first, comments);
 
-      if (anchor && !hasExpectedIndent(source, anchor, expectedWidth, indentChar)) {
+      if (anchor && !hasExpectedIndent(whitespaces, anchor, expectedWidth, indentChar)) {
         out.push(makeIndentFinding(anchor, expectedWidth, indentChar, unitLabel));
       }
 

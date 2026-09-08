@@ -44,6 +44,8 @@ export interface RuleContext {
   tokens: IToken[];
   firstOnLine: IToken[];
   comments: IToken[];
+  /** The whitespace and line-break runs between tokens, in source order. */
+  whitespaces: IToken[];
 }
 
 /**
