@@ -1,23 +1,15 @@
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
 import { classifyBlockLine, opensBody } from './utils/blocks.js';
-import {
-  commentOnlyLines,
-  detectLineEnding,
-  insertLineBefore,
-  introductionStart,
-  precededByBlankLine,
-  splitLines,
-} from './utils/lines.js';
+import { commentOnlyLines, insertLineBefore, introductionStart, precededByBlankLine } from './utils/lines.js';
 import { collectStatementSpans } from './utils/statements.js';
 
 export const blankLineBeforeBlock: Rule<undefined, 'blank-line-before-block'> = {
   id: 'blank-line-before-block',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments, whitespaces }) => {
+  check: ({ tokens, comments, whitespaces, lines: spans, lineEnding }) => {
     const out: Finding[] = [];
-    const spans = splitLines(source);
     const commented = commentOnlyLines(comments, tokens);
     const statements = collectStatementSpans(tokens);
 
@@ -47,7 +39,7 @@ export const blankLineBeforeBlock: Rule<undefined, 'blank-line-before-block'> = 
       out.push({
         range: tokenRange(statement.first),
         message: `A '${statement.first.image}' block should be preceded by a blank line.`,
-        fix: insertLineBefore(spans, top, detectLineEnding(source)),
+        fix: insertLineBefore(spans, top, lineEnding),
       });
     }
 

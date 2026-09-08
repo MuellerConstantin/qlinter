@@ -1,5 +1,4 @@
 import type { Position, Rule, Finding } from '../types.js';
-import { detectLineEnding } from './utils/lines.js';
 
 /*
  * A file should end with exactly one line terminator: enough so the last line
@@ -30,7 +29,7 @@ export const eolLast: Rule<undefined, 'eol-last'> = {
   id: 'eol-last',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source }) => {
+  check: ({ source, lineEnding }) => {
     const out: Finding[] = [];
     const len = source.length;
 
@@ -53,8 +52,6 @@ export const eolLast: Rule<undefined, 'eol-last'> = {
     if (trailing === '\n' || trailing === '\r\n' || trailing === '\r') {
       return out;
     }
-
-    const lineEnding = detectLineEnding(source);
 
     if (trailing.length === 0) {
       const pos = positionAt(source, len);

@@ -1,4 +1,5 @@
 import type { IToken } from 'chevrotain';
+import type { LineSpan } from './lines.js';
 
 /** How serious a diagnostic is. */
 export type Severity = 'error' | 'warning' | 'info';
@@ -46,6 +47,10 @@ export interface RuleContext {
   comments: IToken[];
   /** The whitespace and line-break runs between tokens, in source order. */
   whitespaces: IToken[];
+  /** Every line of the script as a span, in order. */
+  lines: LineSpan[];
+  /** The line ending the script is written in. */
+  lineEnding: string;
 }
 
 /**

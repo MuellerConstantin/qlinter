@@ -1,5 +1,5 @@
 import type { Finding, Rule } from '../types.js';
-import { deleteLineRange, isBlankLine, splitLines } from './utils/lines.js';
+import { deleteLineRange, isBlankLine } from './utils/lines.js';
 
 /*
  * A script starts at its first line of content. This owns only the run of blank
@@ -9,9 +9,8 @@ export const noLeadingBlankLines: Rule<undefined, 'no-leading-blank-lines'> = {
   id: 'no-leading-blank-lines',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, whitespaces }) => {
+  check: ({ whitespaces, lines: spans }) => {
     const out: Finding[] = [];
-    const spans = splitLines(source);
     let first = 0;
 
     while (first < spans.length && isBlankLine(whitespaces, spans[first])) {

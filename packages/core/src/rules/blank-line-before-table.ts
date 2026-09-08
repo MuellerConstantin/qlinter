@@ -3,14 +3,7 @@ import { colonToken, sourceClauseToken } from '../lexer.js';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
 import { classifyBlockLine, opensBody } from './utils/blocks.js';
-import {
-  commentOnlyLines,
-  detectLineEnding,
-  insertLineBefore,
-  introductionStart,
-  precededByBlankLine,
-  splitLines,
-} from './utils/lines.js';
+import { commentOnlyLines, insertLineBefore, introductionStart, precededByBlankLine } from './utils/lines.js';
 import {
   collectStatementSpans,
   findAtTopLevel,
@@ -38,9 +31,8 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
   id: 'blank-line-before-table',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments, whitespaces }) => {
+  check: ({ tokens, comments, whitespaces, lines: spans, lineEnding }) => {
     const out: Finding[] = [];
-    const spans = splitLines(source);
     const commented = commentOnlyLines(comments, tokens);
     const statements = collectStatementSpans(tokens);
 
@@ -74,7 +66,7 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
           label === undefined
             ? 'A table should be preceded by a blank line.'
             : `Table '${label}' should be preceded by a blank line.`,
-        fix: insertLineBefore(spans, top, detectLineEnding(source)),
+        fix: insertLineBefore(spans, top, lineEnding),
       });
     }
 

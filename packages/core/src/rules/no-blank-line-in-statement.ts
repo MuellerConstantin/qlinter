@@ -1,14 +1,13 @@
 import type { Finding, Rule } from '../types.js';
-import { deleteLineRange, isBlankLine, splitLines, tokenInteriorLines } from './utils/lines.js';
+import { deleteLineRange, isBlankLine, tokenInteriorLines } from './utils/lines.js';
 import { collectStatementSpans } from './utils/statements.js';
 
 export const noBlankLineInStatement: Rule<undefined, 'no-blank-line-in-statement'> = {
   id: 'no-blank-line-in-statement',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments, whitespaces }) => {
+  check: ({ tokens, comments, whitespaces, lines: spans }) => {
     const out: Finding[] = [];
-    const spans = splitLines(source);
     const carried = tokenInteriorLines(tokens, comments);
 
     for (const statement of collectStatementSpans(tokens)) {

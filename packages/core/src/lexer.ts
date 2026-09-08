@@ -918,10 +918,18 @@ export const punctuationToken = createToken({ name: 'Punctuation', pattern: /[()
  */
 export const WHITESPACE_GROUP = 'whitespace';
 
+/*
+ * What ends a line, defined once. The token below matches it, and so does the
+ * line geometry built on top of a script — including inside a construct this
+ * lexer keeps whole, where no Newline token is produced but a line still ends.
+ * Two spellings of this pattern would be two answers to the same question.
+ */
+export const LINE_BREAK = /\r?\n/;
+
 const whitespaceToken = createToken({ name: 'Whitespace', pattern: /[ \t]+/, group: WHITESPACE_GROUP });
 export const newlineToken = createToken({
   name: 'Newline',
-  pattern: /\r?\n/,
+  pattern: LINE_BREAK,
   group: WHITESPACE_GROUP,
   line_breaks: true,
 });

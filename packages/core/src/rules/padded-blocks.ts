@@ -2,14 +2,8 @@ import type { IToken } from 'chevrotain';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
 import { classifyBlockLine, closesBody, opensBody } from './utils/blocks.js';
-import {
-  deleteLineRange,
-  detectLineEnding,
-  insertLineBefore,
-  isBlankLine,
-  splitLines,
-  type LineSpan,
-} from './utils/lines.js';
+import { deleteLineRange, insertLineBefore, isBlankLine } from './utils/lines.js';
+import type { LineSpan } from '../lines.js';
 import { collectStatementSpans } from './utils/statements.js';
 
 export const BLOCK_PADDING_STYLES = ['always', 'never'] as const;
@@ -47,11 +41,10 @@ export const paddedBlocks: Rule<PaddedBlocksOptions, 'padded-blocks'> = {
   defaultSeverity: 'warning',
   defaultOptions: { padding: 'always' },
   options: { padding: { type: 'enum', values: BLOCK_PADDING_STYLES } },
-  check: ({ source, tokens, whitespaces }, { padding }) => {
+  check: ({ tokens, whitespaces, lines: spans, lineEnding }, { padding }) => {
     const out: Finding[] = [];
-    const spans = splitLines(source);
     const statements = collectStatementSpans(tokens);
-    const ending = detectLineEnding(source);
+    const ending = lineEnding;
     const wanted = padding === 'always';
 
     for (let index = 1; index < statements.length; index++) {

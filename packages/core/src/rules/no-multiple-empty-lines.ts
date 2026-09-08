@@ -1,5 +1,5 @@
 import type { Rule, Finding } from '../types.js';
-import { isBlankLine, splitLines, tokenInteriorLines } from './utils/lines.js';
+import { isBlankLine, tokenInteriorLines } from './utils/lines.js';
 
 export interface NoMultipleEmptyLinesOptions {
   max: number;
@@ -10,9 +10,8 @@ export const noMultipleEmptyLines: Rule<NoMultipleEmptyLinesOptions, 'no-multipl
   defaultSeverity: 'warning',
   defaultOptions: { max: 1 },
   options: { max: { type: 'number', min: 0, max: 10 } },
-  check: ({ source, tokens, comments, whitespaces }, { max }) => {
+  check: ({ tokens, comments, whitespaces, lines }, { max }) => {
     const out: Finding[] = [];
-    const lines = splitLines(source);
     const carried = tokenInteriorLines(tokens, comments);
 
     let runStart = -1;

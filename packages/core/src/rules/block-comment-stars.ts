@@ -2,7 +2,7 @@ import { blockCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
-import { detectLineEnding } from './utils/lines.js';
+import { detectLineEnding } from '../lines.js';
 
 const LEADING_WS = /^[ \t]*/;
 const TRAILING_WS = /[ \t]+$/;

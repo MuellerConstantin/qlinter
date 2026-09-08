@@ -1,8 +1,8 @@
 import type { IToken } from 'chevrotain';
 import { builtinFunctionToken, commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
+import type { LineSpan } from '../lines.js';
 import { tokenRange } from '../token.js';
-import { detectLineEnding, splitLines } from './utils/lines.js';
 import { isKeywordLessAssignment, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
@@ -46,8 +46,7 @@ function topLevelCommas(tokens: IToken[], openIdx: number, closeIdx: number): IT
   return out;
 }
 
-function lineLengthAt(source: string, line: number): number {
-  const lines = splitLines(source);
+function lineLengthAt(lines: LineSpan[], line: number): number {
   const span = lines[line - 1];
 
   return span === undefined ? 0 : span.end - span.start;
@@ -59,7 +58,13 @@ function lineLengthAt(source: string, line: number): number {
  * too would put a second, independently configured width on the same characters,
  * and whichever pass ran last would silently win.
  */
-function breakableCalls(tokens: IToken[], source: string, newline: string, maxLineLength: number): Finding[] {
+function breakableCalls(
+  tokens: IToken[],
+  source: string,
+  lines: LineSpan[],
+  newline: string,
+  maxLineLength: number,
+): Finding[] {
   const out: Finding[] = [];
   let i = 0;
 
@@ -94,7 +99,7 @@ function breakableCalls(tokens: IToken[], source: string, newline: string, maxLi
       continue;
     }
 
-    if (lineLengthAt(source, funcLine) <= maxLineLength) {
+    if (lineLengthAt(lines, funcLine) <= maxLineLength) {
       i++;
       continue;
     }
@@ -138,8 +143,8 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
   defaultSeverity: 'warning',
   defaultOptions: { maxLineLength: 120 },
   options: { maxLineLength: { type: 'number', min: 20, max: 1000 } },
-  check: ({ source, tokens }, { maxLineLength }) => {
-    const newline = detectLineEnding(source);
+  check: ({ source, tokens, lines, lineEnding }, { maxLineLength }) => {
+    const newline = lineEnding;
     const out: Finding[] = [];
 
     for (const statement of splitStatements(tokens)) {
@@ -148,7 +153,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
         continue;
       }
 
-      out.push(...breakableCalls(statement, source, newline, maxLineLength));
+      out.push(...breakableCalls(statement, source, lines, newline, maxLineLength));
     }
 
     return out;

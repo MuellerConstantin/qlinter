@@ -3,7 +3,6 @@ import { semicolonToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
-import { detectLineEnding } from './utils/lines.js';
 
 /**
  * Line endings a fix may insert. The array is the source; {@link LineEnding} is
@@ -17,7 +16,7 @@ export interface OneStatementPerLineOptions {
   lineEnding: LineEnding;
 }
 
-function resolveLineEnding(option: LineEnding, source: string): string {
+function resolveLineEnding(option: LineEnding, detected: string): string {
   if (option === 'lf') {
     return '\n';
   }
@@ -26,7 +25,7 @@ function resolveLineEnding(option: LineEnding, source: string): string {
     return '\r\n';
   }
 
-  return detectLineEnding(source);
+  return detected;
 }
 
 export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statement-per-line'> = {
@@ -34,8 +33,8 @@ export const oneStatementPerLine: Rule<OneStatementPerLineOptions, 'one-statemen
   defaultSeverity: 'warning',
   defaultOptions: { lineEnding: 'auto' },
   options: { lineEnding: { type: 'enum', values: LINE_ENDINGS } },
-  check: ({ source, tokens, whitespaces }, { lineEnding }) => {
-    const newline = resolveLineEnding(lineEnding, source);
+  check: ({ tokens, whitespaces, lineEnding: detected }, { lineEnding }) => {
+    const newline = resolveLineEnding(lineEnding, detected);
     const out: Finding[] = [];
 
     for (let index = 0; index < tokens.length - 1; index++) {

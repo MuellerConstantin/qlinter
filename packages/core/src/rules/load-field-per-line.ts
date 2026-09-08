@@ -3,7 +3,6 @@ import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
-import { detectLineEnding } from './utils/lines.js';
 import { findFieldListBoundaries, findLoadIndex, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
@@ -76,8 +75,8 @@ export const loadFieldPerLine: Rule<undefined, 'load-field-per-line'> = {
   id: 'load-field-per-line',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, whitespaces }: RuleContext) => {
-    const newline = detectLineEnding(source);
+  check: ({ tokens, whitespaces, lineEnding }: RuleContext) => {
+    const newline = lineEnding;
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
