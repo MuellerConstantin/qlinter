@@ -81,4 +81,36 @@ describe('eol-last', () => {
     expect(result.fixed).toBe(1);
     expect(result.diagnostics).toEqual([]);
   });
+
+  /*
+   * Qlik's reference does not say what ends a line, so whether a file written
+   * with bare carriage returns is terminated cannot be decided here. Left alone
+   * rather than guessed at: appending a newline would mix two conventions.
+   */
+  describe('a carriage return outside a CRLF pair', () => {
+    it('is left alone where it ends the file', () => {
+      expect(lintRule('SET x = 1;\r', eolLast)).toEqual([]);
+    });
+
+    it('is left alone where the file ends with several of them', () => {
+      const result = formatRule('SET x = 1;\r\r', eolLast);
+
+      expect(result.output).toBe('SET x = 1;\r\r');
+      expect(result.fixed).toBe(0);
+    });
+
+    it('is left alone where the file ends without a terminator at all', () => {
+      const result = formatRule('SET x = 1;\rSET y = 2;', eolLast);
+
+      expect(result.output).toBe('SET x = 1;\rSET y = 2;');
+      expect(result.fixed).toBe(0);
+    });
+
+    it('does not stop the rule on a file whose returns all pair with a newline', () => {
+      const result = formatRule('SET x = 1;\r\nSET y = 2;', eolLast);
+
+      expect(result.output).toBe('SET x = 1;\r\nSET y = 2;\r\n');
+      expect(result.fixed).toBe(1);
+    });
+  });
 });

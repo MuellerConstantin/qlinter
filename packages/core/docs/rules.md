@@ -1172,6 +1172,14 @@ The rule inspects only the very end of the file:
 - An empty file, or a file that is nothing but newlines, is left alone — there
   is no content to terminate.
 
+A file carrying a carriage return that is not part of a CRLF pair is skipped
+entirely — no finding, no fix. Qlik's reference never defines what ends a line:
+the page on commenting says a `//` comment runs to the end of "the same row"
+without saying what a row is, and the syntax overview requires only that a
+statement end with a semicolon. Whether such a file is already terminated is
+therefore not a question this project can answer, and appending a newline to it
+would mix two conventions inside one file on a guess.
+
 The autofix reuses the source's dominant line ending: `\r\n` if the file
 contains any CRLF, otherwise `\n`. Trailing spaces on the last line are not
 this rule's concern — they are stripped by

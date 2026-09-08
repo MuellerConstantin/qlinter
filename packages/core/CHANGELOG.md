@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   read — is left alone by the spacing rules rather than measured across, and a
   line inside a construct the lexer keeps whole (inline data, a block comment, a
   multi-line string) no longer counts as a blank line.
+- `eol-last` skips a file carrying a carriage return that is not part of a CRLF
+  pair. Qlik's reference never defines what ends a line — the page on commenting
+  says a `//` comment runs to the end of "the same row" without saying what a row
+  is — so whether such a file is already terminated cannot be answered here. It
+  used to be answered anyway: a file ending in two carriage returns was rewritten
+  to a single newline, and one written entirely with carriage returns had a
+  newline appended, leaving two conventions mixed inside it.
 
 ### Added
 
