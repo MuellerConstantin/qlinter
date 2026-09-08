@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- A conformance score in the popup, beside the per-severity counts: the share of
+  lines in the open script that no diagnostic points at, as a percentage. It comes
+  from the bundled Core engine, updates with every lint pass, and stays hidden for
+  a script under ten lines, which Core declines to score.
+
 ## [0.2.0]
 
 ### Added

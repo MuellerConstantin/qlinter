@@ -18,6 +18,7 @@ const DOM_POLL_TIMEOUT_MS = 10_000;
 let status: Status = 'not-applicable';
 let diagnosticCounts: DiagnosticCounts | null = null;
 let fixableCount = 0;
+let currentScore: number | null = null;
 let currentConfig: LintConfig = {};
 
 function postConfig(): void {
@@ -69,6 +70,7 @@ async function activate(): Promise<void> {
   status = 'active';
   diagnosticCounts = null;
   fixableCount = 0;
+  currentScore = null;
   console.log('[qlinter] activated — qlik script editor detected on', location.href);
   broadcastStatus();
 }
@@ -81,6 +83,7 @@ async function deactivate(): Promise<void> {
   status = 'not-applicable';
   diagnosticCounts = null;
   fixableCount = 0;
+  currentScore = null;
   console.log('[qlinter] deactivated — left script editor');
   broadcastStatus();
 }
@@ -138,7 +141,7 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
 
   if (message?.type === 'qlinter:get-diagnostics') {
     const response: DiagnosticsMessage | null = diagnosticCounts
-      ? { type: 'qlinter:diagnostics', counts: diagnosticCounts, fixable: fixableCount }
+      ? { type: 'qlinter:diagnostics', counts: diagnosticCounts, fixable: fixableCount, score: currentScore }
       : null;
     sendResponse(response);
     return false;
@@ -172,10 +175,12 @@ window.addEventListener('message', (event: MessageEvent) => {
   if (data.type === 'qlinter:diagnostics') {
     diagnosticCounts = data.counts;
     fixableCount = data.fixable;
+    currentScore = data.score;
     const message: DiagnosticsMessage = {
       type: 'qlinter:diagnostics',
       counts: diagnosticCounts,
       fixable: fixableCount,
+      score: currentScore,
     };
     chrome.runtime.sendMessage(message).catch(() => {});
   }

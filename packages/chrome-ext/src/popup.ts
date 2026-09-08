@@ -1,5 +1,4 @@
 import type {
-  DiagnosticCounts,
   DiagnosticsMessage,
   FixAllMessage,
   GetDiagnosticsMessage,
@@ -19,6 +18,9 @@ const summary = document.getElementById('summary') as HTMLDivElement;
 const countError = document.getElementById('count-error') as HTMLSpanElement;
 const countWarning = document.getElementById('count-warning') as HTMLSpanElement;
 const countInfo = document.getElementById('count-info') as HTMLSpanElement;
+const score = document.getElementById('score') as HTMLSpanElement;
+const scoreLabel = document.getElementById('score-label') as HTMLSpanElement;
+const scoreValue = document.getElementById('score-value') as HTMLSpanElement;
 
 const STATUS_MESSAGE_KEYS: Record<Status, string> = {
   loading: 'statusLoading',
@@ -43,20 +45,31 @@ function renderStatus(status: Status): void {
   }
 }
 
-function renderCounts(counts: DiagnosticCounts | undefined, fixable: number): void {
-  summary.hidden = !counts;
-  fixAllButton.hidden = !counts || fixable <= 0;
+function renderDiagnostics(diagnostics: DiagnosticsMessage | null): void {
+  summary.hidden = !diagnostics;
+  fixAllButton.hidden = !diagnostics || diagnostics.fixable <= 0;
 
-  if (!counts) {
+  if (!diagnostics) {
     return;
   }
 
-  countError.textContent = String(counts.error);
-  countWarning.textContent = String(counts.warning);
-  countInfo.textContent = String(counts.info);
+  countError.textContent = String(diagnostics.counts.error);
+  countWarning.textContent = String(diagnostics.counts.warning);
+  countInfo.textContent = String(diagnostics.counts.info);
+
+  // Core declines to score a script under ten lines, where one finding would
+  // swing the figure further than the style it describes. Show nothing rather
+  // than a number that would have to be explained away.
+  score.hidden = diagnostics.score === null;
+
+  if (diagnostics.score !== null) {
+    scoreValue.textContent = chrome.i18n.getMessage('scoreValue', [String(diagnostics.score)]);
+  }
 }
 
 grantButton.textContent = chrome.i18n.getMessage('grantButton');
+scoreLabel.textContent = chrome.i18n.getMessage('scoreLabel');
+score.title = chrome.i18n.getMessage('scoreTitle');
 fixAllButton.textContent = chrome.i18n.getMessage('fixAllButton');
 fixAllButton.onclick = () => {
   if (activeTabId === null) {
@@ -157,10 +170,9 @@ async function refresh(): Promise<void> {
   renderStatus(status);
 
   if (status === 'active') {
-    const diagnostics = await queryDiagnostics(tab.id);
-    renderCounts(diagnostics?.counts, diagnostics?.fixable ?? 0);
+    renderDiagnostics(await queryDiagnostics(tab.id));
   } else {
-    renderCounts(undefined, 0);
+    renderDiagnostics(null);
   }
 }
 
@@ -183,11 +195,11 @@ chrome.runtime.onMessage.addListener((message: Message): undefined => {
     }
 
     renderStatus(message.status);
-    renderCounts(undefined, 0);
+    renderDiagnostics(null);
   }
 
   if (message?.type === 'qlinter:diagnostics') {
-    renderCounts(message.counts, message.fixable);
+    renderDiagnostics(message);
   }
 });
 

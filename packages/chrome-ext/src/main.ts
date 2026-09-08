@@ -1,6 +1,6 @@
 import { debounce } from './util/debounce';
 import { getEditor } from './util/editor';
-import { format, lint } from '@qlinter/core';
+import { conformanceScore, format, lint } from '@qlinter/core';
 import { createHighlighter, injectStyles } from './util/highlight';
 import type { BridgeMessage, DiagnosticCounts, DiagnosticsBridgeMessage, GetConfigBridgeMessage } from './types.js';
 import type { Diagnostic, LintConfig } from '@qlinter/core';
@@ -55,7 +55,8 @@ function onEditorReady(editor: Editor): void {
   const highlighter = createHighlighter(editor);
 
   const runLint = (): void => {
-    const diagnostics = lint(editor.getValue(), currentConfig);
+    const source = editor.getValue();
+    const diagnostics = lint(source, currentConfig);
     highlighter.apply(diagnostics);
 
     const fixable = diagnostics.reduce((count, diagnostic) => (diagnostic.fix ? count + 1 : count), 0);
@@ -65,6 +66,7 @@ function onEditorReady(editor: Editor): void {
       type: 'qlinter:diagnostics',
       counts: countBySeverity(diagnostics),
       fixable,
+      score: conformanceScore(source, diagnostics),
     };
     window.postMessage(message, window.location.origin);
   };

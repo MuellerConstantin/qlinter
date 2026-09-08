@@ -5,7 +5,13 @@ export type DiagnosticCounts = Record<Severity, number>;
 export type Status = 'active' | 'loading' | 'errored' | 'needs-permission' | 'not-applicable';
 
 export type StatusMessage = { type: 'qlinter:status'; status: Status };
-export type DiagnosticsMessage = { type: 'qlinter:diagnostics'; counts: DiagnosticCounts; fixable: number };
+export type DiagnosticsMessage = {
+  type: 'qlinter:diagnostics';
+  counts: DiagnosticCounts;
+  fixable: number;
+  /** The conformance score, or `null` for a script Core considers too short to score. */
+  score: number | null;
+};
 export type LocationChangeMessage = { type: 'qlinter:location-change' };
 export type GetStatusMessage = { type: 'qlinter:get-status' };
 export type GetDiagnosticsMessage = { type: 'qlinter:get-diagnostics' };
@@ -23,6 +29,7 @@ export type DiagnosticsBridgeMessage = {
   type: 'qlinter:diagnostics';
   counts: DiagnosticCounts;
   fixable: number;
+  score: number | null;
 };
 export type FixAllBridgeMessage = { source: 'qlinter-content'; type: 'qlinter:fix-all' };
 export type ConfigBridgeMessage = { source: 'qlinter-content'; type: 'qlinter:config'; config: LintConfig };

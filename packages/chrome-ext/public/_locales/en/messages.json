@@ -39,6 +39,24 @@
     "message": "Format automatically",
     "description": "Button that triggers a fix-all pass over the current Qlik script."
   },
+  "scoreLabel": {
+    "message": "Conformance",
+    "description": "Label next to the conformance score in the popup summary bar."
+  },
+  "scoreValue": {
+    "message": "$score$%",
+    "description": "The conformance score itself, as a percentage. Locales differ on whether a space precedes the sign.",
+    "placeholders": {
+      "score": {
+        "content": "$1",
+        "example": "84"
+      }
+    }
+  },
+  "scoreTitle": {
+    "message": "Share of lines that carry no finding. Scripts under ten lines are not scored.",
+    "description": "Tooltip explaining what the conformance score in the popup measures."
+  },
   "settingsButton": {
     "message": "Open settings",
     "description": "Accessible label and tooltip for the gear icon button that opens the options page."

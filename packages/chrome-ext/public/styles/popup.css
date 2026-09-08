@@ -108,6 +108,22 @@ button {
   font-size: 12px;
 }
 
+.summary .score {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+/* Tabular figures keep the score from shifting sideways as it updates on every keystroke. */
+.summary .score-value {
+  color: var(--fg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .summary .count-dot {
   width: 8px;
   height: 8px;

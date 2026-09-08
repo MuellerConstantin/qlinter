@@ -45,6 +45,10 @@ script ever leaves the browser, and no backend is involved.
   violations surface exactly where you write the script.
 - **Severity-aware diagnostics** — each finding is classified as error, warning, or info,
   and the extension popup shows a live count per severity for the active editor.
+- **Conformance score** — the popup puts one figure next to the counts: the share of
+  lines in the open script that carry no finding. Scripts under ten lines are left
+  unscored, where a single finding would swing the number further than the style it
+  describes.
 - **One-click auto-format** — a single "Fix All" action applies every available autofix
   to the current script and writes the normalized output back into the editor.
 - **Configurable, opinionated ruleset** — ships with a sensible default style guide, but
