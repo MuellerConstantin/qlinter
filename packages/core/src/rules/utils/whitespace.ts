@@ -137,3 +137,18 @@ export function horizontalEndAfter(whitespaces: IToken[], offset: number): numbe
     at = endOf(run);
   }
 }
+
+/** Where the whitespace beginning at `offset` ends, line breaks included; `offset` itself when none does. */
+export function whitespaceEndAfter(whitespaces: IToken[], offset: number): number {
+  let at = offset;
+
+  for (;;) {
+    const run = runStartingAt(whitespaces, at);
+
+    if (run === undefined) {
+      return at;
+    }
+
+    at = endOf(run);
+  }
+}

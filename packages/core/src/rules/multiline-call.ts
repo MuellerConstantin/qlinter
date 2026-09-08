@@ -5,10 +5,12 @@ import type { LineSpan } from '../lines.js';
 import { tokenRange } from '../token.js';
 import { isKeywordLessAssignment, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
+import { whitespaceEndAfter, whitespaceStartBefore } from './utils/whitespace.js';
 
 export interface MultilineCallOptions {
   maxLineLength: number;
 }
+
 function findMatchingClose(tokens: IToken[], openIdx: number): number {
   let depth = 0;
 
@@ -61,8 +63,9 @@ function lineLengthAt(lines: LineSpan[], line: number): number {
 function breakableCalls(
   tokens: IToken[],
   source: string,
+  whitespaces: IToken[],
   lines: LineSpan[],
-  newline: string,
+  lineEnding: string,
   maxLineLength: number,
 ): Finding[] {
   const out: Finding[] = [];
@@ -118,13 +121,15 @@ function breakableCalls(
     let cursor = innerStart;
 
     for (const comma of commas) {
-      args.push(source.slice(cursor, comma.startOffset).trim());
+      args.push(
+        source.slice(whitespaceEndAfter(whitespaces, cursor), whitespaceStartBefore(whitespaces, comma.startOffset)),
+      );
       cursor = (comma.endOffset ?? comma.startOffset) + 1;
     }
 
-    args.push(source.slice(cursor, innerEnd).trim());
+    args.push(source.slice(whitespaceEndAfter(whitespaces, cursor), whitespaceStartBefore(whitespaces, innerEnd)));
 
-    const replacement = newline + args.join(`,${newline}`) + newline;
+    const replacement = lineEnding + args.join(`,${lineEnding}`) + lineEnding;
 
     out.push({
       range: tokenRange(funcToken),
@@ -143,8 +148,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
   defaultSeverity: 'warning',
   defaultOptions: { maxLineLength: 120 },
   options: { maxLineLength: { type: 'number', min: 20, max: 1000 } },
-  check: ({ source, tokens, lines, lineEnding }, { maxLineLength }) => {
-    const newline = lineEnding;
+  check: ({ source, tokens, whitespaces, lines, lineEnding }, { maxLineLength }) => {
     const out: Finding[] = [];
 
     for (const statement of splitStatements(tokens)) {
@@ -153,7 +157,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
         continue;
       }
 
-      out.push(...breakableCalls(statement, source, lines, newline, maxLineLength));
+      out.push(...breakableCalls(statement, source, whitespaces, lines, lineEnding, maxLineLength));
     }
 
     return out;

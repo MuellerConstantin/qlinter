@@ -6,18 +6,18 @@ import { fixStartOffset } from './utils/fixes.js';
 import { findFieldListBoundaries, findLoadIndex, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
-function makeFinding(prev: IToken, t: IToken, whitespaces: IToken[], newline: string): Finding {
+function makeFinding(prev: IToken, t: IToken, whitespaces: IToken[], lineEnding: string): Finding {
   return {
     range: tokenRange(t),
     message: 'Each LOAD field should start on its own line.',
     fix: {
       range: { start: fixStartOffset(whitespaces, prev, t), end: t.startOffset },
-      replacement: newline,
+      replacement: lineEnding,
     },
   };
 }
 
-function checkStatement(tokens: IToken[], whitespaces: IToken[], newline: string): Finding[] {
+function checkStatement(tokens: IToken[], whitespaces: IToken[], lineEnding: string): Finding[] {
   const loadIdx = findLoadIndex(tokens);
 
   if (loadIdx === -1) {
@@ -35,7 +35,7 @@ function checkStatement(tokens: IToken[], whitespaces: IToken[], newline: string
   const firstField = tokens[start];
 
   if ((header.startLine ?? 1) === (firstField.startLine ?? 1)) {
-    out.push(makeFinding(header, firstField, whitespaces, newline));
+    out.push(makeFinding(header, firstField, whitespaces, lineEnding));
   }
 
   let depth = 0;
@@ -64,7 +64,7 @@ function checkStatement(tokens: IToken[], whitespaces: IToken[], newline: string
     }
 
     if ((next.startLine ?? 1) === (t.startLine ?? 1)) {
-      out.push(makeFinding(t, next, whitespaces, newline));
+      out.push(makeFinding(t, next, whitespaces, lineEnding));
     }
   }
 
@@ -76,12 +76,11 @@ export const loadFieldPerLine: Rule<undefined, 'load-field-per-line'> = {
   defaultSeverity: 'warning',
   defaultOptions: undefined,
   check: ({ tokens, whitespaces, lineEnding }: RuleContext) => {
-    const newline = lineEnding;
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
     for (const stmt of stmts) {
-      out.push(...checkStatement(stmt, whitespaces, newline));
+      out.push(...checkStatement(stmt, whitespaces, lineEnding));
     }
 
     return out;

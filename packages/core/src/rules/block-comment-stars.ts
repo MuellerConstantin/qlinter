@@ -1,4 +1,4 @@
-import { blockCommentToken } from '../lexer.js';
+import { LINE_BREAK, blockCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
@@ -6,7 +6,6 @@ import { detectLineEnding } from '../lines.js';
 
 const LEADING_WS = /^[ \t]*/;
 const TRAILING_WS = /[ \t]+$/;
-const CR_AT_END = /\r$/;
 
 /*
  * Reformat a multi-line block comment into the canonical JSDoc-like shape:
@@ -24,7 +23,7 @@ function normalizeBlockComment(text: string, indent: string): string {
   const eol = detectLineEnding(text);
 
   const inner = text.slice(2, -2);
-  const rawLines = inner.split('\n').map((line) => line.replace(CR_AT_END, ''));
+  const rawLines = inner.split(LINE_BREAK);
   const bodies: string[] = [];
 
   for (let i = 0; i < rawLines.length; i++) {

@@ -5,7 +5,7 @@ import { fixStartOffset } from './utils/fixes.js';
 import { findLoadIndex, isClauseStarter, splitStatements } from './utils/statements.js';
 import { isCloseParen, isOpenParen } from './utils/tokens.js';
 
-function checkStatement(tokens: IToken[], whitespaces: IToken[], newline: string): Finding[] {
+function checkStatement(tokens: IToken[], whitespaces: IToken[], lineEnding: string): Finding[] {
   const loadIdx = findLoadIndex(tokens);
 
   if (loadIdx === -1) {
@@ -35,7 +35,7 @@ function checkStatement(tokens: IToken[], whitespaces: IToken[], newline: string
           message: `LOAD clause '${t.image}' should start on its own line.`,
           fix: {
             range: { start: fixStartOffset(whitespaces, prev, t), end: t.startOffset },
-            replacement: newline,
+            replacement: lineEnding,
           },
         });
       }
@@ -52,12 +52,11 @@ export const loadClauseNewline: Rule<undefined, 'load-clause-newline'> = {
   defaultSeverity: 'warning',
   defaultOptions: undefined,
   check: ({ tokens, whitespaces, lineEnding }: RuleContext) => {
-    const newline = lineEnding;
     const stmts = splitStatements(tokens);
     const out: Finding[] = [];
 
     for (const stmt of stmts) {
-      out.push(...checkStatement(stmt, whitespaces, newline));
+      out.push(...checkStatement(stmt, whitespaces, lineEnding));
     }
 
     return out;
