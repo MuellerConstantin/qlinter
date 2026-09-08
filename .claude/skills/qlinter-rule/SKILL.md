@@ -121,12 +121,53 @@ Shared vocabulary that is genuinely the rules' own lives in
 `packages/core/src/rules/utils/`:
 
 - `tokens.ts` — token-shape predicates (`isKeyword`, `isOpenParen`, ...).
-- `lines.ts` — the source's line ending, grouping tokens by line, splitting it into spans, deciding which of those are blank, and which are carried inside a multi-line token.
+- `lines.ts` — grouping tokens by line, deciding which line spans are blank and which lines are carried inside a multi-line token, and the fixes that insert or delete whole lines. Where the spans themselves come from is `src/lines.ts`, outside the rules.
 - `blocks.ts` — what a statement-start line does to the block structure around it: opens a body, closes one, or (for `Else`/`Case`) both.
 - `statements.ts` — statement splitting, statement line spans, LOAD field-list boundaries, and whether a line closes its statement.
 - `indent.ts` — indent style vocabulary and option schema, the shared indent check and finding builder.
 - `load-anchors.ts` — which lines of a LOAD are header, field, and clause anchors: the split `load-indent` enforces and `continuation-indent` takes the complement of.
-- `fixes.ts` — fix-range construction that preserves comments.
+- `whitespace.ts` — what the lexer's whitespace runs answer: what fills the gap between two tokens, whether a token opens or closes its line, where a run of whitespace begins and ends.
+- `fixes.ts` — where a fix that re-spaces a gap may start without eating what stands in it.
+
+### What the text _is_ belongs there too
+
+The same claim covers whitespace. Whether a stretch of characters is a separator, a
+line break, a comment or content is a statement about the language, and a rule that
+answers it a second time drifts from the first answer. That is not hypothetical: the
+indent rules once measured leading whitespace by walking the raw text, and deleted
+every comment that opened a line.
+
+So a rule asks the context, which carries the lexer's answers:
+
+| Field         | Answers                                                     |
+| ------------- | ----------------------------------------------------------- |
+| `tokens`      | what the script says                                        |
+| `comments`    | what it says beside that                                    |
+| `whitespaces` | the gaps, as runs — spaces and tabs, and line breaks, apart |
+| `lines`       | where each line of the file begins and ends                 |
+| `lineEnding`  | which terminator the file is written in                     |
+
+**Where the context does not answer, extend the lexer — do not interpret in the
+rule.** A missing answer is a gap in the model, and filling it once in
+[lexer.ts](../../../packages/core/src/lexer.ts) serves every rule; filling it in a
+`check` serves one and contradicts the next. Whitespace itself arrived that way: it
+used to be `Lexer.SKIPPED`, which is why thirteen rules each had their own idea of it.
+
+Two things are genuinely not the lexer's, and stay outside it:
+
+- **The interior of a construct it keeps whole.** A block comment's body is not Qlik
+  syntax and is deliberately not tokenized, so a rule formatting that body works on
+  `token.image` with its own patterns. That is a different domain, not a second
+  opinion.
+- **Line geometry**, which lives in [lines.ts](../../../packages/core/src/lines.ts)
+  next to the lexer rather than in it. A break inside an opaque token produces no
+  Newline token, so lines have to be counted over the raw text — but the pattern that
+  says what a break _is_ still comes from the lexer, as `LINE_BREAK`.
+
+Reading `source` in a rule file is an ESLint error. Slicing it to carry bytes into a
+fix unchanged stays right — that is the safest thing a fix can do — and takes an
+`eslint-disable-next-line no-restricted-syntax` saying why. Deciding anything from
+those bytes does not.
 
 ### Qlik's semantics are looked up, never inferred
 
@@ -217,6 +258,9 @@ interface RuleContext {
   tokens: IToken[];
   firstOnLine: IToken[];
   comments: IToken[];
+  whitespaces: IToken[];
+  lines: LineSpan[];
+  lineEnding: string;
 }
 
 type Finding = Omit<Diagnostic, 'ruleId' | 'severity'>; // range, message, fix?

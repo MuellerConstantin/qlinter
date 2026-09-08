@@ -4,6 +4,7 @@ import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
 
 const SEGMENT = /[A-Za-z_][A-Za-z0-9_]*/;
+// eslint-disable-next-line no-restricted-syntax -- a regular expression's own pattern, not the script's text
 const PATTERN = new RegExp(`^${SEGMENT.source}(?:\\.${SEGMENT.source})*$`);
 
 export const variableCharset: Rule<undefined, 'variable-charset'> = {

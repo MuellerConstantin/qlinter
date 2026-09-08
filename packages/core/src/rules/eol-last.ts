@@ -29,6 +29,7 @@ export const eolLast: Rule<undefined, 'eol-last'> = {
   id: 'eol-last',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
+  // eslint-disable-next-line no-restricted-syntax -- a lone carriage return terminates a line here but matches no Newline token
   check: ({ source, lineEnding }) => {
     const out: Finding[] = [];
     const len = source.length;

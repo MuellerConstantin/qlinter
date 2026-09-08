@@ -148,6 +148,7 @@ export const multilineCall: Rule<MultilineCallOptions, 'multiline-call'> = {
   defaultSeverity: 'warning',
   defaultOptions: { maxLineLength: 120 },
   options: { maxLineLength: { type: 'number', min: 20, max: 1000 } },
+  // eslint-disable-next-line no-restricted-syntax -- each argument travels onto its own line byte for byte, comment and all
   check: ({ source, tokens, whitespaces, lines, lineEnding }, { maxLineLength }) => {
     const out: Finding[] = [];
 

@@ -7,6 +7,7 @@ export const commaStyle: Rule<undefined, 'comma-style'> = {
   id: 'comma-style',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
+  // eslint-disable-next-line no-restricted-syntax -- the gap before the comma travels into the fix byte for byte, comment and all
   check: ({ source, tokens, firstOnLine, whitespaces }: RuleContext): Finding[] => {
     const firstOnLineSet = new Set(firstOnLine);
     const out: Finding[] = [];
