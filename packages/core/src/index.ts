@@ -1,4 +1,5 @@
 export { lint, format } from './runner.js';
+export { conformanceScore } from './score.js';
 export { validateConfig } from './config/index.js';
 export { resolveConfig } from './rules/index.js';
 export type {

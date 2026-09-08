@@ -19,6 +19,7 @@
     - [Installation](#installation)
     - [Linting](#linting)
     - [Formatting](#formatting)
+    - [Scoring](#scoring)
     - [Configuring rules](#configuring-rules)
     - [Picking your own rule set](#picking-your-own-rule-set)
     - [Disable directives](#disable-directives)
@@ -44,6 +45,9 @@ formatting decision to Core.
   they like (terminal, editor squiggles, CI report).
 - **Format** — apply the same ruleset deterministically to produce normalized output.
   Formatting and linting share one source of truth, so they never disagree.
+- **Conformance score** — one 0-100 number for how much of a script already follows the
+  configured style, for hosts that want a headline figure next to the findings. See
+  [`docs/score.md`](./docs/score.md).
 - **Opinionated default ruleset** — a curated `recommended` preset covering whitespace,
   keyword casing, `LOAD` formatting, variable conventions, comments, and more. See the
   full list in [`docs/rules.md`](./docs/rules.md).
@@ -108,6 +112,30 @@ console.log(`${diagnostics.length} diagnostic(s) remain`);
 
 `output` is always returned; `diagnostics` contains anything the formatter could not
 auto-correct (rules without a fix, or fixes that conflict).
+
+### Scoring
+
+`conformanceScore(source, diagnostics)` reduces a lint result to a single number from 0
+to 100 — the share of lines that no diagnostic points at:
+
+```ts
+import { lint, conformanceScore, recommended } from '@qlinter/core';
+
+const diagnostics = lint(source, recommended);
+const score = conformanceScore(source, diagnostics);
+
+console.log(score === null ? 'too short to score' : `${score}%`);
+```
+
+Every line counts, blank and comment lines included, and every enabled rule counts the
+same regardless of severity. A line carrying several findings still counts once. The
+value is rounded down, so 100 means every line is clean, and `null` comes back for a
+script under ten lines, where a single finding would swing the number too far to mean
+anything.
+
+The score is comparable only across scripts linted with the same configuration, and is
+most useful watched over time on one script. What it measures, what it deliberately does
+not, and how to present it to a team is written up in [`docs/score.md`](./docs/score.md).
 
 ### Configuring rules
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `conformanceScore(source, diagnostics)` reduces a lint result to a single
+  number from 0 to 100: the share of lines that no diagnostic points at, rounded
+  down so 100 means every line is clean. Every line counts, blank and comment
+  lines included, and every enabled rule counts the same regardless of severity;
+  a line carrying several findings counts once, and a finding spanning several
+  lines counts against the line it starts on. A script under ten lines scores
+  `null`, because a single finding would swing the number further than the style
+  it is meant to describe. Core returns the number only — how it is displayed is
+  each binding's decision. See `docs/score.md`.
+
 ### Changed
 
 - Whitespace is reported by the lexer instead of discarded, and the rules ask it
