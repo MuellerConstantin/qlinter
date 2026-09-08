@@ -1,5 +1,6 @@
 import { tokenMatcher, type IToken } from 'chevrotain';
 import { newlineToken } from '../../lexer.js';
+import type { LineSpan } from '../../lines.js';
 
 const endOf = (token: IToken): number => (token.endOffset ?? token.startOffset) + 1;
 
@@ -88,35 +89,23 @@ export function horizontalGap(whitespaces: IToken[], prev: IToken, next: IToken)
   return runs !== undefined && runs.length > 0 && !runs.some(isLineBreak) ? runs : undefined;
 }
 
-/** The offset a token's line begins at. */
-const lineStartOf = (token: IToken): number => token.startOffset - ((token.startColumn ?? 1) - 1);
+/*
+ * Whether a token has anything but whitespace beside it on its own line.
+ *
+ * Both edges come from the line the token sits on, so neither has to reason
+ * about where the file ends: the last line's span stops where the text does, and
+ * a token closing it reaches that edge like any other.
+ */
+export function opensLine(whitespaces: IToken[], lines: LineSpan[], token: IToken): boolean {
+  const span = lines[(token.startLine ?? 1) - 1];
 
-/** True when nothing but whitespace stands before `token` on its line. */
-export function opensLine(whitespaces: IToken[], token: IToken): boolean {
-  return runsSpanning(whitespaces, lineStartOf(token), token.startOffset) !== undefined;
+  return span !== undefined && runsSpanning(whitespaces, span.start, token.startOffset) !== undefined;
 }
 
-/** True when nothing but whitespace stands after `token` on its line. */
-export function closesLine(whitespaces: IToken[], token: IToken, sourceLength: number): boolean {
-  let at = endOf(token);
+export function closesLine(whitespaces: IToken[], lines: LineSpan[], token: IToken): boolean {
+  const span = lines[(token.endLine ?? token.startLine ?? 1) - 1];
 
-  for (;;) {
-    if (at === sourceLength) {
-      return true;
-    }
-
-    const run = runStartingAt(whitespaces, at);
-
-    if (run === undefined) {
-      return false;
-    }
-
-    if (isLineBreak(run)) {
-      return true;
-    }
-
-    at = endOf(run);
-  }
+  return span !== undefined && runsSpanning(whitespaces, endOf(token), span.end) !== undefined;
 }
 
 /** Where the whitespace ending at `offset` begins, line breaks included; `offset` itself when none does. */

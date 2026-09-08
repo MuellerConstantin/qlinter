@@ -72,7 +72,7 @@ export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {
   id: 'block-comment-stars',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, comments, whitespaces }) => {
+  check: ({ comments, whitespaces, lines }) => {
     const out: Finding[] = [];
 
     for (const token of comments) {
@@ -91,14 +91,14 @@ export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {
       const endOffset = (token.endOffset ?? startOffset) + 1;
 
       /* A comment sharing its line with code has no rail to align. */
-      if (!opensLine(whitespaces, token)) {
+      if (!opensLine(whitespaces, lines, token)) {
         continue;
       }
 
       const indent = runEndingAt(whitespaces, startOffset);
       const beforeOpen = indent === undefined || isLineBreak(indent) ? '' : indent.image;
 
-      const text = source.slice(startOffset, endOffset);
+      const text = token.image;
       const normalized = normalizeBlockComment(text, beforeOpen);
 
       if (text === normalized) {

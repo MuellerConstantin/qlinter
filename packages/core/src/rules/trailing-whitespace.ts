@@ -1,11 +1,11 @@
 import type { Rule, Finding } from '../types.js';
-import { isLineBreak, runStartingAt } from './utils/whitespace.js';
+import { isLineBreak } from './utils/whitespace.js';
 
 export const trailingWhitespace: Rule<undefined, 'trailing-whitespace'> = {
   id: 'trailing-whitespace',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, whitespaces }) => {
+  check: ({ whitespaces, lines }) => {
     const out: Finding[] = [];
 
     for (const run of whitespaces) {
@@ -14,22 +14,23 @@ export const trailingWhitespace: Rule<undefined, 'trailing-whitespace'> = {
       }
 
       const end = (run.endOffset ?? run.startOffset) + 1;
-      const following = runStartingAt(whitespaces, end);
+      const line = run.startLine ?? 1;
+      const span = lines[line - 1];
 
       /*
-       * A horizontal run is trailing when a line break follows it, or when the
-       * file ends there. Anything else after it is content, which makes the run
-       * a gap between two things rather than the tail of a line.
+       * A horizontal run is trailing when it reaches the end of its line, which
+       * the last line reaches at the end of the file like any other. Anything
+       * after it is content, and the run is a gap between two things rather than
+       * the tail of a line.
        *
        * Whitespace inside a construct the lexer keeps whole is never reported as
        * a run, so a line ending inside inline data or a block comment cannot
        * reach this loop at all.
        */
-      if (end !== source.length && (following === undefined || !isLineBreak(following))) {
+      if (span === undefined || end !== span.end) {
         continue;
       }
 
-      const line = run.startLine ?? 1;
       const column = run.startColumn ?? 1;
 
       out.push({

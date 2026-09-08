@@ -59,7 +59,7 @@ export const operatorSpacing: Rule<undefined, 'operator-spacing'> = {
   id: 'operator-spacing',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments, whitespaces }) => {
+  check: ({ tokens, comments, whitespaces, lines }) => {
     const out: Finding[] = [];
     const content = contentInOrder(tokens, comments);
 
@@ -114,7 +114,7 @@ export const operatorSpacing: Rule<undefined, 'operator-spacing'> = {
       }
 
       /* Start of line — that is indentation, not operator spacing. */
-      if (prev !== undefined && !opensLine(whitespaces, token)) {
+      if (prev !== undefined && !opensLine(whitespaces, lines, token)) {
         const runs = sameLineGap(whitespaces, prev, token);
 
         if (runs !== undefined) {
@@ -129,7 +129,7 @@ export const operatorSpacing: Rule<undefined, 'operator-spacing'> = {
       /* End of line — a wrapped expression, left to the indent rules. */
       const after = content[i + 1];
 
-      if (after !== undefined && !closesLine(whitespaces, last, source.length)) {
+      if (after !== undefined && !closesLine(whitespaces, lines, last)) {
         const runs = sameLineGap(whitespaces, last, after);
 
         if (runs !== undefined) {

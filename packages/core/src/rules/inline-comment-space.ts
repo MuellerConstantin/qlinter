@@ -7,7 +7,7 @@ export const inlineCommentSpace: Rule<undefined, 'inline-comment-space'> = {
   id: 'inline-comment-space',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ comments, whitespaces }) => {
+  check: ({ comments, whitespaces, lines }) => {
     const out: Finding[] = [];
 
     for (const token of comments) {
@@ -16,7 +16,7 @@ export const inlineCommentSpace: Rule<undefined, 'inline-comment-space'> = {
       }
 
       /* A comment opening its line trails nothing, so there is no gap to size. */
-      if (opensLine(whitespaces, token)) {
+      if (opensLine(whitespaces, lines, token)) {
         continue;
       }
 

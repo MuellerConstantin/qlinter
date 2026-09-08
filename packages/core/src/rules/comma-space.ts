@@ -19,7 +19,7 @@ export const commaSpace: Rule<undefined, 'comma-space'> = {
   id: 'comma-space',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
-  check: ({ source, tokens, comments, whitespaces }) => {
+  check: ({ tokens, comments, whitespaces, lines }) => {
     const out: Finding[] = [];
     const content = contentInOrder(tokens, comments);
 
@@ -37,7 +37,7 @@ export const commaSpace: Rule<undefined, 'comma-space'> = {
        * A comma opening its line is left alone: where a comma sits is not this
        * rule's concern, and what stands before it there is indentation.
        */
-      if (prev !== undefined && !opensLine(whitespaces, token)) {
+      if (prev !== undefined && !opensLine(whitespaces, lines, token)) {
         const runs = horizontalGap(whitespaces, prev, token);
 
         if (runs !== undefined) {
@@ -50,7 +50,7 @@ export const commaSpace: Rule<undefined, 'comma-space'> = {
       }
 
       /* A comma closing its line has nothing after it to be separated from. */
-      if (next === undefined || closesLine(whitespaces, token, source.length)) {
+      if (next === undefined || closesLine(whitespaces, lines, token)) {
         continue;
       }
 
