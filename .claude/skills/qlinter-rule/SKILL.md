@@ -127,6 +127,7 @@ Shared vocabulary that is genuinely the rules' own lives in
 - `indent.ts` — indent style vocabulary and option schema, the shared indent check and finding builder.
 - `load-anchors.ts` — which lines of a LOAD are header, field, and clause anchors: the split `load-indent` enforces and `continuation-indent` takes the complement of.
 - `whitespace.ts` — what the lexer's whitespace runs answer: what fills the gap between two tokens, whether a token opens or closes its line, where a run of whitespace begins and ends.
+- `gaps.ts` — which of two neighbours owns the gap between them, and what counts as standing beside one.
 - `fixes.ts` — where a fix that re-spaces a gap may start without eating what stands in it.
 
 ### What the text _is_ belongs there too

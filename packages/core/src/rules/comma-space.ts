@@ -1,19 +1,8 @@
-import type { IToken } from 'chevrotain';
 import { commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { contentInOrder } from './utils/gaps.js';
 import { closesLine, gapRuns, horizontalGap, opensLine } from './utils/whitespace.js';
-
-/*
- * Tokens and comments in one stream, by position.
- *
- * A comma is separated from whatever stands next to it, and a comment counts:
- * `Load A,/* why *\/ B` is as unseparated as `Load A,B`. Reading only the token
- * stream would step over the comment and measure the gap to `B` instead.
- */
-function contentInOrder(tokens: IToken[], comments: IToken[]): IToken[] {
-  return [...tokens, ...comments].sort((a, b) => a.startOffset - b.startOffset);
-}
 
 export const commaSpace: Rule<undefined, 'comma-space'> = {
   id: 'comma-space',

@@ -1,24 +1,7 @@
-import { tokenMatcher, type IToken } from 'chevrotain';
-import { colonToken, commaToken, equalsToken, punctuationToken, semicolonToken } from '../lexer.js';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
+import { isWord } from './utils/gaps.js';
 import { horizontalGap } from './utils/whitespace.js';
-
-/*
- * A word is anything that is not punctuation: a keyword, a name in any of its
- * delimited forms, a literal. The gaps around punctuation each have an owner
- * already, and the arithmetic characters are deliberately left to nobody —
- * taking them over here would undo that decision.
- */
-function isWord(token: IToken): boolean {
-  return !(
-    tokenMatcher(token, punctuationToken) ||
-    tokenMatcher(token, commaToken) ||
-    tokenMatcher(token, equalsToken) ||
-    tokenMatcher(token, semicolonToken) ||
-    tokenMatcher(token, colonToken)
-  );
-}
 
 export const wordSpacing: Rule<undefined, 'word-spacing'> = {
   id: 'word-spacing',

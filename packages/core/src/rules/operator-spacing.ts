@@ -2,6 +2,7 @@ import type { IToken } from 'chevrotain';
 import { equalsToken, punctuationToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { contentInOrder } from './utils/gaps.js';
 import { closesLine, gapRuns, isLineBreak, opensLine } from './utils/whitespace.js';
 
 /*
@@ -23,14 +24,6 @@ const isEquals = (token: IToken | undefined): boolean => token !== undefined && 
 const endOf = (token: IToken): number => (token.endOffset ?? token.startOffset) + 1;
 
 const adjacent = (left: IToken, right: IToken): boolean => endOf(left) === right.startOffset;
-
-/*
- * Tokens and comments in one stream, by position. An operator is separated from
- * whatever stands next to it, and a comment counts as something.
- */
-function contentInOrder(tokens: IToken[], comments: IToken[]): IToken[] {
-  return [...tokens, ...comments].sort((a, b) => a.startOffset - b.startOffset);
-}
 
 /** The gap between two neighbours when it stays on one line, empty included. */
 function sameLineGap(whitespaces: IToken[], prev: IToken, next: IToken): IToken[] | undefined {

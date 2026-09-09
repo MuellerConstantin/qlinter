@@ -1,14 +1,8 @@
-import { tokenMatcher, type IToken } from 'chevrotain';
-import {
-  builtinFunctionToken,
-  colonToken,
-  commaToken,
-  equalsToken,
-  punctuationToken,
-  semicolonToken,
-} from '../lexer.js';
+import type { IToken } from 'chevrotain';
+import { builtinFunctionToken, punctuationToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { isWord } from './utils/gaps.js';
 import { horizontalGap } from './utils/whitespace.js';
 
 /*
@@ -28,19 +22,6 @@ import { horizontalGap } from './utils/whitespace.js';
 
 const isParen = (token: IToken | undefined, image: string): boolean =>
   token !== undefined && token.tokenType === punctuationToken && token.image === image;
-
-/*
- * A token that stands on its own: a keyword, a name, a literal. The punctuation
- * marks are excluded because the gap on their far side already has an owner.
- */
-const isWord = (token: IToken): boolean =>
-  !(
-    tokenMatcher(token, punctuationToken) ||
-    tokenMatcher(token, commaToken) ||
-    tokenMatcher(token, equalsToken) ||
-    tokenMatcher(token, semicolonToken) ||
-    tokenMatcher(token, colonToken)
-  );
 
 export const parenSpacing: Rule<undefined, 'paren-spacing'> = {
   id: 'paren-spacing',
