@@ -32,7 +32,7 @@
 | [one-statement-per-line](#one-statement-per-line)         | Require each statement to start on its own line.                 |
 | [operator-spacing](#operator-spacing)                     | Require exactly one space around binary operators.               |
 | [padded-blocks](#padded-blocks)                           | Pad the inside edges of a block with a blank line.               |
-| [paren-spacing](#paren-spacing)                           | Disallow function-call and inner-padding spaces around parens.   |
+| [paren-spacing](#paren-spacing)                           | Normalize the spacing on every side of a parenthesis.            |
 | [trailing-whitespace](#trailing-whitespace)               | Disallow whitespace at the end of a line.                        |
 | [variable-case](#variable-case)                           | Enforce a consistent casing style for user-defined vars.         |
 | [variable-charset](#variable-charset)                     | Restrict user-defined variables to a safe identifier charset.    |
@@ -2637,8 +2637,9 @@ End Sub
 
 ## paren-spacing
 
-Disallow the space between a built-in function and its opening parenthesis, and
-any padding immediately inside parentheses.
+Disallow the space between a built-in function and its opening parenthesis and
+any padding immediately inside parentheses, and require exactly one space
+between a closing parenthesis and the word after it.
 
 ### Rule Details
 
@@ -2646,7 +2647,7 @@ Parentheses carry structure in a Qlik expression, and inconsistent spacing
 around them blurs it. A call written `Sum (Amount)` reads as if `Sum` and
 `(Amount)` were two separate things; padding like `If( x, y )` pushes the
 arguments away from the parens that bound them and invites hand-alignment that
-bloats diffs. The rule pins both down:
+bloats diffs. The rule pins every side down:
 
 - **Function calls.** A built-in function name sits flush against its opening
   paren — `Sum(x)`, never `Sum (x)`. Only built-in functions are considered
@@ -2656,18 +2657,34 @@ bloats diffs. The rule pins both down:
 - **Inner padding.** No space directly after `(` or directly before `)`, so
   `( x )` becomes `(x)` and `Rand( )` becomes `Rand()`. This applies to every
   paren, grouping ones included.
+- **After a closing paren.** Exactly one space between `)` and the word that
+  follows it, so `Sum(Amount)      as Total` becomes `Sum(Amount) as Total`. A
+  run of spaces or tabs there is almost always a hand-aligned alias column, and
+  it is the one side of a paren no rule used to claim — `Amount     as Total`
+  was collapsed by [word-spacing](#word-spacing) while `Sum(Amount)     as Total`
+  survived a format pass untouched.
 
-The rule only ever closes a gap that is **pure spaces or tabs**. Two situations
-are therefore left untouched by design:
+Only a **word** counts as the thing after `)`. A closing paren followed by `,`,
+`;`, `=` or an operator keeps its gap, because that gap belongs to
+[comma-space](#comma-space), [semicolon-space](#semicolon-space) or
+[operator-spacing](#operator-spacing).
+
+The rule only ever rewrites a gap that is **pure spaces or tabs**, and only one
+that already exists. Three situations are therefore left untouched by design:
 
 - A gap that spans a **line break** — the broken-out argument list produced by
   [multiline-call](#multiline-call), where `(` ends its line and `)` starts its
   own — keeps its layout; that is owned by the indent rules.
-- A gap that contains a **comment** (`Sum /* note */ (x)`) is not collapsed, so
-  the comment survives.
+- A gap that contains a **comment** (`Sum /* note */ (x)`, `Sum(x) /* note */ as y`)
+  is not collapsed, so the comment survives.
+- An **empty** gap stays empty, on every side. A dollar-sign expansion is
+  spliced into the script as text, so a `)` closing one can sit in the middle of
+  a name: `$(vPrefix)Sales` is a single field, and a space inserted there would
+  split it into two tokens. The rule narrows a gap, it never opens one — see
+  [Dollar-sign expansion using a variable](https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/Variables/dollar-sign-expansion-using-variable.htm).
 
-The autofix deletes the offending whitespace. `Sum ( x )` converges on
-`Sum(x)` in one format pass.
+The autofix deletes the offending whitespace, or collapses it to a single space
+where one is required. `Sum ( x )` converges on `Sum(x)` in one format pass.
 
 Examples of **incorrect** code for this rule:
 
@@ -2678,7 +2695,8 @@ LET vEmpty = Rand( );
 
 [Sales]:
 Load
-    Amount
+    Sum(Amount)          as Total,
+    Count(Amount)        as Rows
 Resident [Raw]
 Where ( Amount > 0 );
 ```
@@ -2694,7 +2712,9 @@ LET vEval = $(=Max(OrderDate));
 // A keyword keeps its space before a grouping paren.
 [Sales]:
 Load
-    Amount
+    Sum(Amount) as Total,
+    // A dollar-sign expansion glued to a name stays glued.
+    $(vPrefix)Sales as Prefixed
 Resident [Raw]
 Where (Amount > 0);
 
@@ -2707,9 +2727,9 @@ LET vRange = RangeSum(
 
 ### Options
 
-This rule has no options. The no-call-space / no-padding convention is
-intentionally fixed — making it configurable would defeat the point of an
-opinionated linter.
+This rule has no options. The no-call-space / no-padding / one-space-after
+convention is intentionally fixed — making it configurable would defeat the
+point of an opinionated linter.
 
 ---
 

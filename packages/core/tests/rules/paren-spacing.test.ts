@@ -68,6 +68,43 @@ describe('paren-spacing', () => {
     expect(diagnostics[0].message).toBe("Unexpected space after '('.");
   });
 
+  it('flags a run of whitespace between a closing paren and the word after it', () => {
+    const diagnostics = lintRule('LOAD Sum(Amount)   as Total Resident [t];\n', parenSpacing);
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].message).toBe("Expected exactly one space after ')'.");
+  });
+
+  it('accepts a single space between a closing paren and the word after it', () => {
+    const diagnostics = lintRule('LOAD Sum(Amount) as Total Resident [t];\n', parenSpacing);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('does not open the gap a dollar-sign expansion closes', () => {
+    const diagnostics = lintRule('LOAD $(vPrefix)Sales as Total Resident [t];\n', parenSpacing);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('leaves the gap before a comma alone', () => {
+    const diagnostics = lintRule('LOAD Sum(Amount)  , Currency Resident [t];\n', parenSpacing);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('does not remove a comment sitting after a closing paren', () => {
+    const diagnostics = lintRule('LOAD Sum(Amount) /* hint */ as Total Resident [t];\n', parenSpacing);
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('leaves a closing paren that ends its line alone', () => {
+    const diagnostics = lintRule('LOAD Sum(Amount)\n    as Total\nResident [t];\n', parenSpacing);
+
+    expect(diagnostics).toEqual([]);
+  });
+
   it('leaves a multi-line call untouched', () => {
     const diagnostics = lintRule('LET x = If(\n    a,\n    b\n);\n', parenSpacing);
 
@@ -93,6 +130,14 @@ describe('paren-spacing', () => {
 
     expect(result.output).toBe('LET x = If(a, b);\n');
     expect(result.fixed).toBe(2);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it('autofixes a tab run before an alias', () => {
+    const result = formatRule('LOAD Sum(Amount)\t\t\tas Total Resident [t];\n', parenSpacing);
+
+    expect(result.output).toBe('LOAD Sum(Amount) as Total Resident [t];\n');
+    expect(result.fixed).toBe(1);
     expect(result.diagnostics).toEqual([]);
   });
 

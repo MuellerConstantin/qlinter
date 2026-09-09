@@ -1,6 +1,7 @@
 [Sales]:
 Load
     Sum (Amount) as Total,
-    If( Amount > 0, 'pos', 'neg' ) as Sign
+    If( Amount > 0, 'pos', 'neg' ) as Sign,
+    Count(Amount)      as Rows
 Resident [Raw]
 Where ( Amount > 0 );

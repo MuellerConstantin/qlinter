@@ -11,3 +11,4 @@ Where (Amount > 0);
 
 LET vEval = $(=Max(OrderDate));
 LET vEmpty = Rand();
+LET vGlued = $(vPrefix)Sales;

@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `paren-spacing` narrows the gap between a closing parenthesis and the word
+  after it to a single space. It was the one side of a paren no rule claimed:
+  `Amount     as Total` was collapsed while `Sum(Amount)     as Total` came out
+  of a format pass with its hand-aligned run of tabs intact. Only a word counts
+  as the thing after `)` — a comma, a semicolon or an operator keeps its gap,
+  which belongs to the rule that owns it — and an empty gap stays empty, because
+  a dollar-sign expansion is spliced in as text and `$(vPrefix)Sales` is one
+  name, not two.
 - Whitespace is reported by the lexer instead of discarded, and the rules ask it
   what whitespace is rather than each deciding for itself. Spaces, tabs and line
   breaks now lex into a group of their own and reach a rule through
