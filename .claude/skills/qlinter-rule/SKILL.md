@@ -43,12 +43,15 @@ A rule that reaches across two axes is the one to split. `comma-space` governs t
 space after a comma; whether a comma may _open a line_ is a placement question and
 belongs in its own rule rather than bolted onto the spacing one.
 
-### Every line needs exactly one owner
+### Every line and every gap needs exactly one owner
 
-This is the failure mode that has produced real bugs here, more than once. The indent
-rules partition lines between them: `block-indent` takes statement starts,
-`load-indent` takes the header, field and clause lines of a LOAD, and
-`continuation-indent` takes **everything left over**. That last one is a catch-all, so
+This is the failure mode that has produced real bugs here, more than once. Two
+partitions run across the ruleset: the indent rules divide the lines between them, and
+the spacing rules divide the gaps between adjacent tokens.
+
+Lines first. `block-indent` takes statement starts, `load-indent` takes the header,
+field and clause lines of a LOAD, and `continuation-indent` takes **everything left
+over**. That last one is a catch-all, so
 a line your rule declines to claim does not become unmanaged — it silently becomes a
 continuation line and is indented one level in.
 
@@ -65,6 +68,19 @@ All three **converged**, so the fixture-corpus sweep in `tests/format.test.ts` d
 catch them. Convergence proves the rules do not fight; it does not prove the shape
 they agree on is the intended one. Pin intended shapes down in a contract suite —
 `tests/load-header.test.ts` is the model.
+
+Gaps are the same idea over a smaller unit. A punctuation mark owns the gaps on both
+of its sides, so a rule governing the space between plain words steps over punctuation
+rather than measuring up to it, and the arithmetic characters are owned by nobody on
+purpose. Where that split falls is `utils/gaps.ts` — a rule that answers it again with
+a predicate of its own is one edit away from claiming a gap twice.
+
+They fail in the opposite direction to lines, because nothing here is a catch-all. A
+gap no rule claims is left as written, which is harmless. The bug is a gap claimed
+**twice**: `applyFixes` keeps the rightmost of two overlapping fixes and drops the
+other without a word, and where the two rules genuinely disagree the format loop never
+settles and throws. So for a spacing rule, ask which gaps it claims — and check that
+nothing else already claims them.
 
 ### Rules compose through the format loop, not through each other
 
