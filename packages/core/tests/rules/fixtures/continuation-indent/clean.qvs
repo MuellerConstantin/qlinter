@@ -51,3 +51,39 @@ Let vTotal = RangeSum(
     /* first */ 1,
     2
 );
+
+// Two parentheses opened on one line still make one level, and the closing
+// line lands back under the line that opened them.
+Let vDouble = If(Match(
+    Region,
+    'North'
+), 1, 0);
+
+// A continuation carries a level of its own, so what a parenthesis it opens
+// contains hangs off that line rather than off the anchor.
+Let vTotal = 1
+    + Sum(
+        Amount
+    );
+
+// Nested calls hang one level per line, whatever a line opens: the anchor here
+// is a field start rather than a statement start, and the same shape follows.
+[Nested]:
+Load
+    If(Match(Flag, 'True'), 1,
+        If(Match(Flag, 'False'), 0,
+            If(IsNull(Flag),
+                -1,
+                Flag
+            )
+        )
+    ) as Flag,
+    If(Match(
+        Region,
+        'North',
+        'South'
+    ), 1, 0) as Compass,
+    If(Match([Region Name], 'North'), 1,
+        If(Match([Region Name], 'South'), 0, [Region Name]
+        )) as Compass2
+From X;

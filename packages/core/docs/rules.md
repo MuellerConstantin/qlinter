@@ -14,7 +14,7 @@
 | [comma-space](#comma-space)                               | Require one space after a comma and none before it.              |
 | [comma-style](#comma-style)                               | Require a comma to close the line of the operand it follows.     |
 | [comment-space](#comment-space)                           | Require a space after `//` and inside `/* */`.                   |
-| [continuation-indent](#continuation-indent)               | Indent continuation lines one level per open parenthesis.        |
+| [continuation-indent](#continuation-indent)               | Indent continuation lines one level per line they hang below.    |
 | [eol-last](#eol-last)                                     | Require the file to end with exactly one newline.                |
 | [include-no-spaces](#include-no-spaces)                   | Disallow spaces around the `=` of an include expansion.          |
 | [inline-comment-space](#inline-comment-space)             | Require exactly one space between code and a trailing comment.   |
@@ -1005,8 +1005,8 @@ comment", which defeats the point of an opinionated linter.
 
 ## continuation-indent
 
-Indent continuation lines one level per open parenthesis, relative to the line
-they continue.
+Indent continuation lines one level per line they hang below, relative to the
+line they continue.
 
 ### Rule Details
 
@@ -1034,24 +1034,47 @@ From [lib://qvd/tree.qvd] (qvd);
 
 The expected indent hangs off the nearest preceding **anchor** — the statement
 start or field/clause line the continuation belongs to — plus one level for
-every parenthesis still open at the start of the line. Counting parentheses is
-what keeps nesting readable instead of flattening every continuation to the same
+every **line** that left a parenthesis open above it. Following the nesting is
+what keeps it readable instead of flattening every continuation to the same
 column:
 
 ```qlik
 Let vFlag = If(Status = 'A',   // anchor, base 0
-    If(Region = 'North',       // depth 1
-        1,                     // depth 2
+    If(Region = 'North',       // one line open above — level 1
+        1,                     // two — level 2
         2),
     0);
 ```
 
+The unit is the **line**, not the parenthesis. A line opening two of them is
+still one line, and everything it contains sits one level in:
+
+```qlik
+Let vFlag = If(Match(
+    Region,
+    'North'
+), 1, 0);
+```
+
+Counting the parentheses instead would put those arguments two levels in while
+the closing line came back only one, leaving it aligned with neither the
+arguments above it nor the line that opened them.
+
+A continuation carries a level of its own, so a parenthesis it opens starts from
+there rather than from the anchor:
+
+```qlik
+Let vTotal = 1
+    + Sum(
+        Amount
+    );
+```
+
 A continuation that is not inside parentheses at all still gets one level, which
 is what makes a broken condition or `&`-chain hang below its clause. A line that
-_starts_ with a closing parenthesis is dedented by one level so the closer lands
-back under its anchor — the same shape [multiline-call](#multiline-call) emits
-when it breaks an over-long call apart, so the two rules never rewrite each
-other.
+_starts_ with a closing parenthesis returns to the level of the line that opened
+the parenthesis — the same shape [multiline-call](#multiline-call) emits when it
+breaks an over-long call apart, so the two rules never rewrite each other.
 
 Because the rule derives the full indent rather than adjusting what is there, it
 fixes the indent _character_ as a side effect: a tab-indented continuation line
@@ -1085,12 +1108,24 @@ Load
 & Region as Label
 From [lib://x.qvd] (qvd);
 
-// Nesting flattened instead of following the parenthesis depth.
+// Nesting flattened instead of following the lines it hangs below.
 Let vFlag = If(Status = 'A',
     If(Region = 'North',
     1,
     2),
     0);
+
+// Two parentheses on one line indented as if they were two lines.
+Let vDouble = If(Match(
+        Region,
+        'North'
+    ), 1, 0);
+
+// A continuation whose parenthesis contents are flattened against it.
+Let vTotal = 1
+    + Sum(
+    Amount
+);
 ```
 
 Examples of **correct** code for this rule:
@@ -1110,11 +1145,37 @@ Let vFlag = If(Status = 'A',
         2),
     0);
 
-// A leading closing parenthesis dedents back under its anchor.
+// A leading closing parenthesis returns to the line that opened it.
 Let vName = ApplyMap('MapX',
     Region,
     'unknown'
 );
+
+// Two parentheses opened on one line still make one level.
+Let vDouble = If(Match(
+    Region,
+    'North'
+), 1, 0);
+
+// What a continuation opens hangs off that line, not off the anchor.
+Let vTotal = 1
+    + Sum(
+        Amount
+    );
+
+// Nested calls follow the same rule, however many parentheses a line opens
+// or closes, and whether the anchor is a statement start or a field.
+[Nested]:
+Load
+    If(Match(Flag, 'True'), 1,
+        If(Match(Flag, 'False'), 0,
+            Flag
+        )
+    ) as Flag,
+    If(Match([Region Name], 'North'), 1,
+        If(Match([Region Name], 'South'), 0, [Region Name]
+        )) as Compass
+From X;
 ```
 
 A continuation line may open with a comment. Indentation is then measured and

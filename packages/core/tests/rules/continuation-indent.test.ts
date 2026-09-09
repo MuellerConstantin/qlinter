@@ -7,7 +7,7 @@ describe('continuation-indent', () => {
   it('flags misindented continuation lines in the violation fixture', () => {
     const diagnostics = lintFixture('violation', continuationIndent);
 
-    expect(diagnostics.map((d) => d.range.start.line)).toEqual([6, 12, 13]);
+    expect(diagnostics.map((d) => d.range.start.line)).toEqual([6, 12, 13, 18, 19, 20, 25, 26, 32, 33, 34, 36, 37, 38]);
     for (const d of diagnostics) {
       expect(d.ruleId).toBe('continuation-indent');
       expect(d.severity).toBe('warning');
@@ -38,6 +38,67 @@ describe('continuation-indent', () => {
     expect(result.output).toBe(
       ['Let vFlag = If(A = 1,', '    If(B = 2,', '        1,', '        2),', '    0);'].join('\n'),
     );
+  });
+
+  /*
+   * `If(Match(` opens two parentheses and is still one line. Counting the
+   * parentheses gave its contents two levels and left the closing line between
+   * the two, aligned with neither.
+   */
+  it('gives a line that opens two parentheses one level, not two', () => {
+    const source = ['Let vFlag = If(Match(', 'Region,', "'North'", '), 1, 0);'].join('\n');
+
+    const result = formatRule(source, continuationIndent);
+
+    expect(result.output).toBe(['Let vFlag = If(Match(', '    Region,', "    'North'", '), 1, 0);'].join('\n'));
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  /*
+   * A continuation carries a level of its own, so a parenthesis it opens starts
+   * from there. Counting parentheses flattened the two together.
+   */
+  it('hangs what a continuation opens off that line rather than off the anchor', () => {
+    const source = ['Let vTotal = 1', '+ Sum(', 'Amount', ');'].join('\n');
+
+    const result = formatRule(source, continuationIndent);
+
+    expect(result.output).toBe(['Let vTotal = 1', '    + Sum(', '        Amount', '    );'].join('\n'));
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  /*
+   * The shape a real script arrives in: an If wrapping a Match, wrapped in
+   * another If, hanging off a field start rather than a statement start. Every
+   * line here opens or closes more than one parenthesis.
+   */
+  it('follows nested calls whose lines open and close several parentheses', () => {
+    const source = [
+      '[T]:',
+      'Load',
+      "    If(Match(Flag, 'True'), 1,",
+      "If(Match(Flag, 'False'), 0,",
+      'Flag',
+      ')',
+      ') as Flag',
+      'From X;',
+    ].join('\n');
+
+    const result = formatRule(source, continuationIndent);
+
+    expect(result.output).toBe(
+      [
+        '[T]:',
+        'Load',
+        "    If(Match(Flag, 'True'), 1,",
+        "        If(Match(Flag, 'False'), 0,",
+        '            Flag',
+        '        )',
+        '    ) as Flag',
+        'From X;',
+      ].join('\n'),
+    );
+    expect(result.diagnostics).toEqual([]);
   });
 
   it('dedents a line that starts with a closing parenthesis back under its anchor', () => {

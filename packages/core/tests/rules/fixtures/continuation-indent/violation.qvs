@@ -12,3 +12,29 @@ Let vFlag = If(Status = 'A',
     1,
     2),
     0);
+
+// Two parentheses on one line indented as if they were two lines.
+Let vDouble = If(Match(
+        Region,
+        'North'
+    ), 1, 0);
+
+// A continuation whose parenthesis contents are flattened against it.
+Let vTotal = 1
+    + Sum(
+    Amount
+);
+
+// Nested calls indented by the parentheses instead of by the lines.
+[Nested]:
+Load
+    If(Match(
+            Region,
+            'North'
+        ), 1, 0) as Compass,
+    If(Match(Flag, 'True'), 1,
+    If(Match(Flag, 'False'), 0,
+    Flag
+    )
+    ) as Flag
+From X;

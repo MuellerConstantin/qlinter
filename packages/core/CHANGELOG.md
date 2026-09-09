@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `continuation-indent` counts the lines a continuation hangs below rather than
+  the parentheses open above it. The two agree wherever each line opens at most
+  one parenthesis, which is every shape the rule ever documented; they part on
+  the two it did not. A line opening two — `If(Match(` — gave its contents two
+  levels while the closing line came back only one, so the closer ended up
+  aligned with neither the arguments above it nor the line that opened them. And
+  a continuation that opened a parenthesis had its contents flattened against
+  itself, because a line with nothing open and a line with one parenthesis open
+  both resolved to a single level.
 - `paren-spacing` narrows the gap between a closing parenthesis and the word
   after it to a single space. It was the one side of a paren no rule claimed:
   `Amount     as Total` was collapsed while `Sum(Amount)     as Total` came out
