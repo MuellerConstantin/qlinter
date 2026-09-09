@@ -1,42 +1,42 @@
 # Rules Reference
 
-| Rule                                                      | Description                                                      |
-| :-------------------------------------------------------- | :--------------------------------------------------------------- |
-| [blank-line-after-block](#blank-line-after-block)         | Require a blank line below each block a script closes.           |
-| [blank-line-before-block](#blank-line-before-block)       | Require a blank line above each block a script opens.            |
-| [blank-line-before-table](#blank-line-before-table)       | Require a blank line above each table a script builds.           |
-| [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.        |
-| [block-indent](#block-indent)                             | Enforce consistent indentation for Qlik block constructs.        |
-| [semicolon-space](#semicolon-space)                       | Disallow whitespace between a statement and its terminator.      |
-| [table-label-brackets](#table-label-brackets)             | Require table labels to be enclosed in brackets.                 |
-| [builtin-function-case](#builtin-function-case)           | Enforce canonical casing for Qlik built-in functions.            |
-| [builtin-keyword-case](#builtin-keyword-case)             | Enforce canonical casing for Qlik keywords.                      |
-| [comma-space](#comma-space)                               | Require one space after a comma and none before it.              |
-| [comma-style](#comma-style)                               | Require a comma to close the line of the operand it follows.     |
-| [comment-space](#comment-space)                           | Require a space after `//` and inside `/* */`.                   |
-| [continuation-indent](#continuation-indent)               | Indent continuation lines one level per line they hang below.    |
-| [eol-last](#eol-last)                                     | Require the file to end with exactly one newline.                |
-| [include-no-spaces](#include-no-spaces)                   | Disallow spaces around the `=` of an include expansion.          |
-| [inline-comment-space](#inline-comment-space)             | Require exactly one space between code and a trailing comment.   |
-| [load-clause-newline](#load-clause-newline)               | Require each LOAD clause keyword to start its own line.          |
-| [load-field-per-line](#load-field-per-line)               | Require each LOAD field to start on its own line.                |
-| [load-identifier-brackets](#load-identifier-brackets)     | Bracket a quoted name inside a LOAD instead of quoting it.       |
-| [load-indent](#load-indent)                               | Indent LOAD fields one step deeper than the LOAD keyword.        |
-| [max-line-length](#max-line-length)                       | Limit how long a single line of script may be.                   |
-| [multiline-call](#multiline-call)                         | Break overlong single-line function calls across multiple lines. |
-| [multiline-comment-block](#multiline-comment-block)       | Require a multi-line comment to be one block comment.            |
-| [no-blank-line-in-statement](#no-blank-line-in-statement) | Disallow a blank line inside a single statement.                 |
-| [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.            |
-| [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.              |
-| [no-multiple-empty-lines](#no-multiple-empty-lines)       | Limit how many consecutive empty lines may appear.               |
-| [one-statement-per-line](#one-statement-per-line)         | Require each statement to start on its own line.                 |
-| [operator-spacing](#operator-spacing)                     | Require exactly one space around binary operators.               |
-| [padded-blocks](#padded-blocks)                           | Pad the inside edges of a block with a blank line.               |
-| [paren-spacing](#paren-spacing)                           | Normalize the spacing on every side of a parenthesis.            |
-| [trailing-whitespace](#trailing-whitespace)               | Disallow whitespace at the end of a line.                        |
-| [variable-case](#variable-case)                           | Enforce a consistent casing style for user-defined vars.         |
-| [variable-charset](#variable-charset)                     | Restrict user-defined variables to a safe identifier charset.    |
-| [word-spacing](#word-spacing)                             | Require exactly one space between two adjacent words.            |
+| Rule                                                      | Description                                                    |
+| :-------------------------------------------------------- | :------------------------------------------------------------- |
+| [blank-line-after-block](#blank-line-after-block)         | Require a blank line below each block a script closes.         |
+| [blank-line-before-block](#blank-line-before-block)       | Require a blank line above each block a script opens.          |
+| [blank-line-before-table](#blank-line-before-table)       | Require a blank line above each table a script builds.         |
+| [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.      |
+| [block-indent](#block-indent)                             | Enforce consistent indentation for Qlik block constructs.      |
+| [semicolon-space](#semicolon-space)                       | Disallow whitespace between a statement and its terminator.    |
+| [table-label-brackets](#table-label-brackets)             | Require table labels to be enclosed in brackets.               |
+| [builtin-function-case](#builtin-function-case)           | Enforce canonical casing for Qlik built-in functions.          |
+| [builtin-keyword-case](#builtin-keyword-case)             | Enforce canonical casing for Qlik keywords.                    |
+| [comma-space](#comma-space)                               | Require one space after a comma and none before it.            |
+| [comma-style](#comma-style)                               | Require a comma to close the line of the operand it follows.   |
+| [comment-space](#comment-space)                           | Require a space after `//` and inside `/* */`.                 |
+| [continuation-indent](#continuation-indent)               | Indent continuation lines one level per line they hang below.  |
+| [eol-last](#eol-last)                                     | Require the file to end with exactly one newline.              |
+| [include-no-spaces](#include-no-spaces)                   | Disallow spaces around the `=` of an include expansion.        |
+| [inline-comment-space](#inline-comment-space)             | Require exactly one space between code and a trailing comment. |
+| [load-clause-newline](#load-clause-newline)               | Require each LOAD clause keyword to start its own line.        |
+| [load-field-per-line](#load-field-per-line)               | Require each LOAD field to start on its own line.              |
+| [load-identifier-brackets](#load-identifier-brackets)     | Bracket a quoted name inside a LOAD instead of quoting it.     |
+| [load-indent](#load-indent)                               | Indent LOAD fields one step deeper than the LOAD keyword.      |
+| [max-line-length](#max-line-length)                       | Limit how long a single line of script may be.                 |
+| [multiline-call](#multiline-call)                         | Break the arguments of a call that made its line overlong.     |
+| [multiline-comment-block](#multiline-comment-block)       | Require a multi-line comment to be one block comment.          |
+| [no-blank-line-in-statement](#no-blank-line-in-statement) | Disallow a blank line inside a single statement.               |
+| [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.          |
+| [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.            |
+| [no-multiple-empty-lines](#no-multiple-empty-lines)       | Limit how many consecutive empty lines may appear.             |
+| [one-statement-per-line](#one-statement-per-line)         | Require each statement to start on its own line.               |
+| [operator-spacing](#operator-spacing)                     | Require exactly one space around binary operators.             |
+| [padded-blocks](#padded-blocks)                           | Pad the inside edges of a block with a blank line.             |
+| [paren-spacing](#paren-spacing)                           | Normalize the spacing on every side of a parenthesis.          |
+| [trailing-whitespace](#trailing-whitespace)               | Disallow whitespace at the end of a line.                      |
+| [variable-case](#variable-case)                           | Enforce a consistent casing style for user-defined vars.       |
+| [variable-charset](#variable-charset)                     | Restrict user-defined variables to a safe identifier charset.  |
+| [word-spacing](#word-spacing)                             | Require exactly one space between two adjacent words.          |
 
 Every rule declares its options as a machine-readable schema, which is what
 `validateConfig` checks a config against and what host settings UIs render from.
@@ -1978,8 +1978,8 @@ lint(source, {
 
 ## multiline-call
 
-Break a single-line built-in function call across multiple lines once its
-host line exceeds the configured maximum length.
+Break the top-level arguments of a built-in function call apart once the line
+it opens on exceeds the configured maximum length.
 
 ### Rule Details
 
@@ -1995,15 +1995,27 @@ The rule walks the token stream and inspects every built-in function call
 (`If`, `Pick`, `Match`, `Alt`, `RangeSum`, ...). A call is flagged when **all**
 of the following hold:
 
-- The call starts and ends on the same line (already multi-line calls are
-  left alone).
-- That line is longer than `maxLineLength`.
-- The call has at least two top-level arguments — a single-argument call
-  cannot be meaningfully split.
+- The call **opens** on a line longer than `maxLineLength`.
+- At least one of its top-level commas sits on that line — there is otherwise
+  nothing on it to separate, and a single-argument call cannot be split at all.
 
-Only the outermost qualifying call on a line is flagged per pass. Nested
-calls are reached on subsequent format passes once their parent has been
-broken, so each level is handled in turn without overlapping fixes.
+The call does **not** have to close on the same line. Requiring that was the
+rule's blind spot: in a nest like
+
+```qlik
+If(Match(Region, 'North'), 1,
+    If(Match(Region, 'South'), 0, Region
+    ))
+```
+
+the call that made the second line long is the inner `If`, which closes two
+lines down. Passing over it left the innermost call that _did_ fit on one
+line — the `Match` — as the only candidate, so the rule exploded an argument
+that was never the problem and left the line barely shorter.
+
+Only the outermost qualifying call on a line is flagged per pass. Nested calls
+are reached on subsequent format passes once their parent has been broken, so
+each level is handled in turn without overlapping fixes.
 
 User-defined function calls (`MyFunc(a, b)`) and `Call myFunc(...)` syntax
 are intentionally out of scope — only built-in functions are considered.
@@ -2021,8 +2033,11 @@ simply nothing this rule can safely do about it.
 vCategory = If(vYear >= 2025 and vMonth >= 6, 'late 2025 or later', 'before mid-2025');
 ```
 
-The autofix replaces the parenthesised body with one argument per line and
-places the closing `)` on its own line. It writes no indentation of its own:
+The autofix puts each argument that _opens on the over-long line_ on a line of
+its own. A call that also closes there is separated whole, its closing `)`
+moved onto its own line as well; one that reaches further down keeps everything
+past its last comma on that line exactly where it stands, already-broken tail
+included. It writes no indentation of its own:
 the lines it creates are continuation lines, and
 [continuation-indent](#continuation-indent) indents them on the next format
 pass — one step deeper for the arguments, back under the call for the closing
@@ -2047,15 +2062,24 @@ LET vCategory = If(
     'before mid-2025'
 );
 
+// The nested call is broken at its own arguments; the Match inside one of
+// them fits and is left whole.
+LET vFlag = If(vYear = 2025,
+    If(
+        Match(vRegionName, 'North', 'South'),
+        'in scope',
+        'out of scope'
+    ));
+
 LET vSimple = If(vYear = 2025, 'this year', 'other');
 LET vTotal = Sum(vRevenue);
 ```
 
 ### Options
 
-| Option          | Type     | Default | Range       | Description                                              |
-| :-------------- | :------- | :------ | :---------- | :------------------------------------------------------- |
-| `maxLineLength` | `number` | `120`   | `20`–`1000` | Threshold above which a single-line call must be broken. |
+| Option          | Type     | Default | Range       | Description                                            |
+| :-------------- | :------- | :------ | :---------- | :----------------------------------------------------- |
+| `maxLineLength` | `number` | `120`   | `20`–`1000` | Threshold above which a call's line must be broken up. |
 
 The rule has no indentation options. It decides _where_ the call is broken and
 emits bare newlines; [continuation-indent](#continuation-indent) owns the

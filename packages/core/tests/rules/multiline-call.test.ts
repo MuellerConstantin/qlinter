@@ -8,7 +8,7 @@ describe('multiline-call', () => {
   it('flags every overlong single-line call in the violation fixture', () => {
     const diagnostics = lintFixture('violation', multilineCall);
 
-    expect(diagnostics).toHaveLength(2);
+    expect(diagnostics).toHaveLength(3);
     for (const d of diagnostics) {
       expect(d.ruleId).toBe('multiline-call');
       expect(d.severity).toBe('warning');
@@ -35,8 +35,50 @@ describe('multiline-call', () => {
     expect(diagnostics[0].message).toContain('20');
   });
 
-  it('does not flag a call that is already multi-line', () => {
+  it('does not flag a call whose opening line stays within the limit', () => {
     const diagnostics = lintRule("LET x = If(\n\ta,\n\t'b',\n\t'c'\n);\n", multilineCall, { maxLineLength: 20 });
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  /*
+   * The call responsible for an over-long line is often one that already spans
+   * lines: what fits is its opening, what does not is an argument further
+   * along. Requiring the call to close on the same line left it alone and broke
+   * the innermost single-line call instead — a Match that was never the reason
+   * the line was long.
+   */
+  it('breaks a call that opens on the over-long line and closes further down', () => {
+    const result = formatRule("Let vX = If(a,\nIf(bbbbbbbbbb, 'yes', 'no'\n));\n", multilineCall, {
+      maxLineLength: 20,
+    });
+
+    expect(result.output).toBe("Let vX = If(a,\nIf(\nbbbbbbbbbb,\n'yes',\n'no'\n));\n");
+    expect(result.fixed).toBe(1);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it('leaves what stands past the last comma on the line where it already is', () => {
+    const result = formatRule("Let vX = If(a,\nIf(bbbbbbbbbb, 'yes',\n'no'));\n", multilineCall, {
+      maxLineLength: 20,
+    });
+
+    expect(result.output).toBe("Let vX = If(a,\nIf(\nbbbbbbbbbb,\n'yes',\n'no'));\n");
+    expect(result.fixed).toBe(1);
+  });
+
+  it('carries a comment on the over-long line onto a line of its own', () => {
+    const result = formatRule("Let vX = If(a,\nIf(bbbbbbbbbb, 'yes', // note\n'no'));\n", multilineCall, {
+      maxLineLength: 20,
+    });
+
+    expect(result.output).toBe("Let vX = If(a,\nIf(\nbbbbbbbbbb,\n'yes',\n// note\n'no'));\n");
+  });
+
+  it('does not flag a call whose top-level commas all sit on other lines', () => {
+    const diagnostics = lintRule("Let vX = If(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n, 'b', 'c');\n", multilineCall, {
+      maxLineLength: 20,
+    });
 
     expect(diagnostics).toEqual([]);
   });
@@ -121,6 +163,45 @@ describe('multiline-call', () => {
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].message).toContain("'If(...)'");
+  });
+
+  /*
+   * The shape a real script arrives in. The inner If is what makes its line
+   * long; the Match inside it fits and stays whole.
+   */
+  it('breaks the call that made the line long, not the one nested inside it', () => {
+    const source = [
+      '[T]:',
+      'Load',
+      "    If(Match(Flag, 'True'), 1,",
+      "        If(Match(Flag, 'False'), 0, Flag",
+      '        )) as Flag',
+      'From X;',
+      '',
+    ].join('\n');
+
+    const result = format(source, {
+      rules: {
+        'multiline-call': ['warning', { maxLineLength: 35 }],
+        'continuation-indent': 'warning',
+      },
+    });
+
+    expect(result.output).toBe(
+      [
+        '[T]:',
+        'Load',
+        "    If(Match(Flag, 'True'), 1,",
+        '        If(',
+        "            Match(Flag, 'False'),",
+        '            0,',
+        '            Flag',
+        '        )) as Flag',
+        'From X;',
+        '',
+      ].join('\n'),
+    );
+    expect(result.diagnostics.filter((d) => d.fix)).toEqual([]);
   });
 
   /*

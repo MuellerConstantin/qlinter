@@ -95,19 +95,20 @@ function breakableCalls(
 
     const closeToken = tokens[closeIdx];
     const funcLine = funcToken.startLine ?? 1;
-    const closeLine = closeToken.endLine ?? closeToken.startLine ?? funcLine;
-
-    if (funcLine !== closeLine) {
-      i++;
-      continue;
-    }
 
     if (lineLengthAt(lines, funcLine) <= maxLineLength) {
       i++;
       continue;
     }
 
-    const commas = topLevelCommas(tokens, openIdx, closeIdx);
+    /*
+     * Only the arguments that open on the over-long line are separated. A call
+     * reaching past that line is already broken further down, and what it holds
+     * there is not what made this line long.
+     */
+    const commas = topLevelCommas(tokens, openIdx, closeIdx).filter(
+      (comma) => (comma.startLine ?? funcLine) === funcLine,
+    );
 
     if (commas.length === 0) {
       i++;
@@ -127,14 +128,25 @@ function breakableCalls(
       cursor = (comma.endOffset ?? comma.startOffset) + 1;
     }
 
-    args.push(source.slice(whitespaceEndAfter(whitespaces, cursor), whitespaceStartBefore(whitespaces, innerEnd)));
+    /*
+     * A call that closes on this line is separated whole, its closing paren
+     * moved onto a line of its own. One that closes further down keeps
+     * everything past its last comma here exactly where it stands, the last
+     * comma included — which is why that one is re-emitted rather than covered.
+     */
+    const closesHere = (closeToken.endLine ?? closeToken.startLine ?? funcLine) === funcLine;
 
-    const replacement = lineEnding + args.join(`,${lineEnding}`) + lineEnding;
+    if (closesHere) {
+      args.push(source.slice(whitespaceEndAfter(whitespaces, cursor), whitespaceStartBefore(whitespaces, innerEnd)));
+    }
+
+    const fixEnd = closesHere ? innerEnd : whitespaceEndAfter(whitespaces, cursor);
+    const replacement = lineEnding + args.join(`,${lineEnding}`) + (closesHere ? lineEnding : `,${lineEnding}`);
 
     out.push({
       range: tokenRange(funcToken),
-      message: `Call '${funcToken.image}(...)' exceeds the maximum line length of ${maxLineLength}; break each argument onto its own line.`,
-      fix: { range: { start: innerStart, end: innerEnd }, replacement },
+      message: `Call '${funcToken.image}(...)' exceeds the maximum line length of ${maxLineLength}; break its arguments onto their own lines.`,
+      fix: { range: { start: innerStart, end: fixEnd }, replacement },
     });
 
     i = closeIdx + 1;

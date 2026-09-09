@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `multiline-call` no longer requires a call to close on the line it opens on.
+  That requirement was the rule's blind spot: in a nest of `If`s, the call that
+  made a line too long is usually the one already spanning lines, and passing
+  over it left the innermost call that did fit on one line as the only
+  candidate. So the rule broke apart a `Match` that was never the reason the
+  line was long, and left the line barely shorter. A call is now flagged when it
+  opens on an over-long line and has a top-level comma there; the arguments that
+  open on that line are separated, and everything past the last comma — the tail
+  already broken onto lines of its own — stays exactly where it stands.
 - `continuation-indent` counts the lines a continuation hangs below rather than
   the parentheses open above it. The two agree wherever each line opens at most
   one parenthesis, which is every shape the rule ever documented; they part on

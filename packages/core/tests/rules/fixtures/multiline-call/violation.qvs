@@ -1,2 +1,8 @@
 LET vCategory = If(vYear >= 2025 and vMonth >= 6 and vDay >= 15, 'in the late second half of the year 2025', 'before mid-June 2025');
 LET vTotal = RangeSum(vMonthlySalesA, vMonthlySalesB, vMonthlySalesC, vMonthlySalesD, vMonthlySalesE, vMonthlySalesF, vMonthlySalesG);
+
+// The call that made this line long is the one already spanning lines. The
+// single-line Match inside it never was.
+LET vFlag = If(vYear = 2025,
+    If(Match(vRegionNameAsTheSourceSystemSpellsIt, 'North', 'South'), 'in scope for this report', 'out of scope for this report'
+    ));
