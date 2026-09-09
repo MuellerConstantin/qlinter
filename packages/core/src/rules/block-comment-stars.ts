@@ -1,6 +1,7 @@
 import { LINE_BREAK, blockCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
+import { blockCommentFrom } from './utils/comments.js';
 import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
 import { detectLineEnding } from '../lines.js';
 
@@ -8,18 +9,12 @@ const LEADING_WS = /^[ \t]*/;
 const TRAILING_WS = /[ \t]+$/;
 
 /*
- * Reformat a multi-line block comment into the canonical JSDoc-like shape:
- *
- *   /*
- *    * body
- *    *\/
- *
- * The `*` column is one position right of the opening `/`, so middle and
- * closing lines share the same `<indent> ` prefix. The function is
- * idempotent — re-running it on its own output is a no-op.
+ * Reformat a multi-line block comment into the canonical rail shape: strip
+ * whatever prefix each line carries down to its body, then hand the bodies back
+ * to the one place that knows how the rail is drawn. The function is idempotent
+ * — re-running it on its own output is a no-op.
  */
 function normalizeBlockComment(text: string, indent: string): string {
-  const middlePrefix = `${indent} `;
   const eol = detectLineEnding(text);
 
   const inner = text.slice(2, -2);
@@ -50,21 +45,7 @@ function normalizeBlockComment(text: string, indent: string): string {
     bodies.push(line);
   }
 
-  while (bodies.length > 0 && bodies[0] === '') {
-    bodies.shift();
-  }
-
-  while (bodies.length > 0 && bodies[bodies.length - 1] === '') {
-    bodies.pop();
-  }
-
-  if (bodies.length === 0) {
-    return `/*${eol}${middlePrefix}*/`;
-  }
-
-  const middleLines = bodies.map((body) => (body === '' ? `${middlePrefix}*` : `${middlePrefix}* ${body}`));
-
-  return `/*${eol}${middleLines.join(eol)}${eol}${middlePrefix}*/`;
+  return blockCommentFrom(bodies, indent, eol);
 }
 
 export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {

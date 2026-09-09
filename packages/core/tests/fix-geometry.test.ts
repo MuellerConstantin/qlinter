@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { IToken } from 'chevrotain';
 import { lint, type Fix } from '../src/index.js';
-import { COMMENT_GROUP, lexer } from '../src/lexer.js';
+import { COMMENT_GROUP, WHITESPACE_GROUP, lexer } from '../src/lexer.js';
 import { recommended } from '../src/rules/index.js';
 
 const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
@@ -81,10 +81,56 @@ function unsafeReason(fix: Fix, source: string, comments: IToken[], skipped: Spa
   return null;
 }
 
+/*
+ * Rules whose subject is the comment text itself, and which therefore reformat
+ * what they cover instead of carrying it through byte for byte. The verbatim
+ * requirement above cannot apply to them; the geometry {@link rewriteReason}
+ * checks still does.
+ *
+ * Membership is deliberate and stays small. A rule that is not about comments
+ * and finds itself wanting an entry here is a rule reading the wrong offsets.
+ */
+const COMMENT_REWRITERS = new Set(['multiline-comment-block']);
+
+/*
+ * Why a comment-rewriting rule's fix is unsafe to apply, or null when it is safe.
+ *
+ * Such a rule cannot be asked to reproduce the text it covers, because
+ * rewriting that text is the job. What it can be asked is to reach no further
+ * than the comments it rewrites: a range holding comments and the whitespace
+ * between them touches nothing else the script carries, whatever it emits in
+ * their place.
+ */
+function rewriteReason(fix: Fix, comments: IToken[], whitespaces: IToken[], skipped: Span[]): string | null {
+  for (const skip of skipped) {
+    if (overlaps(fix.range, skip)) {
+      return 'overlaps characters the lexer skipped';
+    }
+  }
+
+  const covering = [...comments, ...whitespaces]
+    .map(spanOf)
+    .filter((span) => overlaps(fix.range, span))
+    .sort((a, b) => a.start - b.start);
+
+  let at = fix.range.start;
+
+  for (const span of covering) {
+    if (span.start > at) {
+      break;
+    }
+
+    at = Math.max(at, span.end);
+  }
+
+  return at >= fix.range.end ? null : 'reaches past the comments it rewrites';
+}
+
 /** Every unsafe fix `recommended` produces for `source`, as readable lines. */
 function unsafeFixes(source: string): string[] {
   const result = lexer.tokenize(source);
   const comments = result.groups[COMMENT_GROUP] ?? [];
+  const whitespaces = result.groups[WHITESPACE_GROUP] ?? [];
   const skipped = result.errors.map((error) => ({ start: error.offset, end: error.offset + error.length }));
   const out: string[] = [];
 
@@ -95,7 +141,9 @@ function unsafeFixes(source: string): string[] {
       continue;
     }
 
-    const reason = unsafeReason(fix, source, comments, skipped);
+    const reason = COMMENT_REWRITERS.has(diagnostic.ruleId)
+      ? rewriteReason(fix, comments, whitespaces, skipped)
+      : unsafeReason(fix, source, comments, skipped);
 
     if (reason !== null) {
       out.push(
@@ -165,6 +213,40 @@ describe('fix geometry', () => {
       const fix: Fix = { range: { start: 14, end: 15 }, replacement: '\n' };
 
       expect(unsafeReason(fix, source, comments, [])).toBeNull();
+    });
+  });
+
+  describe('comment-rewriter verdict', () => {
+    const run = 'SET a = 1;\n// first\n// second\n';
+    const groups = lexer.tokenize(run).groups;
+    const runComments = groups[COMMENT_GROUP] ?? [];
+    const runWhitespaces = groups[WHITESPACE_GROUP] ?? [];
+    const block = '/*\n * first\n * second\n */';
+    const fold = { start: 11, end: run.length - 1 };
+
+    it('reads the run the cases below are built against', () => {
+      expect(runComments).toHaveLength(2);
+      expect(run.slice(fold.start, fold.end)).toBe('// first\n// second');
+    });
+
+    it('accepts a range holding comments and the whitespace between them', () => {
+      const fix: Fix = { range: fold, replacement: block };
+
+      expect(rewriteReason(fix, runComments, runWhitespaces, [])).toBeNull();
+    });
+
+    it('rejects a range reaching over a code token', () => {
+      const fix: Fix = { range: { start: 0, end: fold.end }, replacement: block };
+
+      expect(rewriteReason(fix, runComments, runWhitespaces, [])).toBe('reaches past the comments it rewrites');
+    });
+
+    it('rejects a range touching a character the lexer skipped', () => {
+      const fix: Fix = { range: fold, replacement: block };
+
+      expect(rewriteReason(fix, runComments, runWhitespaces, [{ start: 12, end: 13 }])).toBe(
+        'overlaps characters the lexer skipped',
+      );
     });
   });
 

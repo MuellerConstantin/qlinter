@@ -1,0 +1,40 @@
+////////////////////////////////////////
+// Calendar
+////////////////////////////////////////
+
+/*
+ * Builds the calendar every chart filters on.
+ * The window is the current year and the two before it.
+ */
+SET vFirstYear = 2024;
+
+// A single line on its own stays a line comment.
+SET vLastYear = 2026; // and so does one sitting after code
+
+// A run needs two own-line comments, and this one has one.
+SET vSpan = vLastYear - vFirstYear;
+
+// This run carries a directive the runner reads off its own line.
+// qlinter-disable-next-line variable-case
+SET Wrong_Case = 1;
+
+// qlinter-disable-next-line variable-charset
+// qlinter-disable-next-line variable-case
+SET OddName = 2;
+
+// This line spells /* in its prose and steps out of any run.
+SET vLabel = 'Calendar';
+
+// The line below spells the closing marker instead.
+// A run ends at */ just the same.
+SET vTail = 'x';
+
+////////////////////////////////////////
+// A banner run is left whole, prose and all.
+// Folding the text would sandwich a block between two rails.
+////////////////////////////////////////
+
+// Two lines split by a blank line are two runs of one.
+
+// So neither of them folds.
+SET vNote = 'ok';

@@ -24,6 +24,7 @@
 | [load-indent](#load-indent)                               | Indent LOAD fields one step deeper than the LOAD keyword.        |
 | [max-line-length](#max-line-length)                       | Limit how long a single line of script may be.                   |
 | [multiline-call](#multiline-call)                         | Break overlong single-line function calls across multiple lines. |
+| [multiline-comment-block](#multiline-comment-block)       | Require a multi-line comment to be one block comment.            |
 | [no-blank-line-in-statement](#no-blank-line-in-statement) | Disallow a blank line inside a single statement.                 |
 | [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.            |
 | [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.              |
@@ -2015,6 +2016,95 @@ lint(source, {
   },
 });
 ```
+
+---
+
+## multiline-comment-block
+
+Require a comment spanning more than one line to be a single block comment.
+
+### Rule Details
+
+A remark that runs over several lines can be written two ways: as a run of `//`
+lines, or as one `/* … */` block. Both are valid Qlik, and a script that uses
+both reads as though the choice meant something. It does not, so this rule
+settles it: `//` is the one-line form, `/* … */` is the multi-line form.
+
+Two or more comment lines directly below one another, with nothing else on any
+of them, are one remark and become one block. A single `//` line is untouched,
+and so is a `//` comment that trails code — neither is a multi-line remark. A
+blank line, a line of script, or a comment line that may not be folded (see
+below) ends a run, so two paragraphs separated by a blank line become two
+blocks rather than one.
+
+The autofix keeps every line's text and drops the markers, drawing the ` *`
+rail from the indentation the run opens at. The individual `//` lines' own
+indentation does not survive — the run gets the first line's.
+
+Two kinds of line may not go inside a block. Such a line steps out of the run
+instead of stopping it from being folded: it ends the run where it sits, the
+prose above and below it folds as usual, and the line itself stays a `//` line.
+
+- **Disable directives.** `// qlinter-disable-next-line` is read off the raw
+  line it sits on. Inside a block it would still read as prose to a person and
+  as nothing at all to the runner, silently dropping the suppression. The lines
+  explaining why a directive is there are ordinary prose and do fold; the
+  directive stays put, directly above the line it suppresses.
+- **Lines whose prose carries a block-comment marker.** Qlik documents that a
+  section between `/*` and `*/` is a comment, and says nothing about what a
+  further marker inside one does or where such a comment then ends. Putting
+  such a line into a block would rest on an answer the reference does not give.
+
+One kind of run is left whole rather than folded around:
+
+- **Decorative banners.** A run holding a line whose body is nothing but
+  further slashes (`////////////////`) is a section divider marking a section
+  header, and the rails and the text between them are one unit. Folding the
+  text would leave a block comment sandwiched between two rails, which is not a
+  shape anyone writes by hand, so the whole run is left as it stands.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+// Builds the calendar every chart filters on.
+// The window is the current year and the two before it.
+SET vFirstYear = 2024;
+
+// Wrong_Case is spelled this way by the source system.
+// Renaming it here would break the mapping downstream.
+// qlinter-disable-next-line variable-case
+SET Wrong_Case = 1;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+/*
+ * Builds the calendar every chart filters on.
+ * The window is the current year and the two before it.
+ */
+SET vFirstYear = 2024;
+
+/*
+ * Wrong_Case is spelled this way by the source system.
+ * Renaming it here would break the mapping downstream.
+ */
+// qlinter-disable-next-line variable-case
+SET Wrong_Case = 1;
+
+// A single line on its own stays a line comment.
+SET vLastYear = 2026; // and so does one sitting after code
+
+////////////////////////////////////////
+// Calendar
+////////////////////////////////////////
+```
+
+### Options
+
+This rule has no options. Which of the two forms a multi-line comment takes is
+the question the rule exists to answer, and answering it twice would leave the
+inconsistency it was written to remove. `severity: 'off'` remains the way out.
 
 ---
 

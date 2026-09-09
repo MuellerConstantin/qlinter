@@ -1,0 +1,39 @@
+// Builds the calendar every chart filters on.
+// The window is the current year and the two before it.
+SET vFirstYear = 2024;
+
+// Wrong_Case is spelled this way by the source system.
+// Renaming it here would break the mapping downstream.
+// qlinter-disable-next-line variable-case
+SET Wrong_Case = 1;
+
+// The marker line below steps out of this run.
+// The prose above it does not.
+// A path spelled /* would end the block early.
+SET vLabel = 'Calendar';
+
+// A blank body in the middle of a run survives as a blank rail line.
+//
+// The run continues below it.
+SET vNote = 'ok';
+
+IF vFirstYear > 2020 THEN
+    // An indented run takes the indentation it opens at.
+    // Every line of the block sits on the same rail.
+    SET vRecent = 1;
+END IF
+
+// Two runs split by a blank line stay two blocks.
+// This is the first of them.
+
+// And this is the second.
+// It folds on its own.
+Calendar:
+LOAD
+    Year
+INLINE [
+    Year
+    2024
+    2025
+    2026
+];

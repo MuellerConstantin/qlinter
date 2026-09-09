@@ -21,6 +21,7 @@ import { loadIdentifierBrackets } from './load-identifier-brackets.js';
 import { loadIndent } from './load-indent.js';
 import { maxLineLength } from './max-line-length.js';
 import { multilineCall } from './multiline-call.js';
+import { multilineCommentBlock } from './multiline-comment-block.js';
 import { noBlankLineInStatement } from './no-blank-line-in-statement.js';
 import { noLeadingBlankLines } from './no-leading-blank-lines.js';
 import { noLegacyPathVariables } from './no-legacy-path-variables.js';
@@ -78,6 +79,7 @@ export const allRules = [
   loadIndent,
   maxLineLength,
   multilineCall,
+  multilineCommentBlock,
   noBlankLineInStatement,
   noLeadingBlankLines,
   noLegacyPathVariables,
@@ -186,6 +188,7 @@ export {
   loadIndent,
   maxLineLength,
   multilineCall,
+  multilineCommentBlock,
   noBlankLineInStatement,
   noLeadingBlankLines,
   noLegacyPathVariables,
