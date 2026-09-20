@@ -5,14 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0]
 
 ### Added
 
+- Ten rules that come from the bundled Core engine, so a configuration on the
+  `recommended` preset picks them up without any change. Six of them own the
+  blank lines of a script, which no rule claimed before: `blank-line-before-block`
+  and `blank-line-after-block` require one above each block a script opens and
+  below each one it closes; `blank-line-before-table` requires one above each
+  table label; `padded-blocks` sets a block body off from its header and closing
+  keyword (`padding: 'always' | 'never'`; an empty block is never padded);
+  `no-blank-line-in-statement` disallows one inside a single statement;
+  `no-leading-blank-lines` disallows them above the first line of content. Two
+  own spacing that was left alone: `word-spacing` narrows a run of spaces or tabs
+  between two words to one, and `semicolon-space` closes the gap between a
+  statement and its `;`. `load-identifier-brackets` settles a quoted or
+  grave-accented name inside a `Load` on brackets — the form `table-label-brackets`
+  already produces — and leaves every `Select` and everything outside a `Load`
+  alone, because a double-quoted name means something else there.
+  `multiline-comment-block` folds a run of `//` lines into one `/* … */` block,
+  stepping around disable directives and leaving decorative banners whole.
 - A conformance score in the popup, beside the per-severity counts: the share of
   lines in the open script that no diagnostic points at, as a percentage. It comes
   from the bundled Core engine, updates with every lint pass, and stays hidden for
   a script under ten lines, which Core declines to score.
+
+### Changed
+
+- Expect more findings on a script that passed under 0.2.0. The blank-line rules
+  above claim gaps nothing measured before, and on a hand-formatted script most
+  of what they flag has an autofix, so a format pass settles it. A configuration
+  that names its rules instead of a preset is unaffected: the new rules reach it
+  only through `recommended` or by being listed.
+- `multiline-call` breaks the call that made a line too long, not the innermost
+  one that happened to fit. It used to skip any call already spanning lines, so
+  in a nest of `If`s it broke apart a `Match` that was never the reason and left
+  the line barely shorter. The arguments opening on the over-long line are now
+  separated; a tail already broken onto lines of its own stays where it stands.
+- `continuation-indent` counts the lines a continuation hangs below rather than
+  the parentheses open above it. A line opening two — `If(Match(` — no longer
+  gives its contents two levels while its closer comes back only one.
+- `paren-spacing` narrows the gap between a closing parenthesis and the word
+  after it to a single space, so `Sum(Amount)     as Total` is collapsed the way
+  `Amount     as Total` already was. An empty gap stays empty: `$(vPrefix)Sales`
+  is one name.
+- Whitespace is read from the lexer instead of decided by each rule. Two things
+  are visible in the editor: a gap holding a comment is left alone by the
+  spacing rules rather than measured across, and a line inside inline data, a
+  block comment or a multi-line string no longer counts as a blank line, so
+  `no-multiple-empty-lines` never trims one there — that is content the script
+  loads.
+- An assignment written without `Let` is one statement per row, as Qlik reads
+  it. `multiline-call` skips such a statement whole instead of breaking a call
+  inside it across lines, which would leave a script the Data Load Editor
+  refuses.
+
+### Fixed
+
+- A comment ahead of a line's first keyword travels with the line when its
+  indentation is rewritten, instead of being replaced by the indent.
+- Indent and spacing rules skip a line whose leading characters belong to inline
+  data, a multi-line string or a block comment opened further up. Rewriting
+  them changed what the script loaded.
+- A doubled closing bracket inside a bracketed name (`[a]]b]`) lexes as the
+  escape it is rather than ending the name early.
+- `eol-last` leaves a file alone whose carriage returns are not part of a CRLF
+  pair, instead of appending a newline and leaving two conventions mixed.
 
 ## [0.2.0]
 
