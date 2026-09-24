@@ -1,15 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { formatRule, formatRules, lintRule } from '../support.js';
 import { loadClauseNewline, loadFieldPerLine, loadIndent } from '../../src/rules/index.js';
-import { lintFixture } from './helpers.js';
-
-const FIXTURES = join(import.meta.dirname, 'fixtures');
-
-function readFixture(kind: 'violation' | 'clean'): string {
-  return readFileSync(join(FIXTURES, 'load-indent', `${kind}.qvs`), 'utf8');
-}
+import { lintFixture, readFixture } from './helpers.js';
 
 describe('load-indent', () => {
   it('does not flag any clean LOAD shape', () => {
@@ -193,7 +185,7 @@ describe('load-indent', () => {
   });
 
   it('autofix on the full violation fixture converges with no remaining findings', () => {
-    const result = formatRule(readFixture('violation'), loadIndent);
+    const result = formatRule(readFixture('violation', loadIndent), loadIndent);
 
     expect(result.diagnostics).toEqual([]);
     expect(result.fixed).toBe(10);

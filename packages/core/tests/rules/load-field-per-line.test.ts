@@ -1,15 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { formatRule, formatRules, lintRule } from '../support.js';
 import { loadFieldPerLine } from '../../src/rules/index.js';
-import { lintFixture } from './helpers.js';
-
-const FIXTURES = join(import.meta.dirname, 'fixtures');
-
-function readFixture(kind: 'violation' | 'clean'): string {
-  return readFileSync(join(FIXTURES, 'load-field-per-line', `${kind}.qvs`), 'utf8');
-}
+import { lintFixture, readFixture } from './helpers.js';
 
 describe('load-field-per-line', () => {
   /*
@@ -139,7 +131,7 @@ describe('load-field-per-line', () => {
   });
 
   it('autofix on the full violation fixture converges with no remaining findings', () => {
-    const result = formatRule(readFixture('violation'), loadFieldPerLine);
+    const result = formatRule(readFixture('violation', loadFieldPerLine), loadFieldPerLine);
 
     expect(result.diagnostics).toEqual([]);
     expect(result.fixed).toBe(14);

@@ -1,15 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { formatRule, lintRule } from '../support.js';
 import { blockIndent } from '../../src/rules/index.js';
-import { lintFixture } from './helpers.js';
-
-const FIXTURES = join(import.meta.dirname, 'fixtures');
-
-function readFixture(kind: 'violation' | 'clean'): string {
-  return readFileSync(join(FIXTURES, 'block-indent', `${kind}.qvs`), 'utf8');
-}
+import { lintFixture, readFixture } from './helpers.js';
 
 describe('block-indent', () => {
   it('does not flag a properly indented script', () => {
@@ -30,7 +22,7 @@ describe('block-indent', () => {
   });
 
   it('autofixes the violation fixture to match the clean fixture shape', () => {
-    const violation = readFixture('violation');
+    const violation = readFixture('violation', blockIndent);
 
     const result = formatRule(violation, blockIndent);
 

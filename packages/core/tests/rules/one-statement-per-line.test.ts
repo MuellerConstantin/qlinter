@@ -1,15 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { formatRule, lintRule } from '../support.js';
 import { oneStatementPerLine } from '../../src/rules/index.js';
-import { lintFixture } from './helpers.js';
-
-const FIXTURES = join(import.meta.dirname, 'fixtures');
-
-function readFixture(kind: 'violation' | 'clean'): string {
-  return readFileSync(join(FIXTURES, 'one-statement-per-line', `${kind}.qvs`), 'utf8');
-}
+import { lintFixture, readFixture } from './helpers.js';
 
 describe('one-statement-per-line', () => {
   /*
@@ -54,7 +46,7 @@ describe('one-statement-per-line', () => {
   });
 
   it('rewrites a violation by splitting the second statement onto a new line', () => {
-    const violation = readFixture('violation');
+    const violation = readFixture('violation', oneStatementPerLine);
 
     const result = formatRule(violation, oneStatementPerLine);
 
