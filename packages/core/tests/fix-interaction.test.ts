@@ -1,106 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { format, lint, type Diagnostic, type LintConfig } from '../src/index.js';
-import { runFormatLoop } from '../src/runner.js';
+import { lint, type Diagnostic } from '../src/index.js';
 import { recommended } from '../src/rules/index.js';
+import { clashes, clashesWhileFormatting, orderDependence } from './invariants.js';
 import { allFixtures, fixtureSource } from './support.js';
-
-/*
- * Two rules rewriting one stretch of existing text into different things.
- *
- * Overlapping fixes are ordinary: the runner keeps one, and the rule that lost
- * asks again on the next pass. An identical span with two answers falls outside
- * that arbitration, because it has no winner the design chose — the runner
- * keeps whichever rule the config happens to list first, and the other
- * overwrites it on the next pass or backs off.
- *
- * An empty span is a different question and not this one. Two zero-width
- * inserts at one offset never displace each other, so both land; whether the
- * result is right depends on what the two rules emit, and is pinned in their
- * own tests rather than judged from geometry here.
- */
-function clashes(diagnostics: readonly Diagnostic[]): string[] {
-  const out: string[] = [];
-
-  for (let i = 0; i < diagnostics.length; i++) {
-    for (let j = i + 1; j < diagnostics.length; j++) {
-      const a = diagnostics[i];
-      const b = diagnostics[j];
-
-      if (a.ruleId === b.ruleId || a.fix === undefined || b.fix === undefined) {
-        continue;
-      }
-
-      const { start, end } = a.fix.range;
-
-      if (start === end || start !== b.fix.range.start || end !== b.fix.range.end) {
-        continue;
-      }
-
-      if (a.fix.replacement !== b.fix.replacement) {
-        out.push(
-          `${a.ruleId} and ${b.ruleId} both rewrite [${start},${end}): ` +
-            `${JSON.stringify(a.fix.replacement)} vs ${JSON.stringify(b.fix.replacement)}`,
-        );
-      }
-    }
-  }
-
-  return out;
-}
-
-/*
- * Every clash the rule set reaches while formatting `source` to a fixed point.
- *
- * The passes come from the real loop rather than a second one written here: a
- * clash the first pass does not show is the interesting kind, because it means
- * one rule's fix moved the script into another rule's reach.
- */
-function clashesWhileFormatting(source: string): string[] {
-  const found: string[] = [];
-
-  runFormatLoop(source, (current) => {
-    const diagnostics = lint(current, recommended);
-    found.push(...clashes(diagnostics));
-
-    return diagnostics;
-  });
-
-  return found;
-}
-
-/* A shuffle that is the same on every run, so a failure here can be reproduced. */
-function seeded(seed: number): () => number {
-  let state = seed;
-
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-
-    return state / 4294967296;
-  };
-}
-
-function permute<T>(items: readonly T[], next: () => number): T[] {
-  const out = [...items];
-
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(next() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-
-  return out;
-}
-
-/*
- * The recommended rule set in several config orders. Nothing in the API ranks
- * the rules, so each of these is a configuration a user can write.
- */
-function orderings(): LintConfig[] {
-  const base = Object.entries(recommended.rules ?? {});
-
-  return [base, [...base].reverse(), ...[1, 2, 3, 4].map((seed) => permute(base, seeded(seed)))].map(
-    (entries) => ({ rules: Object.fromEntries(entries) }) as LintConfig,
-  );
-}
 
 describe('fix interaction', () => {
   /*
@@ -178,14 +80,11 @@ describe('fix interaction', () => {
      * property is checked rather than assumed.
      */
     it('formats a script the same whatever order the rules are configured in', () => {
-      const configs = orderings();
+      const found = allFixtures().flatMap((fixture) =>
+        orderDependence(fixtureSource(fixture)).map((finding) => `${fixture}: ${finding}`),
+      );
 
-      for (const fixture of allFixtures()) {
-        const source = fixtureSource(fixture);
-        const outputs = configs.map((config) => format(source, config).output);
-
-        expect(new Set(outputs).size, `${fixture} formats differently depending on rule order`).toBe(1);
-      }
+      expect(found).toEqual([]);
     });
   });
 });

@@ -8,6 +8,7 @@ import {
   loadIdentifierBrackets,
   recommended,
 } from '../src/rules/index.js';
+import { bareLineFeeds, secondPassChanges } from './invariants.js';
 import { allFixtures, fixtureSource, formatRule } from './support.js';
 
 function readFixture(ruleId: string, kind: 'violation' | 'clean'): string {
@@ -104,13 +105,7 @@ describe('format', () => {
 
       for (const fixture of allFixtures()) {
         it(`reaches a fixed point on ${fixture}`, () => {
-          const source = fixtureSource(fixture);
-
-          const first = format(source, recommended);
-          const second = format(first.output, recommended);
-
-          expect(second.output).toBe(first.output);
-          expect(second.fixed).toBe(0);
+          expect(secondPassChanges(fixtureSource(fixture))).toEqual([]);
         });
       }
     });
@@ -128,15 +123,9 @@ describe('format', () => {
    * independent of what `core.autocrlf` hands the working tree.
    */
   describe('line endings', () => {
-    const BARE_LF = /(?<!\r)\n/;
-
     for (const fixture of allFixtures()) {
       it(`introduces no bare LF into the CRLF form of ${fixture}`, () => {
-        const source = fixtureSource(fixture).replace(/\r?\n/g, '\r\n');
-
-        const output = format(source, recommended).output;
-
-        expect(output).not.toMatch(BARE_LF);
+        expect(bareLineFeeds(fixtureSource(fixture))).toEqual([]);
       });
     }
 
