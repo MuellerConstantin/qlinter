@@ -40,6 +40,7 @@
     "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE.md', 'LICENSE.md')\"",
     "test": "vitest run",
     "test:watch": "vitest",
+    "survey": "vite-node tests/survey/index.ts --",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/tsconfig.json"
   },
   "dependencies": {
