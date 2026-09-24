@@ -1,24 +1,8 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { format, lint, type Diagnostic, type LintConfig } from '../src/index.js';
 import { runFormatLoop } from '../src/runner.js';
 import { recommended } from '../src/rules/index.js';
-
-const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
-
-/* Every fixture in the repo as a `<rule-id>/<name>.qvs` path, discovered rather than listed. */
-function allFixtures(): string[] {
-  return readdirSync(FIXTURES, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .flatMap((dir) =>
-      readdirSync(join(FIXTURES, dir.name))
-        .filter((file) => file.endsWith('.qvs'))
-        .map((file) => `${dir.name}/${file}`),
-    );
-}
-
-const read = (fixture: string): string => readFileSync(join(FIXTURES, fixture), 'utf8');
+import { allFixtures, fixtureSource } from './support.js';
 
 /*
  * Two rules rewriting one stretch of existing text into different things.
@@ -165,7 +149,7 @@ describe('fix interaction', () => {
   describe('fixture corpus', () => {
     it('produces overlapping fixes for the sweep to be worth running', () => {
       const overlapping = allFixtures().filter((fixture) => {
-        const fixed = lint(read(fixture), recommended).filter((diagnostic) => diagnostic.fix !== undefined);
+        const fixed = lint(fixtureSource(fixture), recommended).filter((diagnostic) => diagnostic.fix !== undefined);
 
         return fixed.some((a) =>
           fixed.some(
@@ -180,7 +164,7 @@ describe('fix interaction', () => {
 
     it('leaves no fix pair the runner cannot arbitrate', () => {
       const found = allFixtures().flatMap((fixture) =>
-        clashesWhileFormatting(read(fixture)).map((clash) => `${fixture}: ${clash}`),
+        clashesWhileFormatting(fixtureSource(fixture)).map((clash) => `${fixture}: ${clash}`),
       );
 
       expect(found).toEqual([]);
@@ -197,7 +181,7 @@ describe('fix interaction', () => {
       const configs = orderings();
 
       for (const fixture of allFixtures()) {
-        const source = read(fixture);
+        const source = fixtureSource(fixture);
         const outputs = configs.map((config) => format(source, config).output);
 
         expect(new Set(outputs).size, `${fixture} formats differently depending on rule order`).toBe(1);

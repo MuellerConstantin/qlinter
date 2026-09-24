@@ -1,27 +1,9 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { IToken } from 'chevrotain';
 import { lint, type Fix } from '../src/index.js';
 import { COMMENT_GROUP, WHITESPACE_GROUP, lexer } from '../src/lexer.js';
 import { recommended } from '../src/rules/index.js';
-
-const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
-
-/*
- * Every fixture in the repo as a `<rule-id>/<name>.qvs` path. Discovered rather
- * than listed, so a fixture added for a new rule joins the sweep below without
- * anyone remembering to register it.
- */
-function allFixtures(): string[] {
-  return readdirSync(FIXTURES, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .flatMap((dir) =>
-      readdirSync(join(FIXTURES, dir.name))
-        .filter((file) => file.endsWith('.qvs'))
-        .map((file) => `${dir.name}/${file}`),
-    );
-}
+import { allFixtures, fixtureSource } from './support.js';
 
 interface Span {
   start: number;
@@ -263,17 +245,14 @@ describe('fix geometry', () => {
    */
   describe('fixture corpus', () => {
     it('produces enough fixes for the sweep to be worth running', () => {
-      const total = allFixtures().reduce(
-        (sum, fixture) => sum + fixCount(readFileSync(join(FIXTURES, fixture), 'utf8')),
-        0,
-      );
+      const total = allFixtures().reduce((sum, fixture) => sum + fixCount(fixtureSource(fixture)), 0);
 
       expect(total).toBeGreaterThan(100);
     });
 
     it('covers fixtures whose comments sit where a fix could swallow them', () => {
       const commented = allFixtures().filter((fixture) => {
-        const source = readFileSync(join(FIXTURES, fixture), 'utf8');
+        const source = fixtureSource(fixture);
         const result = lexer.tokenize(source);
         const comments = result.groups[COMMENT_GROUP] ?? [];
 
@@ -289,7 +268,7 @@ describe('fix geometry', () => {
 
     for (const fixture of allFixtures()) {
       it(`applies no content-destroying fix to ${fixture}`, () => {
-        expect(unsafeFixes(readFileSync(join(FIXTURES, fixture), 'utf8'))).toEqual([]);
+        expect(unsafeFixes(fixtureSource(fixture))).toEqual([]);
       });
     }
   });

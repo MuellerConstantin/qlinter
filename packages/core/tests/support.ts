@@ -1,7 +1,11 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { lint, format } from '../src/index.js';
 import type { AnyRule, Diagnostic, FormatResult, LintConfig, RuleConfigEntry } from '../src/index.js';
 
 export type { AnyRule };
+
+const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
 
 function entry(rule: AnyRule, options?: object): RuleConfigEntry {
   return options === undefined ? rule.defaultSeverity : [rule.defaultSeverity, options];
@@ -29,4 +33,24 @@ export function lintRules(source: string, rules: readonly AnyRule[]): Diagnostic
 /** Format `source` with several rules enabled at their default severities. */
 export function formatRules(source: string, rules: readonly AnyRule[]): FormatResult {
   return format(source, configFor(rules));
+}
+
+/*
+ * Every fixture in the repo as a `<rule-id>/<name>.qvs` path. Discovered rather
+ * than listed, so a fixture added for a new rule joins every sweep without
+ * anyone remembering to register it.
+ */
+export function allFixtures(): string[] {
+  return readdirSync(FIXTURES, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((dir) =>
+      readdirSync(join(FIXTURES, dir.name))
+        .filter((file) => file.endsWith('.qvs'))
+        .map((file) => `${dir.name}/${file}`),
+    );
+}
+
+/** The source of a fixture, named by the path {@link allFixtures} lists it under. */
+export function fixtureSource(fixture: string): string {
+  return readFileSync(join(FIXTURES, fixture), 'utf8');
 }

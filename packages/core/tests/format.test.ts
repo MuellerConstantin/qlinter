@@ -1,5 +1,3 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { format, type Diagnostic, type Fix } from '../src/index.js';
 import { applyFixes, runFormatLoop } from '../src/runner.js';
@@ -10,27 +8,10 @@ import {
   loadIdentifierBrackets,
   recommended,
 } from '../src/rules/index.js';
-import { formatRule } from './support.js';
-
-const FIXTURES = join(import.meta.dirname, 'rules', 'fixtures');
+import { allFixtures, fixtureSource, formatRule } from './support.js';
 
 function readFixture(ruleId: string, kind: 'violation' | 'clean'): string {
-  return readFileSync(join(FIXTURES, ruleId, `${kind}.qvs`), 'utf8');
-}
-
-/*
- * Every fixture in the repo as a `<rule-id>/<name>.qvs` path. Discovered rather
- * than listed, so a fixture added for a new rule joins the sweep below without
- * anyone remembering to register it.
- */
-function allFixtures(): string[] {
-  return readdirSync(FIXTURES, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .flatMap((dir) =>
-      readdirSync(join(FIXTURES, dir.name))
-        .filter((file) => file.endsWith('.qvs'))
-        .map((file) => `${dir.name}/${file}`),
-    );
+  return fixtureSource(`${ruleId}/${kind}.qvs`);
 }
 
 describe('format', () => {
@@ -123,7 +104,7 @@ describe('format', () => {
 
       for (const fixture of allFixtures()) {
         it(`reaches a fixed point on ${fixture}`, () => {
-          const source = readFileSync(join(FIXTURES, fixture), 'utf8');
+          const source = fixtureSource(fixture);
 
           const first = format(source, recommended);
           const second = format(first.output, recommended);
@@ -151,7 +132,7 @@ describe('format', () => {
 
     for (const fixture of allFixtures()) {
       it(`introduces no bare LF into the CRLF form of ${fixture}`, () => {
-        const source = readFileSync(join(FIXTURES, fixture), 'utf8').replace(/\r?\n/g, '\r\n');
+        const source = fixtureSource(fixture).replace(/\r?\n/g, '\r\n');
 
         const output = format(source, recommended).output;
 
