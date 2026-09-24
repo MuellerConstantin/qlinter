@@ -7,7 +7,7 @@ import {
   loadIdentifierBrackets,
   recommended,
 } from '../src/rules/index.js';
-import { bareLineFeeds, secondPassChanges } from './invariants.js';
+import { bareLineFeeds, newLexErrors, secondPassChanges, unaccountedLexErrors } from './invariants.js';
 import { allFixtures, fixtureSource, formatRule } from './support.js';
 
 function readFixture(ruleId: string, kind: 'violation' | 'clean'): string {
@@ -140,5 +140,36 @@ describe('format', () => {
 
       expect(crlf).toBe(lf.replace(/\n/g, '\r\n'));
     });
+  });
+
+  /*
+   * Formatting must never make a script harder to read than it arrived: a
+   * character the lexer cannot place after formatting is one a rule wrote, or
+   * one a rule's fix exposed by rewriting what used to enclose it.
+   */
+  describe('lex errors', () => {
+    describe('verdict', () => {
+      it('reports a skipped character the output gained', () => {
+        expect(unaccountedLexErrors('LOAD A FROM x;\n', 'LOAD `A FROM x;\n')).toEqual(['output line 1 skips "`"']);
+      });
+
+      it('accepts a skipped character the input already had, wherever it moved', () => {
+        expect(unaccountedLexErrors('LOAD `A FROM x;\n', 'Load\n    `A\nFrom x;\n')).toEqual([]);
+      });
+
+      it('reports a new skipped character beside one the input already had', () => {
+        expect(unaccountedLexErrors('LOAD `A FROM x;\n', 'LOAD `A FROM "x;\n')).toEqual(['output line 1 skips "\\""']);
+      });
+    });
+
+    it('leaves a script that arrives unreadable no less readable', () => {
+      expect(newLexErrors('LOAD `A, B FROM [lib://x/y.qvd];\n')).toEqual([]);
+    });
+
+    for (const fixture of allFixtures()) {
+      it(`introduces no lex error into ${fixture}`, () => {
+        expect(newLexErrors(fixtureSource(fixture))).toEqual([]);
+      });
+    }
   });
 });

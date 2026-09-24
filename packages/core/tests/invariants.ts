@@ -51,6 +51,44 @@ export function bareLineFeeds(source: string): string[] {
 }
 
 /*
+ * Every lex error `after` has that `before` did not.
+ *
+ * Errors are matched by the text the lexer skipped, not by where it sits,
+ * because formatting moves everything. A script that arrives unreadable in
+ * places keeps those places; what must not happen is the formatter writing a
+ * new one.
+ */
+export function unaccountedLexErrors(before: string, after: string): string[] {
+  const known = new Map<string, number>();
+
+  for (const error of lexer.tokenize(before).errors) {
+    const text = before.slice(error.offset, error.offset + error.length);
+    known.set(text, (known.get(text) ?? 0) + 1);
+  }
+
+  const out: string[] = [];
+
+  for (const error of lexer.tokenize(after).errors) {
+    const text = after.slice(error.offset, error.offset + error.length);
+    const count = known.get(text) ?? 0;
+
+    if (count > 0) {
+      known.set(text, count - 1);
+      continue;
+    }
+
+    out.push(`output line ${error.line ?? '?'} skips ${JSON.stringify(text)}`);
+  }
+
+  return out;
+}
+
+/** Every lex error formatting `source` introduces. */
+export function newLexErrors(source: string): string[] {
+  return unaccountedLexErrors(source, format(source, recommended).output);
+}
+
+/*
  * Why a fix is unsafe to apply, or null when it is safe.
  *
  * A rule computes its fix range from token offsets, so the range can cover
