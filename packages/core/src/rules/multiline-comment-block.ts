@@ -2,7 +2,7 @@ import { tokenMatcher, type IToken } from 'chevrotain';
 import { lineCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { blockCommentFrom, isBannerLineComment } from './utils/comments.js';
+import { blockCommentFrom, isSlashLedLineComment } from './utils/comments.js';
 import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
 
 /*
@@ -52,10 +52,11 @@ export const multilineCommentBlock: Rule<undefined, 'multiline-comment-block'> =
       }
 
       /*
-       * A banner is the exception to stepping aside: the rails and the text
-       * between them are one unit, so a run holding one is left whole.
+       * A slash-led line is the exception to stepping aside: a banner's rails
+       * and the text between them are one unit, and a section marker must stay
+       * a line comment of its own, so a run holding one is left whole.
        */
-      if (group.some((token) => isBannerLineComment(token.image))) {
+      if (group.some((token) => isSlashLedLineComment(token.image))) {
         return;
       }
 

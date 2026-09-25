@@ -39,6 +39,14 @@ describe('comment-space', () => {
     expect(diagnostics).toEqual([]);
   });
 
+  it('leaves a section marker as written', () => {
+    expect(lintRule('///$tab Main\nSET x = 1;\n', commentSpace)).toEqual([]);
+  });
+
+  it('leaves any comment opening with a third slash as written', () => {
+    expect(lintRule('///note\n', commentSpace)).toEqual([]);
+  });
+
   it('accepts a decorative // banner (only slashes after //)', () => {
     const diagnostics = lintRule('//////////////////\n', commentSpace);
 

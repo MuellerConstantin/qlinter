@@ -1,14 +1,15 @@
-const LINE_BANNER = /^\/+$/;
-
 /*
- * A line comment whose body is nothing but further slashes: the divider a
- * script draws between its stages, and content in its own right rather than
- * prose. Two rules have to read it the same way — one accepts it as written,
- * the other declines to fold it into something else — so the shape is decided
- * here once.
+ * A line comment whose body opens with a further slash. That covers the divider
+ * of nothing but slashes a script draws between its stages, and the `///$tab`
+ * line that tools write to mark where a script section begins — a format the
+ * reference never describes. Neither is prose, and what a third slash means is
+ * not ours to read, so such a comment is kept exactly as written.
+ *
+ * Two rules have to read it the same way — one accepts it as written, the other
+ * declines to fold it into something else — so the shape is decided here once.
  */
-export function isBannerLineComment(image: string): boolean {
-  return LINE_BANNER.test(image.slice(2));
+export function isSlashLedLineComment(image: string): boolean {
+  return image.startsWith('///');
 }
 
 /*

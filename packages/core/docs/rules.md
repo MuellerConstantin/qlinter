@@ -980,14 +980,18 @@ The rule walks every comment token and enforces:
   immediately before `*/` (a newline counts as whitespace, so multi-line block
   comments that open with a line break are fine).
 
-Two intentional exceptions keep the rule out of the way of common idioms:
+Three intentional exceptions keep the rule out of the way of common idioms:
 
 - Empty markers (`//`, `/**/`) are accepted.
-- Decorative banners whose body consists only of the marker character are
-  accepted: `////////////////` (only `/`s after `//`) and `/****/` (only `*`s
-  between `/*` and `*/`). This covers the section-divider style that Qlik
-  scripts often use to delimit pipeline stages without forcing an awkward
-  rewrite.
+- A line comment opening with a third slash is kept as written. That covers
+  the decorative banner of nothing but slashes (`////////////////`) that Qlik
+  scripts use to delimit pipeline stages, and the `///$tab Main` line that tools
+  write where a script section begins when they store a script as a text file.
+  The Qlik reference does not describe that format, so the rule reads no
+  meaning into a third slash — but a space inserted after `//` would turn
+  `///$tab` into `// /$tab`, and whatever reads the file back would find one
+  section fewer.
+- A block banner of nothing but asterisks (`/****/`) is accepted likewise.
 
 The autofix inserts a single space at each offending position. A tight
 `/*foo*/` becomes `/* foo */` in one format pass.
@@ -1008,6 +1012,7 @@ LET vDay = 1;
 Examples of **correct** code for this rule:
 
 ```qlik
+///$tab Main
 // Comment with a space
 SET vYear = 2026;
 
@@ -2173,13 +2178,19 @@ prose above and below it folds as usual, and the line itself stays a `//` line.
   further marker inside one does or where such a comment then ends. Putting
   such a line into a block would rest on an answer the reference does not give.
 
-One kind of run is left whole rather than folded around:
+A run holding any line that opens with a third slash is left whole rather than
+folded around:
 
-- **Decorative banners.** A run holding a line whose body is nothing but
-  further slashes (`////////////////`) is a section divider marking a section
-  header, and the rails and the text between them are one unit. Folding the
-  text would leave a block comment sandwiched between two rails, which is not a
-  shape anyone writes by hand, so the whole run is left as it stands.
+- **Decorative banners.** A line whose body is nothing but further slashes
+  (`////////////////`) is a section divider marking a section header, and the
+  rails and the text between them are one unit. Folding the text would leave a
+  block comment sandwiched between two rails, which is not a shape anyone writes
+  by hand.
+- **Section markers.** Tools that store a script as a text file write
+  `///$tab Main` where each script section begins. The Qlik reference does not
+  describe that format, so nothing here reads meaning into it — but folded into
+  a block comment, the line would no longer be one, and whatever reads the file
+  back would find one section fewer. The same goes for any other `///` line.
 
 Examples of **incorrect** code for this rule:
 

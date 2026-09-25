@@ -83,6 +83,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--fix` run on the first script carrying one. Everything after a Set's `=` up to
   its `;` now lexes as one opaque token, and `operator-spacing` spaces that `=` on
   the side of the name only.
+- A line comment opening with a third slash is kept as written. Tools that store
+  a script as a text file mark each section with a `///$tab Main` line, and two
+  rules destroyed it: `comment-space` turned it into `// /$tab Main`, and
+  `multiline-comment-block` folded it with the comments below into one block
+  comment. Either way the file came back with one section fewer. Both rules now
+  leave any `///` line alone, the way they already left a banner of slashes.
 
 ### Added
 

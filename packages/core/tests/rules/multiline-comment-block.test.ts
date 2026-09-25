@@ -70,6 +70,10 @@ describe('multiline-comment-block', () => {
     expect(lintRule('SET a = 1; // one\nSET b = 2; // two\n', multilineCommentBlock)).toEqual([]);
   });
 
+  it('leaves a run holding a section marker alone', () => {
+    expect(lintRule('///$tab Main\n// Setup\n// more\nSET x = 1;\n', multilineCommentBlock)).toEqual([]);
+  });
+
   it('leaves a run of decorative banners alone', () => {
     expect(lintRule('////////////\n// Section\n////////////\n', multilineCommentBlock)).toEqual([]);
   });
