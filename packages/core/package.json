@@ -41,6 +41,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "survey": "vite-node tests/survey/index.ts --",
+    "survey:fetch": "vite-node tests/survey/fetch-github.ts --",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/tsconfig.json"
   },
   "dependencies": {
