@@ -2,46 +2,25 @@ import type { IToken } from 'chevrotain';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
-import { findLoadIndex, isClauseStarter, splitStatements } from './utils/statements.js';
-import { isCloseParen, isOpenParen } from './utils/tokens.js';
+import { loadLineOpeners } from './utils/load-anchors.js';
+import { splitStatements } from './utils/statements.js';
 
 function checkStatement(tokens: IToken[], whitespaces: IToken[], lineEnding: string): Finding[] {
-  const loadIdx = findLoadIndex(tokens);
-
-  if (loadIdx === -1) {
-    return [];
-  }
-
   const out: Finding[] = [];
-  let depth = 0;
-  let prev = tokens[loadIdx];
 
-  for (let i = loadIdx + 1; i < tokens.length; i++) {
-    const t = tokens[i];
+  for (const clause of loadLineOpeners(tokens)?.clauses ?? []) {
+    const prev = tokens[tokens.indexOf(clause) - 1];
 
-    if (isOpenParen(t)) {
-      depth++;
-    } else if (isCloseParen(t)) {
-      depth--;
+    if (prev !== undefined && (prev.startLine ?? 1) === (clause.startLine ?? 1)) {
+      out.push({
+        range: tokenRange(clause),
+        message: `LOAD clause '${clause.image}' should start on its own line.`,
+        fix: {
+          range: { start: fixStartOffset(whitespaces, prev, clause), end: clause.startOffset },
+          replacement: lineEnding,
+        },
+      });
     }
-
-    if (depth === 0 && isClauseStarter(t)) {
-      const prevLine = prev.startLine ?? 1;
-      const tLine = t.startLine ?? 1;
-
-      if (prevLine === tLine) {
-        out.push({
-          range: tokenRange(t),
-          message: `LOAD clause '${t.image}' should start on its own line.`,
-          fix: {
-            range: { start: fixStartOffset(whitespaces, prev, t), end: t.startOffset },
-            replacement: lineEnding,
-          },
-        });
-      }
-    }
-
-    prev = t;
   }
 
   return out;

@@ -1,10 +1,9 @@
 import type { IToken } from 'chevrotain';
-import { commaToken } from '../lexer.js';
 import type { Rule, Finding, RuleContext } from '../types.js';
 import { tokenRange } from '../token.js';
 import { fixStartOffset } from './utils/fixes.js';
-import { findFieldListBoundaries, findLoadIndex, splitStatements } from './utils/statements.js';
-import { isCloseParen, isOpenParen } from './utils/tokens.js';
+import { loadLineOpeners } from './utils/load-anchors.js';
+import { splitStatements } from './utils/statements.js';
 
 function makeFinding(prev: IToken, t: IToken, whitespaces: IToken[], lineEnding: string): Finding {
   return {
@@ -18,53 +17,13 @@ function makeFinding(prev: IToken, t: IToken, whitespaces: IToken[], lineEnding:
 }
 
 function checkStatement(tokens: IToken[], whitespaces: IToken[], lineEnding: string): Finding[] {
-  const loadIdx = findLoadIndex(tokens);
-
-  if (loadIdx === -1) {
-    return [];
-  }
-
-  const { start, end } = findFieldListBoundaries(tokens, loadIdx);
-
-  if (start >= end) {
-    return [];
-  }
-
   const out: Finding[] = [];
-  const header = tokens[start - 1];
-  const firstField = tokens[start];
 
-  if ((header.startLine ?? 1) === (firstField.startLine ?? 1)) {
-    out.push(makeFinding(header, firstField, whitespaces, lineEnding));
-  }
+  for (const field of loadLineOpeners(tokens)?.fields ?? []) {
+    const prev = tokens[tokens.indexOf(field) - 1];
 
-  let depth = 0;
-
-  for (let i = start; i < end; i++) {
-    const t = tokens[i];
-
-    if (isOpenParen(t)) {
-      depth++;
-      continue;
-    }
-
-    if (isCloseParen(t)) {
-      depth--;
-      continue;
-    }
-
-    if (depth !== 0 || t.tokenType !== commaToken) {
-      continue;
-    }
-
-    const next = tokens[i + 1];
-
-    if (!next || i + 1 >= end) {
-      continue;
-    }
-
-    if ((next.startLine ?? 1) === (t.startLine ?? 1)) {
-      out.push(makeFinding(t, next, whitespaces, lineEnding));
+    if (prev !== undefined && (prev.startLine ?? 1) === (field.startLine ?? 1)) {
+      out.push(makeFinding(prev, field, whitespaces, lineEnding));
     }
   }
 

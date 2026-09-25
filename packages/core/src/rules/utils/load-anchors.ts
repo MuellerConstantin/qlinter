@@ -142,6 +142,29 @@ function collectHeaderStarts(tokens: IToken[], fieldsStart: number, headerLine: 
   return out;
 }
 
+/** The tokens of one `Load` that open a line of their own: each field, and each clause after the list. */
+export interface LoadLineOpeners {
+  fields: IToken[];
+  clauses: IToken[];
+}
+
+/*
+ * Where a `Load` breaks its lines. The rules that put a field or a clause on a
+ * line of its own, and the rules that indent those lines, must agree on these
+ * tokens exactly, so they are found here once.
+ */
+export function loadLineOpeners(stmt: IToken[]): LoadLineOpeners | undefined {
+  const loadIdx = findLoadIndex(stmt);
+
+  if (loadIdx === -1) {
+    return undefined;
+  }
+
+  const { start, end } = findFieldListBoundaries(stmt, loadIdx);
+
+  return { fields: collectFieldStarts(stmt, start, end), clauses: collectClauseStarters(stmt, end) };
+}
+
 /*
  * The lines a `Load` statement claims for indentation, one entry per statement.
  * The indent rules split these lines between them and must agree on the split,
@@ -162,13 +185,14 @@ export function collectLoadAnchors(tokens: IToken[], firstByLine: Map<number, IT
     const headerFirst = firstByLine.get(headerLine);
     const base = headerFirst ? (headerFirst.startColumn ?? 1) - 1 : 0;
 
-    const { start, end } = findFieldListBoundaries(stmt, loadIdx);
+    const { start } = findFieldListBoundaries(stmt, loadIdx);
+    const { fields, clauses } = loadLineOpeners(stmt) ?? { fields: [], clauses: [] };
 
     out.push({
       base,
       headerStarts: collectHeaderStarts(stmt, start, headerLine),
-      fieldStarts: collectFieldStarts(stmt, start, end),
-      clauseStarters: collectClauseStarters(stmt, end),
+      fieldStarts: fields,
+      clauseStarters: clauses,
     });
   }
 
