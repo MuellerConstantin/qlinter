@@ -13,6 +13,7 @@
 | [builtin-keyword-case](#builtin-keyword-case)             | Enforce canonical casing for Qlik keywords.                    |
 | [comma-space](#comma-space)                               | Require one space after a comma and none before it.            |
 | [comma-style](#comma-style)                               | Require a comma to close the line of the operand it follows.   |
+| [comment-indent](#comment-indent)                         | Indent a comment line like the code it introduces.             |
 | [comment-space](#comment-space)                           | Require a space after `//` and inside `/* */`.                 |
 | [continuation-indent](#continuation-indent)               | Indent continuation lines one level per line they hang below.  |
 | [eol-last](#eol-last)                                     | Require the file to end with exactly one newline.              |
@@ -969,6 +970,62 @@ This rule has no options. Comma placement has exactly two defensible answers and
 an opinionated formatter has to pick one; the other rules that break lists apart
 already emit the trailing form, so a `leading` setting would only put this rule
 in a fight it cannot win. Set `severity: 'off'` to opt out entirely.
+
+---
+
+## comment-indent
+
+Indent a comment line like the code it introduces.
+
+### Rule Details
+
+A comment on a line of its own is about the code below it, so it stands at that
+code's column. The indent rules place every line that holds code; a line holding
+only a comment falls to none of them, and without this rule it keeps whatever
+column it was written at — however far the code around it has since moved.
+
+The rule claims the lines a comment opens and no code starts on, and indents
+each like the next line of code below it, across blank lines and further
+comments. The indent is copied as that line has it, tabs included, so the rule
+never decides a width of its own: once the code is where it belongs, its
+comments follow on the next format pass. A multi-line block comment moves by
+its first line, and [block-comment-stars](#block-comment-stars) realigns the
+rest.
+
+Directly above a line that ends a body — `End Sub`, `EndIf`, `Next`, `Else`,
+`Case` — a comment may belong to either side, so both the level of the body and
+the level of the closing line are accepted.
+
+Left alone:
+
+- **A comment sharing its line with code**, whose line the code's indent rule
+  places.
+- **A comment with no code below it**, which has no column to take.
+- **A line opening with a third slash**, such as the `///$tab Main` marker tools
+  write where a script section begins. It is kept exactly as written, and its
+  column is part of that.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Sub LoadCalendar
+
+            // Too deep for the line it introduces.
+    Let vYear = 2026;
+
+End Sub
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Sub LoadCalendar
+
+    // Inside a block, it follows the body.
+    Let vYear = 2026;
+
+End Sub
+```
 
 ---
 

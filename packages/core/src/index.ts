@@ -33,6 +33,7 @@ export {
   blockIndent,
   builtinFunctionCase,
   builtinKeywordCase,
+  commentIndent,
   commentSpace,
   loadClauseNewline,
   loadFieldPerLine,

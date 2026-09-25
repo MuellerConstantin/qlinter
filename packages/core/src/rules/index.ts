@@ -10,6 +10,7 @@ import { builtinFunctionCase } from './builtin-function-case.js';
 import { builtinKeywordCase } from './builtin-keyword-case.js';
 import { commaSpace } from './comma-space.js';
 import { commaStyle } from './comma-style.js';
+import { commentIndent } from './comment-indent.js';
 import { commentSpace } from './comment-space.js';
 import { continuationIndent } from './continuation-indent.js';
 import { eolLast } from './eol-last.js';
@@ -69,6 +70,7 @@ export const allRules = [
   builtinKeywordCase,
   commaSpace,
   commaStyle,
+  commentIndent,
   commentSpace,
   continuationIndent,
   eolLast,
@@ -179,6 +181,7 @@ export {
   builtinKeywordCase,
   commaSpace,
   commaStyle,
+  commentIndent,
   commentSpace,
   continuationIndent,
   eolLast,

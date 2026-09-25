@@ -1,0 +1,16 @@
+Sub LoadCalendar
+
+            // Too deep for the line it introduces.
+    Let vYear = 2026;
+
+// Too shallow for the line it introduces.
+    Let vMonth = 6;
+
+End Sub
+
+[Sales]:
+Load
+    OrderId,
+  // The amount already includes tax.
+    Amount
+From [lib://Data/sales.qvd] (qvd);

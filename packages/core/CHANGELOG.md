@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `comment-indent` indents a line holding only a comment like the next line of
+  code below it. The indent rules place every line that holds code; a comment
+  line fell to none of them and stayed at whatever column it was written at, so
+  a comment drifted away from the code it describes as that code was reindented.
+  Directly above the line that ends a body, the body's level is accepted as
+  well. A comment with no code below it and a `///` line are left alone.
 - `no-rem` writes a remark as a `//` comment instead of a `Rem` statement, so a
   script has one way of saying one thing. Several remarks in a row become line
   comments that `multiline-comment-block` then folds into one block. A remark

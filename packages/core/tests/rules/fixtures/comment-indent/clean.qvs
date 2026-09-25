@@ -1,0 +1,31 @@
+///$tab Main
+// A comment at the left edge introduces code at the left edge.
+Let vYear = 2026;
+
+Sub LoadCalendar
+
+    // Inside a block, it follows the body.
+    Let vMonth = 6;
+
+    /*
+     * A block comment moves as one piece.
+     */
+    Let vDay = 1;
+    // Above the end of a block, the body level is fine.
+
+End Sub
+
+If vYear > 2025 Then
+
+    Let vFlag = 1;
+
+// And so is the level of the line that ends it.
+
+EndIf
+
+[Sales]:
+Load
+    OrderId,
+    // The amount already includes tax.
+    Amount
+From [lib://Data/sales.qvd] (qvd);
