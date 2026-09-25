@@ -66,6 +66,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to a single newline, and one written entirely with carriage returns had a
   newline appended, leaving two conventions mixed inside it.
 
+### Fixed
+
+- The command of a SQL statement is no longer formatted. Qlik hands the text after
+  the `SQL` prefix — and a bare `Select`, whose prefix is optional — to the
+  database driver unread, yet the rules treated it as Qlik: they recased
+  `SELECT … FROM` to `Select … From`, spaced `a,b` and `x=1`, and choked on a
+  connector command that is not SQL at all, such as the JSON a SAP connector
+  takes. The command now lexes as one opaque token up to its `;`, the way a
+  `Trace` message does, and reaches the database exactly as written.
+
 ### Added
 
 - Tokenizer for Qlik load script built on Chevrotain, covering keywords, builtin

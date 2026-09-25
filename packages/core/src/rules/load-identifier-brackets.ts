@@ -2,8 +2,7 @@ import { tokenMatcher, type IToken } from 'chevrotain';
 import { backtickIdentifierToken, quotedIdentifierToken } from '../lexer.js';
 import { tokenFix, tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
-import { collectStatementSpans, findAtTopLevel, findLoadIndex } from './utils/statements.js';
-import { isKeyword } from './utils/tokens.js';
+import { collectStatementSpans, findLoadIndex, selectsFromDatabase } from './utils/statements.js';
 
 /*
  * The name a delimited identifier stands for. Inside double quotes a doubled
@@ -23,7 +22,7 @@ function nameOf(token: IToken): string {
  * alone and a syntax error elsewhere.
  */
 function isQlikLoad(tokens: IToken[]): boolean {
-  return findLoadIndex(tokens) !== -1 && findAtTopLevel(tokens, (token) => isKeyword(token, 'select')) === -1;
+  return findLoadIndex(tokens) !== -1 && !selectsFromDatabase(tokens);
 }
 
 /*

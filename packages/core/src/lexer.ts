@@ -829,6 +829,43 @@ export const traceMessageToken = createToken({
 });
 
 /*
+ * The command of a SQL statement is not Qlik's to read. Qlik hands it to the
+ * ODBC driver or OLE DB provider, which interprets it in its own dialect — a
+ * connector may not even take SQL, but JSON. The `SQL` prefix is Qlik's and stays
+ * a keyword; everything after it up to the terminator is one opaque token, the
+ * same way a Trace body is, so no rule rewrites text the database will read.
+ *
+ * The prefix is optional before a Select, so a bare Select is the command itself
+ * and lexes as the same token. That token also marks the statement as one that
+ * selects rows, which is what keeps it a table without reading its text.
+ *
+ * Like a Trace body, the command ends at the first `;`.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/SQL.htm | SQL}
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/Select.htm | Select}
+ */
+export const sqlKeywordToken = createToken({
+  name: 'SqlKeyword',
+  pattern: /SQL\b/i,
+  longer_alt: identifierToken,
+  categories: [keywordToken],
+  push_mode: 'sql_body',
+});
+
+export const sqlCommandToken = createToken({
+  name: 'SqlCommand',
+  pattern: /[^;]+/,
+  line_breaks: true,
+});
+
+export const sqlSelectToken = createToken({
+  name: 'SqlSelect',
+  pattern: /\s*Select\b[^;]*/i,
+  line_breaks: true,
+  categories: [sqlCommandToken],
+});
+
+/*
  * `$(Include=…)` / `$(Must_Include=…)` is not an assignment but a fixed dollar
  * expansion form. Qlik matches the literal `Include=` and explicitly forbids a
  * space on either side of the `=` — "Do not put a space character before or
@@ -899,6 +936,13 @@ export const semicolonToken = createToken({ name: 'Semicolon', pattern: /;/ });
 
 export const traceEndToken = createToken({
   name: 'TraceEnd',
+  pattern: /;/,
+  pop_mode: true,
+  categories: [semicolonToken],
+});
+
+export const sqlEndToken = createToken({
+  name: 'SqlEnd',
   pattern: /;/,
   pop_mode: true,
   categories: [semicolonToken],
@@ -975,6 +1019,8 @@ const defaultModeTokens = [
   builtinFunctionToken,
   systemVariableToken,
   traceKeywordToken,
+  sqlKeywordToken,
+  sqlSelectToken,
   /*
    * Before the general keyword token so the structural keywords win, but after
    * builtinFunctionToken so `If(` still lexes as the function it is.
@@ -992,13 +1038,16 @@ const defaultModeTokens = [
 
 const traceBodyModeTokens = [traceEndToken, traceMessageToken];
 
-export const allTokens = [...defaultModeTokens, traceMessageToken, traceEndToken];
+const sqlBodyModeTokens = [sqlEndToken, sqlSelectToken, sqlCommandToken];
+
+export const allTokens = [...defaultModeTokens, traceMessageToken, traceEndToken, sqlCommandToken, sqlEndToken];
 
 export const lexer = new Lexer(
   {
     modes: {
       default_mode: defaultModeTokens,
       trace_body: traceBodyModeTokens,
+      sql_body: sqlBodyModeTokens,
     },
     defaultMode: 'default_mode',
   },

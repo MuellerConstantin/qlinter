@@ -6,6 +6,7 @@ import {
   equalsToken,
   identifierToken,
   semicolonToken,
+  sqlSelectToken,
   statementTerminatorToken,
 } from '../../lexer.js';
 import { groupByLine } from './lines.js';
@@ -270,6 +271,11 @@ export function collectStatementSpans(tokens: IToken[]): StatementSpan[] {
   return out;
 }
 
+/** Whether the statement passes a Select through to the database, with or without the `SQL` prefix. */
+export function selectsFromDatabase(tokens: IToken[]): boolean {
+  return tokens.some((token) => token.tokenType === sqlSelectToken);
+}
+
 /*
  * Whether the statement opens a data section: it carries a label, or a
  * top-level `Load` or `Select`.
@@ -285,5 +291,5 @@ export function opensTable(tokens: IToken[]): boolean {
     return true;
   }
 
-  return findLoadIndex(tokens) !== -1 || findAtTopLevel(tokens, (token) => isKeyword(token, 'select')) !== -1;
+  return findLoadIndex(tokens) !== -1 || selectsFromDatabase(tokens);
 }

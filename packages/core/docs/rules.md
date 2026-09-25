@@ -62,6 +62,22 @@ it, and follows along if that ever changes. Writing `["warning", { "size": 2 }]`
 instead pins the severity to `warning` forever, which is rarely what someone
 adjusting an indent width intends.
 
+### Text no rule touches
+
+**A SQL command reaches the database exactly as written.** Qlik does not read
+the text after the `SQL` prefix; it hands it to the ODBC driver or OLE DB
+provider, which interprets it in its own dialect — and a connector may not take
+SQL at all, but JSON. So no rule recases, respaces or rebreaks it, whether the
+statement is `SQL SELECT …`, `SQL EXEC …`, or a bare `Select`, whose `SQL`
+prefix Qlik makes optional. The `SQL` prefix itself is Qlik's and is still
+recased by [builtin-keyword-case](#builtin-keyword-case).
+
+```qlik
+SQL SELECT OrderId,Amount FROM dbo.Orders WHERE Amount>0;
+```
+
+The command runs to the first `;`, the same way a `Trace` message does.
+
 ---
 
 ## blank-line-after-block
