@@ -866,6 +866,28 @@ export const sqlSelectToken = createToken({
 });
 
 /*
+ * A Rem is a comment written as a statement: "everything between the rem and
+ * the next semicolon" is remark text, so it lexes as one opaque token the way a
+ * Trace body does. The words in it are prose, not script, and no rule rewrites
+ * them.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/Rem.htm | Rem}
+ */
+export const remKeywordToken = createToken({
+  name: 'RemKeyword',
+  pattern: /Rem\b/i,
+  longer_alt: identifierToken,
+  categories: [keywordToken],
+  push_mode: 'rem_body',
+});
+
+export const remTextToken = createToken({
+  name: 'RemText',
+  pattern: /[^;]+/,
+  line_breaks: true,
+});
+
+/*
  * A Set assigns "the text to the right of the equal sign" to its variable
  * without evaluating it — `set x = 3 + 4;` holds `'3 + 4'` — so a space or a
  * comma rewritten there is a different value. Everything after the Set's `=` up
@@ -983,6 +1005,13 @@ export const sqlEndToken = createToken({
   categories: [semicolonToken],
 });
 
+export const remEndToken = createToken({
+  name: 'RemEnd',
+  pattern: /;/,
+  pop_mode: true,
+  categories: [semicolonToken],
+});
+
 export const commaToken = createToken({ name: 'Comma', pattern: /,/ });
 export const equalsToken = createToken({ name: 'Equals', pattern: /=/ });
 
@@ -1080,6 +1109,7 @@ const defaultModeTokens = [
   sqlKeywordToken,
   sqlSelectToken,
   setKeywordToken,
+  remKeywordToken,
   /*
    * Before the general keyword token so the structural keywords win, but after
    * builtinFunctionToken so `If(` still lexes as the function it is.
@@ -1106,15 +1136,23 @@ const sqlBodyModeTokens = [sqlEndToken, sqlSelectToken, sqlCommandToken];
 const setHeadModeTokens = [
   ...defaultModeTokens.filter(
     (token) =>
-      ![traceKeywordToken, sqlKeywordToken, sqlSelectToken, setKeywordToken, equalsToken, semicolonToken].includes(
-        token,
-      ),
+      ![
+        traceKeywordToken,
+        sqlKeywordToken,
+        sqlSelectToken,
+        setKeywordToken,
+        remKeywordToken,
+        equalsToken,
+        semicolonToken,
+      ].includes(token),
   ),
   setEqualsToken,
   setHeadEndToken,
 ];
 
 const setValueModeTokens = [setEndToken, setValueToken];
+
+const remBodyModeTokens = [remEndToken, remTextToken];
 
 export const allTokens = [
   ...defaultModeTokens,
@@ -1126,6 +1164,8 @@ export const allTokens = [
   setHeadEndToken,
   setValueToken,
   setEndToken,
+  remTextToken,
+  remEndToken,
 ];
 
 export const lexer = new Lexer(
@@ -1136,6 +1176,7 @@ export const lexer = new Lexer(
       sql_body: sqlBodyModeTokens,
       set_head: setHeadModeTokens,
       set_value: setValueModeTokens,
+      rem_body: remBodyModeTokens,
     },
     defaultMode: 'default_mode',
   },

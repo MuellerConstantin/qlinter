@@ -83,6 +83,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--fix` run on the first script carrying one. Everything after a Set's `=` up to
   its `;` now lexes as one opaque token, and `operator-spacing` spaces that `=` on
   the side of the name only.
+- The text of a `Rem` statement is no longer formatted. Everything between `Rem`
+  and the next `;` is a comment, yet the rules read it as script: a banner such as
+  `REM ===== Begin =====;` came out as `Rem = = = = = Begin = = = = = ;`, and two
+  rules then fought over the space before its `;` until `format` gave up and
+  threw. The remark now lexes as one opaque token, the way a `Trace` message does.
 - A line comment opening with a third slash is kept as written. Tools that store
   a script as a text file mark each section with a `///$tab Main` line, and two
   rules destroyed it: `comment-space` turned it into `// /$tab Main`, and

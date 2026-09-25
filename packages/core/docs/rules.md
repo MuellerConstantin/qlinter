@@ -78,6 +78,15 @@ SQL SELECT OrderId,Amount FROM dbo.Orders WHERE Amount>0;
 
 The command runs to the first `;`, the same way a `Trace` message does.
 
+**The text of a `Rem` is kept exactly as written.** A `Rem` is a comment written
+as a statement: everything between the keyword and the next `;` is remark text,
+so it is not spaced, recased or rebroken, whatever script words it happens to
+contain. The keyword itself is recased like any other.
+
+```qlik
+Rem ===== Begin of the calendar section =====;
+```
+
 **The value of a `Set` is kept exactly as written.** A `Set` assigns the text to
 the right of its `=` without evaluating it — `Set x = 3 + 4;` holds `3 + 4`, and
 `Set x = Today();` holds `Today()` — so a space, a comma or a letter's case
