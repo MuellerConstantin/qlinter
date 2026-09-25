@@ -91,6 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An include whose file name is built from a variable —
+  `$(Must_Include=[$(vLib)common.qvs])` — is read whole again. The include ended
+  at the first `)`, which is the one closing the inner `$(vLib)`, so the rest of
+  the file name spilled out as script: a stray `]` the lexer could not read, and
+  text the rules then respaced. The include now runs to the parenthesis closing
+  the expansion it opened with, since Qlik nests dollar-sign expansions.
 - `Let vX =;`, the empty assignment that clears a variable, no longer makes
   `format` throw. `operator-spacing` asked for a space after the `=` and
   `semicolon-space` removed it again, pass after pass, until the loop gave up —

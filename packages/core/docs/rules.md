@@ -1407,7 +1407,10 @@ statement with a syntax error, so the included file is never loaded.
 This makes the rule a correctness rule rather than a style rule, which is why it
 defaults to `error`. It is also the reason the whole expansion is tokenized as a
 single unit: [operator-spacing](#operator-spacing) would otherwise treat that `=`
-as a binary operator and introduce exactly the spaces this rule removes.
+as a binary operator and introduce exactly the spaces this rule removes. The unit
+runs to the parenthesis that closes the expansion, so a file name built from
+variables — `$(Must_Include=$(vLib)helpers.qvs)` — is kept whole as well; Qlik
+[nests dollar-sign expansions](https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/dollar-sign-expansions.htm).
 
 The autofix deletes the offending whitespace and touches nothing else. The
 include target is preserved byte for byte, because a data connection path may

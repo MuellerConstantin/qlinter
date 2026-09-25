@@ -17,6 +17,10 @@ describe('include expansion tokenization', () => {
     '$(Must_Include=[lib://DataFiles/abc.qvs])',
     '$(must_include=lib://DataFiles\\abc.txt)',
     '$(MUST_INCLUDE=abc.txt)',
+    '$(Must_Include=$(vLib)helpers.qvs)',
+    '$(Must_Include=[$(v_Lib)Common/WhoReloadsMe_SUB.qvs])',
+    '$(Include=$(vRoot)$(vFolder)/x.qvs)',
+    '$(Include=$(v$(vEnv)Path)x.qvs)',
   ])('tokenizes %s as a single opaque token', (source) => {
     const { tokens, errors } = lexer.tokenize(source);
 
@@ -37,6 +41,19 @@ describe('include expansion tokenization', () => {
 
     expect(tokens).toHaveLength(1);
     expect(tokens[0].tokenType).toBe(includeExpansionToken);
+  });
+
+  it('ends at the parenthesis closing the expansion, not at one inside it', () => {
+    const { tokens } = lexer.tokenize('$(Must_Include=$(vLib)x.qvs); Let y = 1;');
+
+    expect(tokens[0].image).toBe('$(Must_Include=$(vLib)x.qvs)');
+    expect(tokens[1].tokenType.name).toBe('Semicolon');
+  });
+
+  it('does not reach past the end of its line for a closing parenthesis', () => {
+    const { tokens } = lexer.tokenize('$(Must_Include=$(vLib)x.qvs\n);');
+
+    expect(tokens.some((t) => t.tokenType === includeExpansionToken)).toBe(false);
   });
 
   it('leaves an ordinary $(=…) evaluation expansion alone', () => {

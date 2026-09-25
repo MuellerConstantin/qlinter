@@ -934,11 +934,47 @@ export const setValueToken = createToken({
  * already carries the broken spacing must not be mangled further, and keeping
  * it in a single token leaves a future rule free to flag it off the image.
  *
+ * The file name may itself carry dollar expansions — `$(Must_Include=$(vLib)x.qvs)`
+ * — since expansions nest, so the token ends at the `)` closing the `$(` it
+ * opened with, not at the first one. Only `$(` counts as an opening: whether a
+ * bare parenthesis in a file name nests anything, the reference does not say.
+ *
  * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/SystemVariables/Include.htm | Include}
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/dollar-sign-expansions.htm | Dollar-sign expansions}
  */
+const INCLUDE_HEAD = /\$\([ \t]*(?:Must_)?Include[ \t]*=/iy;
+
+function matchIncludeExpansion(text: string, offset: number): RegExpExecArray | null {
+  INCLUDE_HEAD.lastIndex = offset;
+
+  if (INCLUDE_HEAD.exec(text) === null) {
+    return null;
+  }
+
+  let depth = 1;
+
+  for (let i = INCLUDE_HEAD.lastIndex; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '\r' || char === '\n') {
+      return null;
+    }
+
+    if (char === '$' && text[i + 1] === '(') {
+      depth++;
+      i++;
+    } else if (char === ')' && --depth === 0) {
+      return [text.slice(offset, i + 1)] as unknown as RegExpExecArray;
+    }
+  }
+
+  return null;
+}
+
 export const includeExpansionToken = createToken({
   name: 'IncludeExpansion',
-  pattern: /\$\([ \t]*(?:Must_)?Include[ \t]*=[^)\r\n]*\)/i,
+  pattern: { exec: matchIncludeExpansion },
+  start_chars_hint: ['$'],
   line_breaks: false,
 });
 
