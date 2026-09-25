@@ -3,6 +3,8 @@ import { join, relative, resolve } from 'node:path';
 import { lexer } from '../../src/lexer.js';
 import {
   bareLineFeeds,
+  changedCommentContent,
+  changedOpaqueContent,
   clashesWhileFormatting,
   newLexErrors,
   orderDependence,
@@ -27,6 +29,8 @@ const CHECKS: Record<string, (source: string) => string[]> = {
   'rule-clash': clashesWhileFormatting,
   'order-dependence': orderDependence,
   'new-lex-error': newLexErrors,
+  'opaque-content': changedOpaqueContent,
+  'comment-content': changedCommentContent,
   'bare-lf': bareLineFeeds,
   'second-pass': secondPassChanges,
 };

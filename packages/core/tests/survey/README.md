@@ -25,6 +25,8 @@ rather than inside the repo, because it quotes the scripts.
 | `unsafe-fix`       | a fix reaches over a comment or a character the lexer skipped            |
 | `rule-clash`       | two rules rewrite one span into different things — a line break against a space excepted, which the break wins by design |
 | `order-dependence` | the output depends on the order the rules are configured in              |
+| `opaque-content`   | a SQL command, `Set` value, `Trace` message or string came out changed |
+| `comment-content`  | a comment lost, gained or changed a word, or a `///` line changed at all |
 | `bare-lf`          | a CRLF script comes out with a bare LF                                   |
 | `second-pass`      | a second `format` still changes something; `throws` if it never settles |
 | `not-utf8`         | the file is not valid UTF-8, so the CLI skips it                         |
@@ -62,7 +64,8 @@ yields at most 1000 results; another `--query` reaches further.
   from GitHub may simply be wrong. Look the construct up in the
   [Qlik Sense help](https://help.qlik.com/en-US/sense/) before teaching the
   lexer anything.
-- **What the checks cannot see still needs looking at.** They catch crashes,
-  clashes and unreadable output — not a rewrite that is well-formed but means
-  something else, such as a changed `Set` value or SQL text. When a finding
-  leads into a construct, check what formatting does to its content by hand.
+- **What the checks cannot see still needs looking at.** `opaque-content` guards
+  the texts the lexer already knows to hand on as written; it cannot notice a
+  construct the lexer does not know to be one, and formats as script. When a
+  finding leads into an unfamiliar construct, check what formatting does to its
+  content by hand.

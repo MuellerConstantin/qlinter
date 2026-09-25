@@ -1,8 +1,21 @@
-import type { IToken } from 'chevrotain';
+import { tokenMatcher, type IToken } from 'chevrotain';
 import { format, lint, type Diagnostic, type Fix, type LintConfig } from '../src/index.js';
-import { COMMENT_GROUP, LINE_BREAK, WHITESPACE_GROUP, lexer } from '../src/lexer.js';
+import {
+  COMMENT_GROUP,
+  LINE_BREAK,
+  WHITESPACE_GROUP,
+  blockCommentToken,
+  lexer,
+  lineCommentToken,
+  remTextToken,
+  setValueToken,
+  sqlCommandToken,
+  stringLiteralToken,
+  traceMessageToken,
+} from '../src/lexer.js';
 import { runFormatLoop } from '../src/runner.js';
 import { recommended } from '../src/rules/index.js';
+import { blockCommentBodies, isSlashLedLineComment } from '../src/rules/utils/comments.js';
 
 /*
  * Properties every script must keep under `recommended`, whatever it contains.
@@ -86,6 +99,100 @@ export function unaccountedLexErrors(before: string, after: string): string[] {
 /** Every lex error formatting `source` introduces. */
 export function newLexErrors(source: string): string[] {
   return unaccountedLexErrors(source, format(source, recommended).output);
+}
+
+/*
+ * Text the script hands on as written: the command a database reads, the value a
+ * Set holds, the message a Trace prints, a string. No rule may change a character
+ * of it, so the same texts come out, in the same order, as went in.
+ *
+ * An include is not among them — one rule is there to take the spaces out of its
+ * `=` — and neither is a remark, which may turn into a comment; its words are
+ * followed by `changedCommentWords` instead.
+ */
+const OPAQUE = [sqlCommandToken, setValueToken, traceMessageToken, stringLiteralToken];
+
+function opaqueTexts(source: string): string[] {
+  return lexer
+    .tokenize(source)
+    .tokens.filter((token) => OPAQUE.some((type) => tokenMatcher(token, type)))
+    .map((token) => token.image);
+}
+
+const EXCERPT = 24;
+
+/* The stretch around where two texts first differ, short enough to read in a report. */
+function excerpt(text: string, at: number): string {
+  const start = Math.max(0, at - EXCERPT);
+
+  return `${start > 0 ? '…' : ''}${JSON.stringify(text.slice(start, at + EXCERPT))}${at + EXCERPT < text.length ? '…' : ''}`;
+}
+
+/* Where two sequences part, as readable lines; empty when they are the same. */
+function divergence(label: string, before: readonly string[], after: readonly string[]): string[] {
+  for (let i = 0; i < Math.max(before.length, after.length); i++) {
+    const was = before[i];
+    const is = after[i];
+
+    if (was === is) {
+      continue;
+    }
+
+    if (was === undefined || is === undefined) {
+      return [`${label} ${i + 1} ${was === undefined ? 'appeared' : 'went missing'}: ${excerpt(was ?? is ?? '', 0)}`];
+    }
+
+    let at = 0;
+
+    while (at < was.length && was[at] === is[at]) {
+      at++;
+    }
+
+    return [`${label} ${i + 1} changed: was ${excerpt(was, at)}, is ${excerpt(is, at)}`];
+  }
+
+  return [];
+}
+
+export function changedOpaqueTexts(before: string, after: string): string[] {
+  return divergence('opaque text', opaqueTexts(before), opaqueTexts(after));
+}
+
+/** Every text formatting `source` changes that it must hand on as written. */
+export function changedOpaqueContent(source: string): string[] {
+  return changedOpaqueTexts(source, format(source, recommended).output);
+}
+
+/*
+ * The words of every comment and remark, in order. What a comment is written
+ * with — `//`, `/* … *\/`, its ` *` rail, `Rem … ;` — and how its words are
+ * spaced and broken may change; the words themselves may not. A line opening
+ * with a third slash is kept exactly as written, so it counts as one word,
+ * markers and spacing included.
+ */
+function commentWords(source: string): string[] {
+  const result = lexer.tokenize(source);
+  const remarks = result.tokens.filter((token) => tokenMatcher(token, remTextToken));
+  const words = (text: string): string[] => text.split(/\s+/).filter((word) => word !== '');
+
+  return [...(result.groups[COMMENT_GROUP] ?? []), ...remarks]
+    .sort((a, b) => a.startOffset - b.startOffset)
+    .flatMap((token) => {
+      if (tokenMatcher(token, lineCommentToken)) {
+        return isSlashLedLineComment(token.image) ? [token.image] : words(token.image.slice(2));
+      }
+
+      return words(tokenMatcher(token, blockCommentToken) ? blockCommentBodies(token.image).join(' ') : token.image);
+    });
+}
+
+export function changedCommentWords(before: string, after: string): string[] {
+  return divergence('comment word', commentWords(before), commentWords(after));
+}
+
+/** Every comment word formatting `source` loses, adds or changes. */
+export function changedCommentContent(source: string): string[] {
+  return changedCommentWords(source, format(source, recommended).output);
 }
 
 /*
