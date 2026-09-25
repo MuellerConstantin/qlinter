@@ -29,6 +29,7 @@
 | [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.          |
 | [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.            |
 | [no-multiple-empty-lines](#no-multiple-empty-lines)       | Limit how many consecutive empty lines may appear.             |
+| [no-rem](#no-rem)                                         | Write a remark as a `//` comment instead of a `Rem` statement. |
 | [one-statement-per-line](#one-statement-per-line)         | Require each statement to start on its own line.               |
 | [operator-spacing](#operator-spacing)                     | Require exactly one space around binary operators.             |
 | [padded-blocks](#padded-blocks)                           | Pad the inside edges of a block with a blank line.             |
@@ -81,7 +82,8 @@ The command runs to the first `;`, the same way a `Trace` message does.
 **The text of a `Rem` is kept exactly as written.** A `Rem` is a comment written
 as a statement: everything between the keyword and the next `;` is remark text,
 so it is not spaced, recased or rebroken, whatever script words it happens to
-contain. The keyword itself is recased like any other.
+contain. The keyword itself is recased like any other, and
+[no-rem](#no-rem) moves the remark into a `//` comment — its words unchanged.
 
 ```qlik
 Rem ===== Begin of the calendar section =====;
@@ -2492,6 +2494,73 @@ SET vYear = 2026;
 
 
 SET vMonth = 6;
+```
+
+---
+
+## no-rem
+
+Write a remark as a `//` comment instead of a `Rem` statement.
+
+### Rule Details
+
+Qlik offers three ways to comment a script: `//` to the end of the line,
+`/* … */` around any stretch, and the `Rem` statement, whose remark runs from the
+keyword to the next `;`
+([Rem](https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/Rem.htm)).
+`Rem` is current and fully supported, but it is the odd one out: it reads like a
+statement, ends at a semicolon a reader can easily miss, and is handled by none
+of the comment rules. Writing every remark as a comment keeps one way of saying
+one thing.
+
+The autofix writes the remark as a line comment and drops the `;` that ended it.
+A remark over several lines becomes one `//` line per line, at the indent the
+`Rem` stood at. Several remarks in a row become several line comments, which
+[multiline-comment-block](#multiline-comment-block) then folds into one block —
+so a stack of `REM` lines ends up as a single `/* … */` after a format pass.
+
+A remark is flagged but **not rewritten** where the rewrite would change more
+than the syntax:
+
+- **It holds a dollar-sign expansion** (`$(…)`). The reference does not say
+  whether Qlik expands one inside a remark, nor inside a line comment, so
+  moving it from one to the other could change what runs.
+- **It would become a disable directive.** `Rem qlinter-disable-next-line …` is
+  prose to qlinter; as `// qlinter-disable-next-line …` it would start
+  suppressing findings nobody asked to suppress.
+- **Something follows its `;` on the same line.** A line comment would swallow
+  it. Once that statement stands on a line of its own, the remark is rewritten.
+- **It shares its line with the statement before it** (`Exit Script; REM why;`).
+  [one-statement-per-line](#one-statement-per-line) moves it onto a line of its
+  own first, and the rewrite follows there. Waiting for that keeps a single way
+  to the result, whatever order the rules are configured in.
+
+A `Rem` where no statement begins is not a remark at all, and is not flagged:
+`Rem` is a statement, so in `LOAD a, REM, b RESIDENT MyTable;` the word is a
+field name. Rewriting it would comment out the rest of the `Load`.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+REM Default configuration for the calendar;
+Let vYear = 2026;
+
+REM Quarters are numbered from the start of the fiscal year;
+REM which begins in April;
+Let vFirstMonth = 4;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+// Default configuration for the calendar
+Let vYear = 2026;
+
+/*
+ * Quarters are numbered from the start of the fiscal year
+ * which begins in April
+ */
+Let vFirstMonth = 4;
 ```
 
 ---

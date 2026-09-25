@@ -1,0 +1,13 @@
+REM Default configuration for the calendar;
+Let vYear = 2026;
+
+REM Quarters are numbered from the start of the fiscal year;
+REM which begins in April;
+Let vFirstMonth = 4;
+
+Sub LoadCalendar
+
+    REM Builds one row per day;
+    Let vDays = 365;
+
+End Sub

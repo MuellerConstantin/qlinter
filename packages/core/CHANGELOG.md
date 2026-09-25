@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `no-rem` writes a remark as a `//` comment instead of a `Rem` statement, so a
+  script has one way of saying one thing. Several remarks in a row become line
+  comments that `multiline-comment-block` then folds into one block. A remark
+  holding a dollar-sign expansion, one that would turn into a disable
+  directive, and one sharing its line with another statement are flagged but
+  left as written; a `Rem` where no statement begins — a field of that name in a
+  `Load` — is not flagged at all.
 - `conformanceScore(source, diagnostics)` reduces a lint result to a single
   number from 0 to 100: the share of lines that no diagnostic points at, rounded
   down so 100 means every line is clean. Every line counts, blank and comment

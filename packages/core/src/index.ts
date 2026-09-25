@@ -42,6 +42,7 @@ export {
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
+  noRem,
   semicolonSpace,
   paddedBlocks,
   trailingWhitespace,

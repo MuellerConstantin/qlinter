@@ -1,0 +1,14 @@
+// Default configuration for the calendar
+Let vYear = 2026;
+
+/*
+ * Quarters are numbered from the start of the fiscal year
+ * which begins in April
+ */
+Let vFirstMonth = 4;
+
+// A name that starts with Rem is not a Rem.
+[Remarks]:
+Load
+    Remark
+From [lib://Data/remarks.qvd] (qvd);

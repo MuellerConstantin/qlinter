@@ -2,7 +2,7 @@ import { tokenMatcher } from 'chevrotain';
 import { describe, expect, it } from 'vitest';
 import { format } from '../../src/index.js';
 import { keywordToken, lexer, remKeywordToken, semicolonToken } from '../../src/lexer.js';
-import { builtinKeywordCase, recommended } from '../../src/rules/index.js';
+import { builtinKeywordCase } from '../../src/rules/index.js';
 import { lintRule } from '../support.js';
 
 /*
@@ -56,8 +56,9 @@ describe('rem_body lexer mode', () => {
 describe('rules + rem_body interaction', () => {
   it('formats nothing inside the remark', () => {
     const source = 'Rem ===== Begin of Qvc.qvs version 11.3 =====;\n';
+    const keepingRem = { presets: 'recommended', rules: { 'no-rem': 'off' } } as const;
 
-    expect(format(source, recommended).output).toBe(source);
+    expect(format(source, keepingRem).output).toBe(source);
   });
 
   it('still recases the keyword', () => {

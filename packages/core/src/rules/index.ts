@@ -26,6 +26,7 @@ import { noBlankLineInStatement } from './no-blank-line-in-statement.js';
 import { noLeadingBlankLines } from './no-leading-blank-lines.js';
 import { noLegacyPathVariables } from './no-legacy-path-variables.js';
 import { noMultipleEmptyLines } from './no-multiple-empty-lines.js';
+import { noRem } from './no-rem.js';
 import { oneStatementPerLine } from './one-statement-per-line.js';
 import { operatorSpacing } from './operator-spacing.js';
 import { paddedBlocks } from './padded-blocks.js';
@@ -84,6 +85,7 @@ export const allRules = [
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
+  noRem,
   oneStatementPerLine,
   operatorSpacing,
   paddedBlocks,
@@ -193,6 +195,7 @@ export {
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
+  noRem,
   oneStatementPerLine,
   operatorSpacing,
   paddedBlocks,
