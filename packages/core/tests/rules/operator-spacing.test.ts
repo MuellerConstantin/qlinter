@@ -21,7 +21,7 @@ describe('operator-spacing', () => {
   });
 
   it('flags a missing space on both sides of "="', () => {
-    const diagnostics = lintRule('SET x=1;\n', operatorSpacing);
+    const diagnostics = lintRule('LET x=1;\n', operatorSpacing);
 
     expect(diagnostics).toHaveLength(2);
     expect(diagnostics[0].message).toBe("Expected a space before '='.");
@@ -84,9 +84,9 @@ describe('operator-spacing', () => {
   });
 
   it('autofixes missing spaces around "="', () => {
-    const result = formatRule('SET x=1;\n', operatorSpacing);
+    const result = formatRule('LET x=1;\n', operatorSpacing);
 
-    expect(result.output).toBe('SET x = 1;\n');
+    expect(result.output).toBe('LET x = 1;\n');
     expect(result.fixed).toBe(2);
     expect(result.diagnostics).toEqual([]);
   });
@@ -105,5 +105,27 @@ describe('operator-spacing', () => {
     expect(result.output).toBe('LET x = If(a >= b, 1, 0);\n');
     expect(result.fixed).toBe(2);
     expect(result.diagnostics).toEqual([]);
+  });
+
+  /*
+   * A Set assigns the text to the right of its `=` verbatim, and the reference
+   * does not say which blanks there belong to the value.
+   *
+   * @see https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/work-with-variables-in-data-load-editor.htm
+   */
+  describe('the = of a Set', () => {
+    it('still spaces the side of the name', () => {
+      const result = formatRule('SET x= 1;\n', operatorSpacing);
+
+      expect(result.output).toBe('SET x = 1;\n');
+    });
+
+    it('leaves the side of the value as written', () => {
+      expect(lintRule('SET x =1;\nSET y =   1;\nSET z =\t1;\n', operatorSpacing)).toEqual([]);
+    });
+
+    it('leaves an empty value empty', () => {
+      expect(lintRule('SET x =;\n', operatorSpacing)).toEqual([]);
+    });
   });
 });

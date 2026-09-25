@@ -866,6 +866,41 @@ export const sqlSelectToken = createToken({
 });
 
 /*
+ * A Set assigns "the text to the right of the equal sign" to its variable
+ * without evaluating it — `set x = 3 + 4;` holds `'3 + 4'` — so a space or a
+ * comma rewritten there is a different value. Everything after the Set's `=` up
+ * to the terminator is therefore one opaque token, the blanks at either end
+ * included: the reference shows one space after `=` falling outside the value,
+ * but says nothing of more, of a tab, or of blanks before the `;`.
+ *
+ * The keyword opens a head in which the name lexes as usual; its `=` closes the
+ * head and opens the value. A Let evaluates its right-hand side and stays
+ * ordinary script.
+ *
+ * A `;` inside quotes does not end the value — the reference's own
+ * `Set MoneyFormat='$ #,##0.00; ($ #,##0.00)';` carries one — so a quoted or
+ * bracketed stretch is taken whole. A quote left open falls back to a single
+ * character, and the value then ends at the next `;` as it would otherwise.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/Set.htm | Set}
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/work-with-variables-in-data-load-editor.htm | Variables in the data load editor}
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/NumberInterpretationVariables/MoneyFormat.htm | MoneyFormat}
+ */
+export const setKeywordToken = createToken({
+  name: 'SetKeyword',
+  pattern: /Set\b/i,
+  longer_alt: identifierToken,
+  categories: [keywordToken],
+  push_mode: 'set_head',
+});
+
+export const setValueToken = createToken({
+  name: 'SetValue',
+  pattern: /(?:'(?:[^']|'')*'|"(?:[^"]|"")*"|\[(?:[^\]]|\]\])*\]|[^;'"[]|['"[])+/,
+  line_breaks: true,
+});
+
+/*
  * `$(Include=…)` / `$(Must_Include=…)` is not an assignment but a fixed dollar
  * expansion form. Qlik matches the literal `Include=` and explicitly forbids a
  * space on either side of the `=` — "Do not put a space character before or
@@ -950,6 +985,29 @@ export const sqlEndToken = createToken({
 
 export const commaToken = createToken({ name: 'Comma', pattern: /,/ });
 export const equalsToken = createToken({ name: 'Equals', pattern: /=/ });
+
+export const setEqualsToken = createToken({
+  name: 'SetEquals',
+  pattern: /=/,
+  pop_mode: true,
+  push_mode: 'set_value',
+  categories: [equalsToken],
+});
+
+/* A Set that ends before any `=` leaves its head the way it came in. */
+const setHeadEndToken = createToken({
+  name: 'SetHeadEnd',
+  pattern: /;/,
+  pop_mode: true,
+  categories: [semicolonToken],
+});
+
+export const setEndToken = createToken({
+  name: 'SetEnd',
+  pattern: /;/,
+  pop_mode: true,
+  categories: [semicolonToken],
+});
 export const punctuationToken = createToken({ name: 'Punctuation', pattern: /[(){}+\-*/<>.@&|?!%^]/ });
 
 /*
@@ -1021,6 +1079,7 @@ const defaultModeTokens = [
   traceKeywordToken,
   sqlKeywordToken,
   sqlSelectToken,
+  setKeywordToken,
   /*
    * Before the general keyword token so the structural keywords win, but after
    * builtinFunctionToken so `If(` still lexes as the function it is.
@@ -1040,7 +1099,34 @@ const traceBodyModeTokens = [traceEndToken, traceMessageToken];
 
 const sqlBodyModeTokens = [sqlEndToken, sqlSelectToken, sqlCommandToken];
 
-export const allTokens = [...defaultModeTokens, traceMessageToken, traceEndToken, sqlCommandToken, sqlEndToken];
+/*
+ * The name of a Set lexes as any other script, minus what would open a mode of
+ * its own; only its `=` and a stray `;` behave differently here.
+ */
+const setHeadModeTokens = [
+  ...defaultModeTokens.filter(
+    (token) =>
+      ![traceKeywordToken, sqlKeywordToken, sqlSelectToken, setKeywordToken, equalsToken, semicolonToken].includes(
+        token,
+      ),
+  ),
+  setEqualsToken,
+  setHeadEndToken,
+];
+
+const setValueModeTokens = [setEndToken, setValueToken];
+
+export const allTokens = [
+  ...defaultModeTokens,
+  traceMessageToken,
+  traceEndToken,
+  sqlCommandToken,
+  sqlEndToken,
+  setEqualsToken,
+  setHeadEndToken,
+  setValueToken,
+  setEndToken,
+];
 
 export const lexer = new Lexer(
   {
@@ -1048,6 +1134,8 @@ export const lexer = new Lexer(
       default_mode: defaultModeTokens,
       trace_body: traceBodyModeTokens,
       sql_body: sqlBodyModeTokens,
+      set_head: setHeadModeTokens,
+      set_value: setValueModeTokens,
     },
     defaultMode: 'default_mode',
   },

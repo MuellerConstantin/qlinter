@@ -78,6 +78,23 @@ SQL SELECT OrderId,Amount FROM dbo.Orders WHERE Amount>0;
 
 The command runs to the first `;`, the same way a `Trace` message does.
 
+**The value of a `Set` is kept exactly as written.** A `Set` assigns the text to
+the right of its `=` without evaluating it — `Set x = 3 + 4;` holds `3 + 4`, and
+`Set x = Today();` holds `Today()` — so a space, a comma or a letter's case
+rewritten there is a different value. Whether that text is later expanded into an
+expression, a path, a delimiter or an SQL fragment is decided where the variable
+is used, which no rule can see. So everything after the `=` up to the `;` is left
+alone, blanks at either end included: the reference shows a single space after
+the `=` falling outside the value, but says nothing of more, of a tab, or of
+blanks before the `;`. The keyword and the variable name are formatted as usual.
+A `Let` evaluates its right-hand side, which therefore stays ordinary script.
+
+```qlik
+Set vFields = OrderId,Amount;
+Set vEmpty =;
+Let vTotal = vA + vB;
+```
+
 ---
 
 ## blank-line-after-block
@@ -2588,6 +2605,9 @@ another concern:
   space may appear on either side of it, so a space there is a syntax error in
   the Data Load Editor rather than a style choice. The whole expansion is
   tokenized as one unit and never touched.
+- The `=` of a `Set` is spaced on the side of the name only. What follows it is
+  the variable's value, taken verbatim, and a blank there may be part of it (see
+  [Text no rule touches](#text-no-rule-touches)).
 
 Arithmetic operators (`+`, `-`, `*`, `/`) are intentionally **out of scope**.
 `+` and `-` are ambiguously unary (`LET x = -1`), and `*` doubles as the
@@ -2600,7 +2620,8 @@ so `vX=1`, `vX =1`, and `vX  =  1` all converge on `vX = 1` in one format pass.
 Examples of **incorrect** code for this rule:
 
 ```qlik
-SET vYear=2026;
+LET vYear=2026;
+SET vStart= 2025;
 LET vFlag = If(vYear>=2025, 'new', 'old');
 LET vLabel = 'Year: '&vYear;
 LET vGap = vYear  &  ' end';
@@ -2609,7 +2630,9 @@ LET vGap = vYear  &  ' end';
 Examples of **correct** code for this rule:
 
 ```qlik
-SET vYear = 2026;
+LET vYear = 2026;
+SET vStart = 2025;
+SET vEnd =2030;
 LET vFlag = If(vYear >= 2025, 'new', 'old');
 LET vLabel = 'Year: ' & vYear;
 LET vEval = $(=Max(OrderDate));

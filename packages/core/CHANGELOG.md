@@ -75,6 +75,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   connector command that is not SQL at all, such as the JSON a SAP connector
   takes. The command now lexes as one opaque token up to its `;`, the way a
   `Trace` message does, and reaches the database exactly as written.
+- The value of a `Set` is no longer formatted. A `Set` assigns the text right of
+  its `=` without evaluating it, yet the rules spaced `a,b` into `a, b` and so
+  changed what the variable holds. Two of them also fought over the empty value
+  in `Set vX =;` — one inserting a space after the `=`, the other removing the
+  space before the `;` — until `format` gave up and threw, which ended a CLI
+  `--fix` run on the first script carrying one. Everything after a Set's `=` up to
+  its `;` now lexes as one opaque token, and `operator-spacing` spaces that `=` on
+  the side of the name only.
 
 ### Added
 
