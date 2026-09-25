@@ -29,3 +29,5 @@ Load
     // The amount already includes tax.
     Amount
 From [lib://Data/sales.qvd] (qvd);
+
+// Below the last line of code, a comment sits at that line's level.

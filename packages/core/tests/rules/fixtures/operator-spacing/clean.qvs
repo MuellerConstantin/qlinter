@@ -26,3 +26,7 @@ Load
         as Label
 Resident [Raw]
 Where Amount > 0;
+
+// An empty assignment clears a variable; the gap before its ; is the terminator's.
+Let vCleared =;
+Set vAlsoCleared =;

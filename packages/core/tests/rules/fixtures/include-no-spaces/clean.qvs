@@ -8,3 +8,7 @@ $(Must_Include=[lib://Data Files/my helpers.qvs]);
 
 // An evaluation expansion is a different construct entirely.
 LET vEval = $(=Max(OrderDate));
+
+// A file name built from variables stays part of the include.
+$(Must_Include=$(vScriptPath)common.qvs);
+$(Must_Include=[$(vScriptPath)Common/helpers.qvs]);

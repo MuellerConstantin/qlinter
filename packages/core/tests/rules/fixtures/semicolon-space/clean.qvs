@@ -9,3 +9,6 @@ Resident Src;
 Trace loading sales   ;
 
 Drop Table Src;
+
+// A ; inside the quotes of a Set value is part of the value, not its end.
+Set vMoneyFormat = '#,##0.00 €;-#,##0.00 €';

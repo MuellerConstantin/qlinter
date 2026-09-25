@@ -11,3 +11,14 @@ Sub LoadCalendar
     Let vDays = 365;
 
 End Sub
+
+If vSourceMissing = 1 Then
+
+    Exit Script;	REM The load cannot continue without a source;
+
+EndIf
+
+REM Builds the calendar table;
+// One row per day.
+// Rebuilt on every reload.
+Let vCalendarReady = 1;

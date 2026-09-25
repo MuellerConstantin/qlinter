@@ -9,7 +9,7 @@ describe('no-rem', () => {
     const diagnostics = lintFixture('violation', noRem);
 
     expect(diagnostics[0]).toMatchObject({ ruleId: 'no-rem', severity: 'warning' });
-    expect(diagnostics.map((diagnostic) => diagnostic.range.start.line)).toEqual([1, 4, 5, 10]);
+    expect(diagnostics.map((diagnostic) => diagnostic.range.start.line)).toEqual([1, 4, 5, 10, 17, 21]);
   });
 
   it('does not flag the clean fixture', () => {
@@ -24,6 +24,10 @@ describe('no-rem', () => {
       '/*\n * Quarters are numbered from the start of the fiscal year\n * which begins in April\n */\n',
     );
     expect(output).toContain('    // Builds one row per day\n');
+    expect(output).toContain('    Exit Script;\n    // The load cannot continue without a source\n');
+    expect(output).toContain(
+      '/*\n * Builds the calendar table\n * One row per day.\n * Rebuilt on every reload.\n */\n',
+    );
     expect(output).not.toMatch(/\bRem\b/i);
   });
 

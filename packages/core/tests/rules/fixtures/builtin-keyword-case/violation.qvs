@@ -2,3 +2,8 @@
 LOAD
     Sum(Value) as Total
 Resident [TableA];
+
+// Words inside a SQL command are the database's, not Qlik keywords.
+SQL SELECT OrderId FROM dbo.Orders WHERE Amount > 0;
+
+select OrderId from dbo.Orders;

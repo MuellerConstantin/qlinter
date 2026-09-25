@@ -19,3 +19,15 @@ Trace loading a,b,c;
 LET vBefore = If(vSum > 0, 'pos', 'neg');
 LOAD A, B, C
 FROM [lib://x/y.qvd];
+
+// A Set holds its value as written, commas and all.
+Set vFieldList = OrderId,Amount;
+
+// The text of a SQL statement goes to the database as written.
+SQL SELECT OrderId,Amount FROM dbo.Orders WHERE Amount>0;
+
+// A connector command need not be SQL at all.
+SQL {
+  "function": "/Vendor/GET_ROWS",
+  "values": [ [ "" ], [ "" ] ]
+};
