@@ -1,52 +1,9 @@
-import { LINE_BREAK, blockCommentToken } from '../lexer.js';
+import { blockCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { blockCommentFrom } from './utils/comments.js';
+import { blockCommentBodies, blockCommentFrom } from './utils/comments.js';
 import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
 import { detectLineEnding } from '../lines.js';
-
-const LEADING_WS = /^[ \t]*/;
-const TRAILING_WS = /[ \t]+$/;
-
-/*
- * Reformat a multi-line block comment into the canonical rail shape: strip
- * whatever prefix each line carries down to its body, then hand the bodies back
- * to the one place that knows how the rail is drawn. The function is idempotent
- * — re-running it on its own output is a no-op.
- */
-function normalizeBlockComment(text: string, indent: string): string {
-  const eol = detectLineEnding(text);
-
-  const inner = text.slice(2, -2);
-  const rawLines = inner.split(LINE_BREAK);
-  const bodies: string[] = [];
-
-  for (let i = 0; i < rawLines.length; i++) {
-    let line = rawLines[i];
-
-    if (i === 0) {
-      line = line.replace(LEADING_WS, '');
-    } else {
-      line = line.replace(LEADING_WS, '');
-
-      if (line.startsWith('*')) {
-        line = line.slice(1);
-      }
-
-      if (line.startsWith(' ') || line.startsWith('\t')) {
-        line = line.slice(1);
-      }
-    }
-
-    if (i === rawLines.length - 1) {
-      line = line.replace(TRAILING_WS, '');
-    }
-
-    bodies.push(line);
-  }
-
-  return blockCommentFrom(bodies, indent, eol);
-}
 
 export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {
   id: 'block-comment-stars',
@@ -79,7 +36,7 @@ export const blockCommentStars: Rule<undefined, 'block-comment-stars'> = {
       const beforeOpen = indent === undefined || isLineBreak(indent) ? '' : indent.image;
 
       const text = token.image;
-      const normalized = normalizeBlockComment(text, beforeOpen);
+      const normalized = blockCommentFrom(blockCommentBodies(text), beforeOpen, detectLineEnding(text));
 
       if (text === normalized) {
         continue;

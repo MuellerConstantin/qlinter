@@ -1,9 +1,8 @@
 import { blockCommentToken, lineCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { isSlashLedLineComment } from './utils/comments.js';
+import { isBannerBlockComment, isSlashLedLineComment } from './utils/comments.js';
 
-const BLOCK_BANNER = /^\*+$/;
 const WHITESPACE_HEAD = /^\s/;
 const WHITESPACE_TAIL = /\s$/;
 
@@ -39,7 +38,7 @@ export const commentSpace: Rule<undefined, 'comment-space'> = {
 
       const inner = token.image.slice(2, -2);
 
-      if (inner.length === 0 || BLOCK_BANNER.test(inner)) {
+      if (inner.length === 0 || isBannerBlockComment(token.image)) {
         continue;
       }
 

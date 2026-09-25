@@ -1,3 +1,5 @@
+import { LINE_BREAK } from '../../lexer.js';
+
 /*
  * A line comment whose body opens with a further slash. That covers the divider
  * of nothing but slashes a script draws between its stages, and the `///$tab`
@@ -10,6 +12,46 @@
  */
 export function isSlashLedLineComment(image: string): boolean {
   return image.startsWith('///');
+}
+
+const BLOCK_BANNER = /^\*+$/;
+
+/*
+ * A block comment of nothing but asterisks between its markers: a divider, not
+ * prose. Two rules read it the same way — one accepts it as written, the other
+ * declines to fold it into a larger block.
+ */
+export function isBannerBlockComment(image: string): boolean {
+  return BLOCK_BANNER.test(image.slice(2, -2));
+}
+
+const LEADING_WS = /^[ \t]*/;
+const TRAILING_WS = /[ \t]+$/;
+
+/*
+ * The body of each line of a block comment, with whatever prefix a line carries
+ * — its indent, and a ' *' rail — taken off. The inverse of
+ * {@link blockCommentFrom}: feeding its result back in draws the same comment on
+ * the canonical rail.
+ */
+export function blockCommentBodies(image: string): string[] {
+  const rows = image.slice(2, -2).split(LINE_BREAK);
+
+  return rows.map((row, index) => {
+    let body = row.replace(LEADING_WS, '');
+
+    if (index > 0) {
+      if (body.startsWith('*')) {
+        body = body.slice(1);
+      }
+
+      if (body.startsWith(' ') || body.startsWith('\t')) {
+        body = body.slice(1);
+      }
+    }
+
+    return index === rows.length - 1 ? body.replace(TRAILING_WS, '') : body;
+  });
 }
 
 /*
