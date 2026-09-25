@@ -38,6 +38,12 @@ Bindings stay thin by design: they handle their platform concerns (file discover
 exit codes in the CLI, editor injection in the extension) and delegate every linting and
 formatting decision to Core.
 
+Reading a file is one of those concerns, and so is its encoding. Core takes the script
+as decoded text, without a byte order mark: a BOM says how the file is stored, not what
+the script says, and Core would read it as a character at the start of line 1. A
+binding that reads files decodes them, drops the BOM, and puts it back when it writes —
+on Windows, Qlik reads a script as UTF-8 only when the file starts with one.
+
 ## Features
 
 - **Lint** — surface style violations (whitespace, keyword casing, statement conventions)
