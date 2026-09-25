@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { format } from '../src/index.js';
+import { lexer } from '../src/lexer.js';
 import {
   tableLabelBrackets,
   builtinFunctionCase,
@@ -169,6 +170,17 @@ describe('format', () => {
     for (const fixture of allFixtures()) {
       it(`introduces no lex error into ${fixture}`, () => {
         expect(newLexErrors(fixtureSource(fixture))).toEqual([]);
+      });
+    }
+
+    /*
+     * A fixture is valid Qlik, so a character the lexer skips in one is the
+     * lexer misreading it. Without this, a construct the lexer reads wrong
+     * passes every sweep above: formatting a misread script adds no new error.
+     */
+    for (const fixture of allFixtures()) {
+      it(`reads ${fixture} without a lex error`, () => {
+        expect(lexer.tokenize(fixtureSource(fixture)).errors).toEqual([]);
       });
     }
   });
