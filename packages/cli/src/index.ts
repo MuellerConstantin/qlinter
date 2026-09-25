@@ -49,6 +49,20 @@ function collectScriptFiles(target: string): string[] {
   return out;
 }
 
+/*
+ * A script that is not UTF-8 cannot be read without guessing its encoding, and
+ * written back as UTF-8 it would lose every character the guess got wrong. It is
+ * skipped rather than read.
+ *
+ * `ignoreBOM` keeps a byte order mark in the text, so a file that has one still
+ * has it after `--fix`. On Windows Qlik reads a script as UTF-8 only when it
+ * starts with one and assumes ANSI otherwise, so dropping it would change how
+ * every non-ASCII character of the script is read.
+ *
+ * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/SystemVariables/Include.htm | Include — Limitations}
+ */
+const UTF8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+
 function stylish(file: string, d: Diagnostic): string {
   const { line, column } = d.range.start;
   return `  ${relative(process.cwd(), file)}:${line}:${column}  ${d.severity}  ${d.ruleId}  ${d.message}`;
@@ -110,9 +124,22 @@ function main(): void {
   let errors = 0;
   let warnings = 0;
   let fixedTotal = 0;
+  let skipped = 0;
 
   for (const file of files) {
-    const source = readFileSync(file, 'utf8');
+    const bytes = readFileSync(file);
+    let source: string;
+
+    try {
+      source = UTF8.decode(bytes);
+    } catch {
+      console.error(
+        `${relative(process.cwd(), file)}: not valid UTF-8, skipped. Save it as UTF-8 with a byte order mark to lint it.`,
+      );
+      skipped++;
+      continue;
+    }
+
     let diagnostics: Diagnostic[];
 
     if (values.fix) {
@@ -148,10 +175,12 @@ function main(): void {
 
   if (values.format !== 'json') {
     const fixedNote = values.fix ? `, ${fixedTotal} fix(es) applied` : '';
-    console.log(`\n${errors} error(s), ${warnings} warning(s) in ${files.length} file(s)${fixedNote}.`);
+    const skippedNote = skipped > 0 ? `, ${skipped} file(s) skipped` : '';
+    console.log(`\n${errors} error(s), ${warnings} warning(s) in ${files.length} file(s)${fixedNote}${skippedNote}.`);
   }
 
-  process.exit(errors > 0 ? 1 : 0);
+  // A skipped file was never checked, so the run cannot vouch for it whatever the others found.
+  process.exit(skipped > 0 ? 2 : errors > 0 ? 1 : 0);
 }
 
 main();

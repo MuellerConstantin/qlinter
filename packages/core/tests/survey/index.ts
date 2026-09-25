@@ -44,6 +44,8 @@ function inputLexErrors(source: string): string[] {
     );
 }
 
+const UTF8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+
 interface Finding {
   file: string;
   check: string;
@@ -90,10 +92,14 @@ function main(): void {
 
   files.forEach((path, index) => {
     const file = relative(dir, path);
-    const source = readFileSync(path, 'utf8');
+    let source: string;
 
-    if (source.includes('�')) {
-      findings.push({ file, check: 'not-utf8', detail: 'read as UTF-8 with replacement characters' });
+    // Decoded the way the CLI decodes, which skips a script that is not UTF-8 rather than reading it.
+    try {
+      source = UTF8.decode(readFileSync(path));
+    } catch {
+      findings.push({ file, check: 'not-utf8', detail: 'not valid UTF-8, the CLI skips it' });
+      return;
     }
 
     for (const detail of inputLexErrors(source)) {

@@ -140,4 +140,4 @@ qlinter --config qlinter.json --quiet --format json src/
 | ---- | ---------------------------------------------------------------------- |
 | `0`  | No errors. Files were clean, or only `warning`/`info` diagnostics were reported. |
 | `1`  | At least one `error`-level diagnostic was reported.                    |
-| `2`  | Usage error — no targets given, path not found, or no `.qvs` files matched. |
+| `2`  | Usage error — no targets given, path not found, or no `.qvs` files matched — or a script was skipped because it is not valid UTF-8. |

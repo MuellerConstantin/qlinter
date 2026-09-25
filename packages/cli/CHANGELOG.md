@@ -33,3 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--help` / `-h` flag printing usage.
 - Exit codes suitable for CI: `0` when no errors, `1` when errors are present,
   `2` for invalid usage, a missing/invalid config, or missing input paths.
+
+### Fixed
+
+- A script that is not valid UTF-8 is skipped instead of read. The CLI decoded
+  every file as UTF-8, so a script saved in a legacy encoding — Windows-1252, as
+  QlikView-era scripts often are — had each character outside ASCII turned into
+  `�`, and `--fix` wrote that back, destroying every umlaut in the file for good.
+  Such a file is now reported on stderr, left untouched, and makes the run exit
+  with `2`, since it was never checked; the other files of the run are still
+  linted. The message asks for UTF-8 _with_ a byte order mark, because on Windows
+  Qlik reads a script without one as ANSI; for the same reason a byte order mark
+  is kept through `--fix`, as before.

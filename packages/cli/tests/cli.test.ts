@@ -202,6 +202,51 @@ describe('--fix', () => {
   });
 });
 
+describe('encoding', () => {
+  /* `Let x = 'Größe';   ` in Windows-1252, as a QlikView-era script is often saved. */
+  const ansi = Buffer.from([...Buffer.from("Let x = 'Gr", 'latin1'), 0xf6, 0xdf, ...Buffer.from("e';   \n", 'latin1')]);
+
+  it('skips a script that is not UTF-8 and fails the run', () => {
+    config('warning');
+    writeFileSync(join(dir, 'ansi.qvs'), ansi);
+
+    const { code, stderr } = run('--config', 'qlinter.json', 'ansi.qvs');
+
+    expect(code).toBe(2);
+    expect(stderr).toContain('ansi.qvs: not valid UTF-8, skipped');
+  });
+
+  it('never writes to a script it could not read', () => {
+    config('error');
+    writeFileSync(join(dir, 'ansi.qvs'), ansi);
+
+    run('--config', 'qlinter.json', '--fix', 'ansi.qvs');
+
+    expect(readFileSync(join(dir, 'ansi.qvs'))).toEqual(ansi);
+  });
+
+  it('still checks the other scripts of the run', () => {
+    config('error');
+    writeFileSync(join(dir, 'ansi.qvs'), ansi);
+    const path = write('utf8.qvs', 'SET x = 1;   \n');
+
+    const { code, stdout } = run('--config', 'qlinter.json', '--fix', '.');
+
+    expect(code).toBe(2);
+    expect(readFileSync(path, 'utf8')).toBe('SET x = 1;\n');
+    expect(stdout).toContain('1 file(s) skipped');
+  });
+
+  it('keeps a byte order mark through --fix', () => {
+    config('error');
+    const path = write('bom.qvs', '﻿SET x = 1;   \n');
+
+    run('--config', 'qlinter.json', '--fix', 'bom.qvs');
+
+    expect(readFileSync(path, 'utf8')).toBe('﻿SET x = 1;\n');
+  });
+});
+
 describe('init', () => {
   it('creates a config naming the recommended preset', () => {
     const { code, stdout } = run('init');
