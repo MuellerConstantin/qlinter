@@ -1,7 +1,7 @@
 import { commaToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { contentInOrder } from './utils/gaps.js';
+import { contentInOrder, ownsGapBefore } from './utils/gaps.js';
 import { closesLine, gapRuns, horizontalGap, opensLine } from './utils/whitespace.js';
 
 export const commaSpace: Rule<undefined, 'comma-space'> = {
@@ -38,8 +38,8 @@ export const commaSpace: Rule<undefined, 'comma-space'> = {
         }
       }
 
-      /* A comma closing its line has nothing after it to be separated from. */
-      if (next === undefined || closesLine(whitespaces, lines, token)) {
+      /* A comma closing its line, or its statement, has nothing after it to be separated from. */
+      if (next === undefined || ownsGapBefore(next) || closesLine(whitespaces, lines, token)) {
         continue;
       }
 

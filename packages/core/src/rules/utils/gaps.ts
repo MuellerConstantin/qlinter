@@ -30,6 +30,19 @@ export function isWord(token: IToken): boolean {
 }
 
 /*
+ * The gap before a `;` belongs to the `;`.
+ *
+ * Two marks side by side would each own the gap between them, and the rule for
+ * the one on the left asks for a space the rule for the terminator removes — so
+ * `Let x =;` never settled. The terminator decides: whatever a statement ends
+ * on, nothing stands between it and its `;`, and the rule for the mark before it
+ * steps aside.
+ */
+export function ownsGapBefore(token: IToken | undefined): boolean {
+  return token !== undefined && tokenMatcher(token, semicolonToken);
+}
+
+/*
  * Tokens and comments in one stream, by position.
  *
  * What stands beside a gap is not only the next token: a comment counts as

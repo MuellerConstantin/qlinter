@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { operatorSpacing } from '../../src/rules/index.js';
+import { operatorSpacing, semicolonSpace } from '../../src/rules/index.js';
 import { lintFixture } from './helpers.js';
-import { formatRule, lintRule } from '../support.js';
+import { formatRule, formatRules, lintRule } from '../support.js';
 
 describe('operator-spacing', () => {
   it('flags operator-spacing problems in the violation fixture', () => {
@@ -126,6 +126,17 @@ describe('operator-spacing', () => {
 
     it('leaves an empty value empty', () => {
       expect(lintRule('SET x =;\n', operatorSpacing)).toEqual([]);
+    });
+  });
+
+  describe('before a ;', () => {
+    it('leaves the gap to the terminator', () => {
+      expect(lintRule('Let x =;\n', operatorSpacing)).toEqual([]);
+      expect(lintRule("Let x = 'a' &;\n", operatorSpacing)).toEqual([]);
+    });
+
+    it('settles an empty Let beside the terminator rule instead of trading fixes with it', () => {
+      expect(formatRules('Let x = ;\n', [operatorSpacing, semicolonSpace]).output).toBe('Let x =;\n');
     });
   });
 });

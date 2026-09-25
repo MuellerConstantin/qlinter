@@ -91,6 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `Let vX =;`, the empty assignment that clears a variable, no longer makes
+  `format` throw. `operator-spacing` asked for a space after the `=` and
+  `semicolon-space` removed it again, pass after pass, until the loop gave up —
+  and a comma or an operator right before a `;` did the same. The gap before a
+  `;` now belongs to the terminator alone: the rules for the mark before it step
+  aside, and the empty assignment keeps its form.
 - The command of a SQL statement is no longer formatted. Qlik hands the text after
   the `SQL` prefix — and a bare `Select`, whose prefix is optional — to the
   database driver unread, yet the rules treated it as Qlik: they recased

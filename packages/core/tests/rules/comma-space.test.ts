@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatRule, formatRules, lintRule } from '../support.js';
-import { commaSpace, commaStyle } from '../../src/rules/index.js';
+import { commaSpace, commaStyle, semicolonSpace } from '../../src/rules/index.js';
 import { lintFixture } from './helpers.js';
 
 describe('comma-space', () => {
@@ -196,5 +196,15 @@ describe('comma-space', () => {
     expect(result.output).toBe("LET x = If(1, 'a', 'b');\n");
     expect(result.fixed).toBe(2);
     expect(result.diagnostics).toEqual([]);
+  });
+
+  describe('before a ;', () => {
+    it('leaves the gap to the terminator', () => {
+      expect(lintRule('Load a,;\n', commaSpace)).toEqual([]);
+    });
+
+    it('settles beside the terminator rule instead of trading fixes with it', () => {
+      expect(formatRules('Load a, ;\n', [commaSpace, semicolonSpace]).output).toBe('Load a,;\n');
+    });
   });
 });

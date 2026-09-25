@@ -819,6 +819,8 @@ The rule is intentionally narrow:
   common multi-line case (`LOAD A,\n B,\n C`) — that side is left alone. Trailing
   whitespace after the comma but before the newline (`LOAD A,   \n B`) is the
   domain of [trailing-whitespace](#trailing-whitespace).
+- A comma directly before a `;` gets no space after it: that gap belongs to the
+  terminator, which [semicolon-space](#semicolon-space) keeps empty.
 - A comma that _opens_ its line is left alone entirely: which line a comma
   belongs on is a placement question owned by [comma-style](#comma-style), and
   flagging that line's indentation here would have the two rules fighting over
@@ -2763,6 +2765,9 @@ another concern:
   space may appear on either side of it, so a space there is a syntax error in
   the Data Load Editor rather than a style choice. The whole expansion is
   tokenized as one unit and never touched.
+- The gap between an operator and a `;` right after it belongs to the
+  terminator, and [semicolon-space](#semicolon-space) keeps it empty. An empty
+  `Let vX =;` — the form that clears a variable — therefore stays as it is.
 - The `=` of a `Set` is spaced on the side of the name only. What follows it is
   the variable's value, taken verbatim, and a blank there may be part of it (see
   [Text no rule touches](#text-no-rule-touches)).

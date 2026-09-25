@@ -2,7 +2,7 @@ import { tokenMatcher, type IToken } from 'chevrotain';
 import { equalsToken, punctuationToken, setEqualsToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { contentInOrder } from './utils/gaps.js';
+import { contentInOrder, ownsGapBefore } from './utils/gaps.js';
 import { closesLine, gapRuns, isLineBreak, opensLine } from './utils/whitespace.js';
 
 /*
@@ -121,11 +121,17 @@ export const operatorSpacing: Rule<undefined, 'operator-spacing'> = {
 
       /*
        * End of line — a wrapped expression, left to the indent rules. After a
-       * Set's `=` the value begins, and a blank there may be part of it.
+       * Set's `=` the value begins, and a blank there may be part of it. Before
+       * a `;` the gap is the terminator's.
        */
       const after = content[i + 1];
 
-      if (after !== undefined && !tokenMatcher(token, setEqualsToken) && !closesLine(whitespaces, lines, last)) {
+      if (
+        after !== undefined &&
+        !ownsGapBefore(after) &&
+        !tokenMatcher(token, setEqualsToken) &&
+        !closesLine(whitespaces, lines, last)
+      ) {
         const runs = sameLineGap(whitespaces, last, after);
 
         if (runs !== undefined) {
