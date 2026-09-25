@@ -30,6 +30,22 @@ export function isWord(token: IToken): boolean {
 }
 
 /*
+ * A line break outranks a space.
+ *
+ * The rules that place a token on a line of its own and the rules that space a
+ * gap can both reach for the same gap — one to break it, one to narrow it. That
+ * is settled without either knowing of the other, because every spacing rule
+ * only ever reads a gap that stays on one line: once the break is in, the gap is
+ * no longer theirs, and a space put in first is still a gap on one line that the
+ * break then replaces. Either way round, the break is what remains.
+ *
+ * A spacing rule therefore does not step aside for a token that is about to move
+ * to a line of its own. Whether one moves depends on which rules a config turns
+ * on, and a rule that asked would stop spacing that gap for everyone who keeps
+ * the token on its line.
+ */
+
+/*
  * The gap before a `;` belongs to the `;`.
  *
  * Two marks side by side would each own the gap between them, and the rule for

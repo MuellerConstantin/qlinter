@@ -1,6 +1,6 @@
 import type { IToken } from 'chevrotain';
 import { format, lint, type Diagnostic, type Fix, type LintConfig } from '../src/index.js';
-import { COMMENT_GROUP, WHITESPACE_GROUP, lexer } from '../src/lexer.js';
+import { COMMENT_GROUP, LINE_BREAK, WHITESPACE_GROUP, lexer } from '../src/lexer.js';
 import { runFormatLoop } from '../src/runner.js';
 import { recommended } from '../src/rules/index.js';
 
@@ -207,6 +207,16 @@ export function unsafeFixes(source: string): string[] {
   return out;
 }
 
+const BLANK = /^[ \t]*$/;
+
+/* One replacement breaks the line where the other only spaces it, and both are nothing but whitespace. */
+function breakAgainstSpace(a: string, b: string): boolean {
+  const breaks = (text: string): boolean =>
+    LINE_BREAK.test(text) && text.split(LINE_BREAK).every((part) => BLANK.test(part));
+
+  return (breaks(a) && BLANK.test(b)) || (breaks(b) && BLANK.test(a));
+}
+
 /*
  * Two rules rewriting one stretch of existing text into different things.
  *
@@ -220,6 +230,10 @@ export function unsafeFixes(source: string): string[] {
  * inserts at one offset never displace each other, so both land; whether the
  * result is right depends on what the two rules emit, and is pinned in their
  * own tests rather than judged from geometry here.
+ *
+ * Nor is a line break against a space: that pair has the winner the design
+ * chose, since the break is what remains whichever lands first (see
+ * `src/rules/utils/gaps.ts`).
  */
 export function clashes(diagnostics: readonly Diagnostic[]): string[] {
   const out: string[] = [];
@@ -239,7 +253,7 @@ export function clashes(diagnostics: readonly Diagnostic[]): string[] {
         continue;
       }
 
-      if (a.fix.replacement !== b.fix.replacement) {
+      if (a.fix.replacement !== b.fix.replacement && !breakAgainstSpace(a.fix.replacement, b.fix.replacement)) {
         out.push(
           `${a.ruleId} and ${b.ruleId} both rewrite [${start},${end}): ` +
             `${JSON.stringify(a.fix.replacement)} vs ${JSON.stringify(b.fix.replacement)}`,

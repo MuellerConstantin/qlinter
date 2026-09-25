@@ -20,7 +20,16 @@ describe('fix interaction', () => {
     });
 
     it('reports two rules rewriting one span differently', () => {
-      expect(clashes([at('a', 3, 5, ' '), at('b', 3, 5, '\n')])).toHaveLength(1);
+      expect(clashes([at('a', 3, 5, ' '), at('b', 3, 5, '')])).toHaveLength(1);
+    });
+
+    it('accepts a line break against a space, which the break wins by design', () => {
+      expect(clashes([at('a', 3, 5, ' '), at('b', 3, 5, '\n')])).toEqual([]);
+      expect(clashes([at('a', 3, 5, '\r\n    '), at('b', 3, 5, '\t')])).toEqual([]);
+    });
+
+    it('reports a line break against anything but whitespace', () => {
+      expect(clashes([at('a', 3, 5, '\n'), at('b', 3, 5, ', ')])).toHaveLength(1);
     });
 
     it('accepts two rules rewriting one span into the same thing', () => {
