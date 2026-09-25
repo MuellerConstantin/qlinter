@@ -54,14 +54,17 @@ function collectScriptFiles(target: string): string[] {
  * written back as UTF-8 it would lose every character the guess got wrong. It is
  * skipped rather than read.
  *
- * `ignoreBOM` keeps a byte order mark in the text, so a file that has one still
- * has it after `--fix`. On Windows Qlik reads a script as UTF-8 only when it
- * starts with one and assumes ANSI otherwise, so dropping it would change how
- * every non-ASCII character of the script is read.
+ * A byte order mark says how the file is encoded, not what the script says, so
+ * the decoder drops it and Core never sees it. It is put back on write: on
+ * Windows Qlik reads a script as UTF-8 only when it starts with one and assumes
+ * ANSI otherwise, so losing it would change how every non-ASCII character of
+ * the script is read.
  *
  * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/SystemVariables/Include.htm | Include — Limitations}
  */
-const UTF8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const UTF8 = new TextDecoder('utf-8', { fatal: true });
+
+const BOM = Buffer.from([0xef, 0xbb, 0xbf]);
 
 function stylish(file: string, d: Diagnostic): string {
   const { line, column } = d.range.start;
@@ -128,6 +131,7 @@ function main(): void {
 
   for (const file of files) {
     const bytes = readFileSync(file);
+    const bom = bytes.subarray(0, BOM.length).equals(BOM) ? '﻿' : '';
     let source: string;
 
     try {
@@ -148,7 +152,7 @@ function main(): void {
       fixedTotal += result.fixed;
 
       if (result.output !== source) {
-        writeFileSync(file, result.output, 'utf8');
+        writeFileSync(file, bom + result.output, 'utf8');
       }
     } else {
       diagnostics = lint(source, config);

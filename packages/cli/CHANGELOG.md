@@ -45,3 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   linted. The message asks for UTF-8 _with_ a byte order mark, because on Windows
   Qlik reads a script without one as ANSI; for the same reason a byte order mark
   is kept through `--fix`, as before.
+- A byte order mark no longer reaches the rules. It was handed to Core as the
+  first character of the script, where it read as something standing before
+  line 1's first token: a file opening with a comment got a space inserted
+  between the mark and the `//`.
+  The mark is now dropped when the file is read and put back when it is written.

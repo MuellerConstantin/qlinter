@@ -44,7 +44,7 @@ function inputLexErrors(source: string): string[] {
     );
 }
 
-const UTF8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const UTF8 = new TextDecoder('utf-8', { fatal: true });
 
 interface Finding {
   file: string;
@@ -94,7 +94,7 @@ function main(): void {
     const file = relative(dir, path);
     let source: string;
 
-    // Decoded the way the CLI decodes, which skips a script that is not UTF-8 rather than reading it.
+    // Decoded the way the CLI decodes: a script that is not UTF-8 is skipped, and a byte order mark never reaches Core.
     try {
       source = UTF8.decode(readFileSync(path));
     } catch {

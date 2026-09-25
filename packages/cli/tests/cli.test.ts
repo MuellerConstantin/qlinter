@@ -237,6 +237,16 @@ describe('encoding', () => {
     expect(stdout).toContain('1 file(s) skipped');
   });
 
+  it('reads the first line of a script with a byte order mark as if it had none', () => {
+    write('qlinter.json', JSON.stringify({ rules: { 'inline-comment-space': 'error' } }));
+    const path = write('bom.qvs', '﻿// Main\nSET x = 1;\n');
+
+    const { code } = run('--config', 'qlinter.json', '--fix', 'bom.qvs');
+
+    expect(code).toBe(0);
+    expect(readFileSync(path, 'utf8')).toBe('﻿// Main\nSET x = 1;\n');
+  });
+
   it('keeps a byte order mark through --fix', () => {
     config('error');
     const path = write('bom.qvs', '﻿SET x = 1;   \n');
