@@ -120,4 +120,50 @@ describe('multiline-comment-block', () => {
     expect(together.output).toBe(alone.output);
     expect(together.diagnostics).toEqual([]);
   });
+
+  /*
+   * A line comment turning up beside a block after that block was folded is the
+   * same comment either way; without this, which shape a script ends in would
+   * depend on which fix happened to land first.
+   */
+  describe('a line comment beside a block comment', () => {
+    it('joins the block below it', () => {
+      expect(formatRule('// note\n/*\n * block\n */\nLet a = 1;\n', multilineCommentBlock).output).toBe(
+        '/*\n * note\n * block\n */\nLet a = 1;\n',
+      );
+    });
+
+    it('joins the block above it', () => {
+      expect(formatRule('/* block */\n// note\nLet a = 1;\n', multilineCommentBlock).output).toBe(
+        '/*\n * block\n * note\n */\nLet a = 1;\n',
+      );
+    });
+
+    it('keeps a blank line inside the block, and drops the padding at its edges', () => {
+      expect(formatRule('// note\n/*\n * one\n *\n * two\n */\n', multilineCommentBlock).output).toBe(
+        '/*\n * note\n * one\n *\n * two\n */\n',
+      );
+    });
+
+    it('reaches the same block whichever half was folded first', () => {
+      const lines = '// a\n// b\n// c\nLet x = 1;\n';
+      const early = '// a\n/*\n * b\n * c\n */\nLet x = 1;\n';
+
+      expect(formatRule(early, multilineCommentBlock).output).toBe(formatRule(lines, multilineCommentBlock).output);
+    });
+  });
+
+  describe('left alone', () => {
+    it('blocks beside each other with no line comment among them', () => {
+      expect(lintRule('/* one */\n/* two */\nLet a = 1;\n', multilineCommentBlock)).toEqual([]);
+    });
+
+    it('a banner of asterisks', () => {
+      expect(lintRule('// note\n/*****/\nLet a = 1;\n', multilineCommentBlock)).toEqual([]);
+    });
+
+    it('a block sharing its line with code', () => {
+      expect(lintRule('// note\n/* block */ Let a = 1;\n', multilineCommentBlock)).toEqual([]);
+    });
+  });
 });

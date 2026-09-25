@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line fell to none of them and stayed at whatever column it was written at, so
   a comment drifted away from the code it describes as that code was reindented.
   Directly above the line that ends a body, the body's level is accepted as
-  well. A comment with no code below it and a `///` line are left alone.
+  well; below the last line of code, a comment takes that line's indent. A
+  `///` line is left alone.
 - `no-rem` writes a remark as a `//` comment instead of a `Rem` statement, so a
   script has one way of saying one thing. Several remarks in a row become line
   comments that `multiline-comment-block` then folds into one block. A remark
@@ -34,6 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `multiline-comment-block` folds a block comment directly above or below a run
+  of `//` lines into the same block, and a lone `//` line beside a block with
+  it. A `//` line glued to a block was left as it stood, so a script could
+  settle in two shapes: `REM` lines turned into comments after the lines beside
+  them had already been folded ended up as a line comment on top of a block,
+  and which shape came out depended on the order the rules were configured in.
+  Blocks beside blocks, a banner of asterisks and a block sharing its line with
+  code are still left alone. The message now reads "Consecutive comment lines
+  should be a single block comment."
 - `multiline-call` no longer requires a call to close on the line it opens on.
   That requirement was the rule's blind spot: in a nest of `If`s, the call that
   made a line too long is usually the one already spanning lines, and passing

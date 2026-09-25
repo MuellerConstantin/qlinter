@@ -992,6 +992,10 @@ comments follow on the next format pass. A multi-line block comment moves by
 its first line, and [block-comment-stars](#block-comment-stars) realigns the
 rest.
 
+Below the last line of code there is nothing left to introduce, so a comment
+there takes the indent of the last line of code above it instead: it closes
+what is above rather than opening anything.
+
 Directly above a line that ends a body — `End Sub`, `EndIf`, `Next`, `Else`,
 `Case` — a comment may belong to either side, so both the level of the body and
 the level of the closing line are accepted.
@@ -1000,7 +1004,6 @@ Left alone:
 
 - **A comment sharing its line with code**, whose line the code's indent rule
   places.
-- **A comment with no code below it**, which has no column to take.
 - **A line opening with a third slash**, such as the `///$tab Main` marker tools
   write where a script section begins. It is kept exactly as written, and its
   column is part of that.
@@ -2231,6 +2234,15 @@ blocks rather than one.
 The autofix keeps every line's text and drops the markers, drawing the ` *`
 rail from the indentation the run opens at. The individual `//` lines' own
 indentation does not survive — the run gets the first line's.
+
+**A block comment directly above or below such a run joins it.** A `//` line
+glued to a `/* … */` block is still one remark in two syntaxes, so the block's
+lines are folded in with the rest; blank lines inside the block stay, the
+padding at its edges does not. This also means a script reaches the same block
+however its comments got there — whether a run was folded before or after the
+line beside it became a line comment. Two blocks beside each other with no `//`
+line among them are left as they are, and so are a banner of asterisks
+(`/*****/`) and a block that shares its line with code.
 
 Two kinds of line may not go inside a block. Such a line steps out of the run
 instead of stopping it from being folded: it ends the run where it sits, the

@@ -47,23 +47,30 @@ export const commentIndent: Rule<undefined, 'comment-indent'> = {
       }
 
       const next = tokens[after];
+      const previous = tokens[after - 1];
 
-      /* With no code below, or code that does not open its line, there is no column to take. */
-      if (next === undefined || !opensLine(whitespaces, lines, next)) {
+      /* Code that does not open its line gives no column to take. */
+      if (next !== undefined && !opensLine(whitespaces, lines, next)) {
+        continue;
+      }
+
+      /* Below the last line of code there is nothing left to introduce, so the comment closes what is above. */
+      const anchor = next ?? previous;
+
+      if (anchor === undefined) {
         continue;
       }
 
       const actual = indentOf(whitespaces, lines, line);
-      const expected = indentOf(whitespaces, lines, next.startLine ?? 1);
+      const expected = indentOf(whitespaces, lines, anchor.startLine ?? 1);
 
       if (actual === expected) {
         continue;
       }
 
       /* Above the line that ends a body, the comment may still belong to that body. */
-      const previous = tokens[after - 1];
-
       if (
+        next !== undefined &&
         previous !== undefined &&
         closesBody(classifyBlockLine([next])) &&
         actual === indentOf(whitespaces, lines, previous.startLine ?? 1)

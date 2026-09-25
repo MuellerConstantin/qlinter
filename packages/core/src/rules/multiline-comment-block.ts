@@ -1,9 +1,9 @@
 import { tokenMatcher, type IToken } from 'chevrotain';
-import { lineCommentToken } from '../lexer.js';
+import { blockCommentToken, lineCommentToken } from '../lexer.js';
 import type { Rule, Finding } from '../types.js';
 import { tokenRange } from '../token.js';
-import { blockCommentFrom, isSlashLedLineComment } from './utils/comments.js';
-import { isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
+import { blockCommentBodies, blockCommentFrom, isBannerBlockComment, isSlashLedLineComment } from './utils/comments.js';
+import { closesLine, isLineBreak, opensLine, runEndingAt } from './utils/whitespace.js';
 
 /*
  * Either half of the block-comment delimiter, appearing in prose.
@@ -35,6 +35,23 @@ function foldable(body: string): boolean {
   return !DIRECTIVE.test(body) && !BLOCK_MARKER.test(body);
 }
 
+/* A block's bodies without the blank lines at its edges, which pad that block and nothing it joins. */
+function paddingTrimmed(image: string): string[] {
+  const bodies = blockCommentBodies(image);
+  let start = 0;
+  let end = bodies.length;
+
+  while (start < end && bodies[start] === '') {
+    start++;
+  }
+
+  while (end > start && bodies[end - 1] === '') {
+    end--;
+  }
+
+  return bodies.slice(start, end);
+}
+
 export const multilineCommentBlock: Rule<undefined, 'multiline-comment-block'> = {
   id: 'multiline-comment-block',
   defaultSeverity: 'warning',
@@ -43,11 +60,34 @@ export const multilineCommentBlock: Rule<undefined, 'multiline-comment-block'> =
     const out: Finding[] = [];
     let run: IToken[] = [];
 
+    /*
+     * A comment that has its lines to itself. One sharing a line with code
+     * annotates that line, not the ones around it. A block comment beside a run
+     * of line comments is the same comment written in two syntaxes, and joins it;
+     * a banner of asterisks is a divider and does not.
+     */
+    const member = (token: IToken): boolean => {
+      if (!opensLine(whitespaces, lines, token)) {
+        return false;
+      }
+
+      if (tokenMatcher(token, lineCommentToken)) {
+        return foldable(token.image.slice(2).trim());
+      }
+
+      return (
+        tokenMatcher(token, blockCommentToken) &&
+        closesLine(whitespaces, lines, token) &&
+        !isBannerBlockComment(token.image)
+      );
+    };
+
     const flush = () => {
       const group = run;
       run = [];
 
-      if (group.length < 2) {
+      /* Blocks alone are already what this rule asks for; only a line comment among them makes a run. */
+      if (group.length < 2 || !group.some((token) => tokenMatcher(token, lineCommentToken))) {
         return;
       }
 
@@ -56,11 +96,13 @@ export const multilineCommentBlock: Rule<undefined, 'multiline-comment-block'> =
        * and the text between them are one unit, and a section marker must stay
        * a line comment of its own, so a run holding one is left whole.
        */
-      if (group.some((token) => isSlashLedLineComment(token.image))) {
+      if (group.some((token) => tokenMatcher(token, lineCommentToken) && isSlashLedLineComment(token.image))) {
         return;
       }
 
-      const bodies = group.map((token) => token.image.slice(2).trim());
+      const bodies = group.flatMap((token) =>
+        tokenMatcher(token, lineCommentToken) ? [token.image.slice(2).trim()] : paddingTrimmed(token.image),
+      );
       const first = group[0];
       const last = group[group.length - 1];
 
@@ -69,7 +111,7 @@ export const multilineCommentBlock: Rule<undefined, 'multiline-comment-block'> =
 
       out.push({
         range: { start: tokenRange(first).start, end: tokenRange(last).end },
-        message: "Consecutive '//' comment lines should be a single block comment.",
+        message: 'Consecutive comment lines should be a single block comment.',
         fix: {
           range: { start: first.startOffset, end: (last.endOffset ?? last.startOffset) + 1 },
           replacement: blockCommentFrom(bodies, indent, lineEnding),
@@ -79,19 +121,17 @@ export const multilineCommentBlock: Rule<undefined, 'multiline-comment-block'> =
 
     for (const token of comments) {
       const previous = run[run.length - 1];
-      /* A comment sharing its line with code annotates that line, not the ones around it. */
-      const member =
-        tokenMatcher(token, lineCommentToken) &&
-        opensLine(whitespaces, lines, token) &&
-        foldable(token.image.slice(2).trim());
 
-      if (!member || (previous !== undefined && (token.startLine ?? 1) !== (previous.startLine ?? 1) + 1)) {
+      if (!member(token)) {
+        flush();
+        continue;
+      }
+
+      if (previous !== undefined && (token.startLine ?? 1) !== (previous.endLine ?? previous.startLine ?? 1) + 1) {
         flush();
       }
 
-      if (member) {
-        run.push(token);
-      }
+      run.push(token);
     }
 
     flush();

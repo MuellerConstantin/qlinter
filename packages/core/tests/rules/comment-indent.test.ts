@@ -34,6 +34,12 @@ describe('comment-indent', () => {
       );
     });
 
+    it('indents a comment below the last code like the line of code above it', () => {
+      expect(formatRule('    End Sub\n/* end */\n\n            // the end\n', commentIndent).output).toBe(
+        '    End Sub\n    /* end */\n\n    // the end\n',
+      );
+    });
+
     it('copies the indent as written, tabs included', () => {
       expect(formatRule('// note\n\tLet a = 1;\n', commentIndent).output).toBe('\t// note\n\tLet a = 1;\n');
     });
@@ -58,8 +64,8 @@ describe('comment-indent', () => {
       expect(lintRule('    Let a = 1; // note\nLet b = 2;\n', commentIndent)).toEqual([]);
     });
 
-    it('a comment with no code below it', () => {
-      expect(lintRule('Let a = 1;\n    // the end\n', commentIndent)).toEqual([]);
+    it('a file holding no code at all', () => {
+      expect(lintRule('    // nothing but a remark\n', commentIndent)).toEqual([]);
     });
 
     it('a section marker, whose column is part of it', () => {
