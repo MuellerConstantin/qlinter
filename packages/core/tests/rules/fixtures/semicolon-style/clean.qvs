@@ -1,0 +1,25 @@
+Let vYear = 2026;
+
+[Sales]:
+Load
+    OrderId,
+    Amount
+Resident Src;
+
+Set vFormat = #,##0.00;
+
+// A Trace message keeps its line breaks, and a SQL command reaches the database as written.
+Trace
+loading sales
+;
+
+SQL SELECT OrderId
+FROM dbo.Orders
+;
+
+Drop Table Src; // done
+
+// A lone terminator after a finished statement ends an empty one.
+Drop Table Other;
+
+;

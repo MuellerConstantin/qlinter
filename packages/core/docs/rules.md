@@ -8,6 +8,7 @@
 | [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.      |
 | [block-indent](#block-indent)                             | Enforce consistent indentation for Qlik block constructs.      |
 | [semicolon-space](#semicolon-space)                       | Disallow whitespace between a statement and its terminator.    |
+| [semicolon-style](#semicolon-style)                       | Require a `;` to close the last line of its statement.         |
 | [table-label-brackets](#table-label-brackets)             | Require table labels to be enclosed in brackets.               |
 | [builtin-function-case](#builtin-function-case)           | Enforce canonical casing for Qlik built-in functions.          |
 | [builtin-keyword-case](#builtin-keyword-case)             | Enforce canonical casing for Qlik keywords.                    |
@@ -632,6 +633,80 @@ Trace loading sales   ;
 ### Options
 
 This rule has no options.
+
+---
+
+## semicolon-style
+
+Require a `;` to close the last line of its statement.
+
+### Rule Details
+
+A `;` belongs to the statement it closes, and a script reads that way when it
+stays on that statement's last line. Written on a line of its own, the
+terminator reads as a statement of its own — and a line added below the
+statement lands outside it.
+
+The autofix pulls the `;` up behind the statement's last token and drops the
+whitespace and blank lines it leaves behind. Comments are carried, not dropped:
+a comment trailing the statement stays on its line behind the `;`, and a comment
+line between the two keeps its line below it. A statement following the `;` on
+its line keeps that line to itself.
+
+Moving the `;` changes nothing Qlik loads, with one construct to look at: a
+`Set` assigns the text to the right of its `=` unevaluated. The reference is
+silent on whether a line break before its `;` is part of the value, so this rests
+on a measurement in Qlik Sense Enterprise on Windows May 2025 Patch 19:
+`Set x = 1.2` with its `;` on the next line holds `1.2`, three characters long,
+just as `Set x = 1.2;` does. See [Text no rule touches](#text-no-rule-touches).
+
+Three terminators are left where they stand:
+
+- **After a `Trace` message, a SQL command or a `Rem`.** Each runs up to its `;`
+  and takes every line break on the way, so those breaks are part of the text.
+  A `Trace` prints them — measured in the same Qlik — and how a database driver
+  reads the edges of a SQL command has not been measured.
+- **A `;` directly after another `;`.** It ends an empty statement, which has no
+  line to join.
+- **A `;` on the same line as the statement.** Any space between the two is
+  [semicolon-space](#semicolon-space)'s to remove.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Let vYear = 2026
+;
+
+[Sales]:
+Load
+    OrderId
+Resident Src
+;
+
+Drop Table Src // done
+    ;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Let vYear = 2026;
+
+[Sales]:
+Load
+    OrderId
+Resident Src;
+
+Drop Table Src; // done
+
+Trace
+loading sales
+;
+```
+
+### Options
+
+This rule has no options. Set `severity: 'off'` to opt out entirely.
 
 ---
 

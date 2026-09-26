@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `semicolon-style` puts a `;` on the last line of the statement it closes
+  instead of on a line of its own, carrying any comment in between along. A
+  `Set` value is unaffected: Qlik drops a line break before its `;`, measured
+  in Qlik Sense Enterprise on Windows May 2025 Patch 19. The `;` after a `Trace`
+  message, a SQL command and a `Rem` stays where it is, since the line breaks
+  before it belong to that text, and so does a `;` ending an empty statement.
 - `comment-indent` indents a line holding only a comment like the next line of
   code below it. The indent rules place every line that holds code; a comment
   line fell to none of them and stayed at whatever column it was written at, so

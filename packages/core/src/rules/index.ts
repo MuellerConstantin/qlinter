@@ -33,6 +33,7 @@ import { operatorSpacing } from './operator-spacing.js';
 import { paddedBlocks } from './padded-blocks.js';
 import { parenSpacing } from './paren-spacing.js';
 import { semicolonSpace } from './semicolon-space.js';
+import { semicolonStyle } from './semicolon-style.js';
 import { tableLabelBrackets } from './table-label-brackets.js';
 import { trailingWhitespace } from './trailing-whitespace.js';
 import { variableCase } from './variable-case.js';
@@ -93,6 +94,7 @@ export const allRules = [
   paddedBlocks,
   parenSpacing,
   semicolonSpace,
+  semicolonStyle,
   trailingWhitespace,
   variableCase,
   variableCharset,
@@ -204,6 +206,7 @@ export {
   paddedBlocks,
   parenSpacing,
   semicolonSpace,
+  semicolonStyle,
   tableLabelBrackets,
   trailingWhitespace,
   variableCase,
