@@ -12,8 +12,7 @@
     "directory": "packages/chrome-ext"
   },
   "scripts": {
-    "build": "tsdown && node -e \"require('node:fs').cpSync('public', 'dist', { recursive: true })\" && npm run build:pet",
-    "build:pet": "node scripts/pet/build.mjs",
+    "build": "tsdown && node -e \"require('node:fs').cpSync('public', 'dist', { recursive: true })\"",
     "package": "npm run build && node scripts/zip.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

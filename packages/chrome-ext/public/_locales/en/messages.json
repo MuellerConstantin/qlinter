@@ -57,34 +57,6 @@
     "message": "Share of lines that carry no finding. Scripts under ten lines are not scored.",
     "description": "Tooltip explaining what the conformance score in the popup measures."
   },
-  "petSleep": {
-    "message": "Too short to score, so it is having a nap.",
-    "description": "Tooltip on the popup's pet while its mood is 'sleep'."
-  },
-  "petHappy": {
-    "message": "Every single line is clean!",
-    "description": "Tooltip on the popup's pet while its mood is 'happy'."
-  },
-  "petContent": {
-    "message": "Happy with the script.",
-    "description": "Tooltip on the popup's pet while its mood is 'content'."
-  },
-  "petSkeptical": {
-    "message": "Not quite convinced yet.",
-    "description": "Tooltip on the popup's pet while its mood is 'skeptical'."
-  },
-  "petSick": {
-    "message": "Caught a cold.",
-    "description": "Tooltip on the popup's pet while its mood is 'sick'."
-  },
-  "petDrip": {
-    "message": "Hanging on by a drip.",
-    "description": "Tooltip on the popup's pet while its mood is 'drip'."
-  },
-  "petGrave": {
-    "message": "Rest in peace.",
-    "description": "Tooltip on the popup's pet while its mood is 'grave'."
-  },
   "settingsButton": {
     "message": "Open settings",
     "description": "Accessible label and tooltip for the gear icon button that opens the options page."

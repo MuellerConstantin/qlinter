@@ -7,13 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- A small pixel pet beside the conformance score in the popup, whose mood follows
-  the score — from a jump for joy at a spotless 100 down to a ghost over its own
-  tombstone. It naps while a script is too short to score, and holds still for
-  anyone who has asked their system for reduced motion.
-
 ### Fixed
 
 - Quick Fix and Ignore act only on the text their diagnostic was linted from.
