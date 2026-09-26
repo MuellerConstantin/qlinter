@@ -57,6 +57,34 @@
     "message": "Anteil der Zeilen ohne Befund. Skripte unter zehn Zeilen werden nicht bewertet.",
     "description": "Tooltip explaining what the conformance score in the popup measures."
   },
+  "petSleep": {
+    "message": "Zu kurz zum Bewerten, also ein Nickerchen.",
+    "description": "Tooltip on the popup's pet while its mood is 'sleep'."
+  },
+  "petHappy": {
+    "message": "Jede einzelne Zeile ist sauber!",
+    "description": "Tooltip on the popup's pet while its mood is 'happy'."
+  },
+  "petContent": {
+    "message": "Zufrieden mit dem Skript.",
+    "description": "Tooltip on the popup's pet while its mood is 'content'."
+  },
+  "petSkeptical": {
+    "message": "Noch nicht ganz überzeugt.",
+    "description": "Tooltip on the popup's pet while its mood is 'skeptical'."
+  },
+  "petSick": {
+    "message": "Hat sich erkältet.",
+    "description": "Tooltip on the popup's pet while its mood is 'sick'."
+  },
+  "petDrip": {
+    "message": "Hängt am Tropf.",
+    "description": "Tooltip on the popup's pet while its mood is 'drip'."
+  },
+  "petGrave": {
+    "message": "Ruhe in Frieden.",
+    "description": "Tooltip on the popup's pet while its mood is 'grave'."
+  },
   "settingsButton": {
     "message": "Einstellungen öffnen",
     "description": "Accessible label and tooltip for the gear icon button that opens the options page."

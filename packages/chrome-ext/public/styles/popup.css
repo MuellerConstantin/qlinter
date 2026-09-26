@@ -94,11 +94,23 @@ button {
 
 .summary {
   display: flex;
+  align-items: center;
   gap: 14px;
   margin: 8px -12px -12px;
   padding: 8px 12px;
   background: var(--summary-bg);
   border-top: 1px solid var(--border);
+}
+
+/*
+ * Pinned right on its own; beside a visible score, the score already carries the auto margin.
+ * The negative block margin lets it reach halfway into the bar's padding, so the bar grows by less than the sprite.
+ */
+.summary .pet {
+  margin: -4px 0 -4px auto;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
 }
 
 .summary .count {
@@ -140,4 +152,8 @@ button {
 
 .summary .count[data-severity='info'] .count-dot {
   background: #3b82f6;
+}
+
+.summary .score:not([hidden]) + .pet {
+  margin-left: 0;
 }

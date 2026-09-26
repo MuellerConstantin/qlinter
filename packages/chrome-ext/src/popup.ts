@@ -7,6 +7,8 @@ import type {
   Status,
   StatusMessage,
 } from './types.js';
+import { createPet, petState } from './util/pet.js';
+import type { Pet, PetManifest, PetState } from './util/pet.js';
 
 const statusDot = document.getElementById('status-dot') as HTMLSpanElement;
 const statusLabel = document.getElementById('status-label') as HTMLSpanElement;
@@ -21,6 +23,7 @@ const countInfo = document.getElementById('count-info') as HTMLSpanElement;
 const score = document.getElementById('score') as HTMLSpanElement;
 const scoreLabel = document.getElementById('score-label') as HTMLSpanElement;
 const scoreValue = document.getElementById('score-value') as HTMLSpanElement;
+const petElement = document.getElementById('pet') as HTMLSpanElement;
 
 const STATUS_MESSAGE_KEYS: Record<Status, string> = {
   loading: 'statusLoading',
@@ -30,7 +33,53 @@ const STATUS_MESSAGE_KEYS: Record<Status, string> = {
   errored: 'statusErrored',
 };
 
+const PET_MESSAGE_KEYS: Record<PetState, string> = {
+  sleep: 'petSleep',
+  happy: 'petHappy',
+  content: 'petContent',
+  skeptical: 'petSkeptical',
+  sick: 'petSick',
+  drip: 'petDrip',
+  grave: 'petGrave',
+};
+
+const PET_SCALE = 1;
+
 let activeTabId: number | null = null;
+
+/** The pet is decoration: when its sprites cannot be loaded the popup goes on without it. */
+async function loadPet(): Promise<Pet | null> {
+  try {
+    const response = await fetch('images/pet/pet.json');
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const manifest = (await response.json()) as PetManifest;
+    const animate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return createPet(petElement, manifest, (state) => `images/pet/${state}.png`, PET_SCALE, animate);
+  } catch (err) {
+    console.warn('[qlinter:popup] pet sprites unavailable', err);
+    return null;
+  }
+}
+
+const pet = await loadPet();
+
+function renderPet(score: number | null): void {
+  petElement.hidden = pet === null;
+
+  if (pet === null) {
+    return;
+  }
+
+  const state = petState(score);
+  pet.show(state);
+  const label = chrome.i18n.getMessage(PET_MESSAGE_KEYS[state]);
+  petElement.title = label;
+  petElement.setAttribute('aria-label', label);
+}
 
 function renderStatus(status: Status): void {
   statusLabel.textContent = chrome.i18n.getMessage(STATUS_MESSAGE_KEYS[status]);
@@ -65,6 +114,8 @@ function renderDiagnostics(diagnostics: DiagnosticsMessage | null): void {
   if (diagnostics.score !== null) {
     scoreValue.textContent = chrome.i18n.getMessage('scoreValue', [String(diagnostics.score)]);
   }
+
+  renderPet(diagnostics.score);
 }
 
 grantButton.textContent = chrome.i18n.getMessage('grantButton');
