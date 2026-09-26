@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Quick Fix and Ignore act only on the text their diagnostic was linted from.
+  Linting runs 150 ms behind the last keystroke, so a click in that window
+  applied the fix's offsets — or the ignore's line number — to text that had
+  changed since, and edited the wrong characters. Such a click now does nothing;
+  the pending lint redraws the marks, and the next click applies.
+
 ## [0.3.0]
 
 ### Added

@@ -57,7 +57,7 @@ function onEditorReady(editor: Editor): void {
   const runLint = (): void => {
     const source = editor.getValue();
     const diagnostics = lint(source, currentConfig);
-    highlighter.apply(diagnostics);
+    highlighter.apply(diagnostics, source);
 
     const fixable = diagnostics.reduce((count, diagnostic) => (diagnostic.fix ? count + 1 : count), 0);
 

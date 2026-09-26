@@ -91,8 +91,79 @@ const SEVERITY_GLYPH: Record<Severity, string> = {
   info: 'i',
 };
 
+/** The part of a CodeMirror editor the tooltip actions write through. */
+export type ScriptDoc = Pick<Editor, 'getValue' | 'getLine' | 'posFromIndex' | 'replaceRange'>;
+
+/*
+ * A diagnostic's offsets and line numbers describe the text it was linted
+ * from, and linting runs debounced behind every edit. Applied to anything else
+ * they land on the wrong characters, so an action on a diagnostic from an
+ * older lint does nothing; the lint already pending redraws the marks.
+ */
+function isCurrent(doc: ScriptDoc, linted: string): boolean {
+  return doc.getValue() === linted;
+}
+
+/** Applies `fix` when `doc` still holds `linted`; returns whether it did. */
+export function applyFix(doc: ScriptDoc, linted: string, fix: NonNullable<Diagnostic['fix']>): boolean {
+  if (!isCurrent(doc, linted)) {
+    return false;
+  }
+
+  doc.replaceRange(fix.replacement, doc.posFromIndex(fix.range.start), doc.posFromIndex(fix.range.end), 'qlinter-fix');
+
+  return true;
+}
+
+/** Adds a disable directive for `diagnostic` when `doc` still holds `linted`; returns whether it did. */
+export function applyIgnore(doc: ScriptDoc, linted: string, diagnostic: Diagnostic): boolean {
+  if (!isCurrent(doc, linted)) {
+    return false;
+  }
+
+  const issueLineIdx = diagnostic.range.start.line - 1;
+  const issueLineText = doc.getLine(issueLineIdx) ?? '';
+  const indent = /^\s*/.exec(issueLineText)?.[0] ?? '';
+
+  const prevLineIdx = issueLineIdx - 1;
+  const prevLineText = prevLineIdx >= 0 ? (doc.getLine(prevLineIdx) ?? '') : '';
+  const prevMatch = /^(\s*)(\/\/\s*qlinter-disable-next-line)(?:\s+(.+?))?\s*$/.exec(prevLineText);
+
+  if (!prevMatch) {
+    const directive = `${indent}// qlinter-disable-next-line ${diagnostic.ruleId}\n`;
+    doc.replaceRange(directive, { line: issueLineIdx, ch: 0 }, { line: issueLineIdx, ch: 0 }, 'qlinter-ignore');
+    return true;
+  }
+
+  const existingList = prevMatch[3];
+
+  /* A bare directive already disables every rule on the line. */
+  if (existingList === undefined) {
+    return true;
+  }
+
+  const ids = existingList
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+
+  if (!ids.includes(diagnostic.ruleId)) {
+    ids.push(diagnostic.ruleId);
+  }
+
+  const replacement = `${prevMatch[1]}${prevMatch[2]} ${ids.join(', ')}`;
+  doc.replaceRange(
+    replacement,
+    { line: prevLineIdx, ch: 0 },
+    { line: prevLineIdx, ch: prevLineText.length },
+    'qlinter-ignore',
+  );
+
+  return true;
+}
+
 export function createHighlighter(editor: Editor): {
-  apply: (diagnostics: Diagnostic[]) => void;
+  apply: (diagnostics: Diagnostic[], source: string) => void;
   clear: () => void;
 } {
   const byMarker = new Map<TextMarker, Diagnostic>();
@@ -100,6 +171,7 @@ export function createHighlighter(editor: Editor): {
   let tooltipElement: HTMLDivElement | null = null;
   let hideTimer: ReturnType<typeof setTimeout> | undefined;
   let currentMarker: TextMarker | null = null;
+  let linted = '';
 
   const clear = (): void => {
     for (const marker of byMarker.keys()) {
@@ -114,8 +186,9 @@ export function createHighlighter(editor: Editor): {
     currentMarker = null;
   };
 
-  const apply = (diagnostics: Diagnostic[]): void => {
+  const apply = (diagnostics: Diagnostic[], source: string): void => {
     clear();
+    linted = source;
 
     /*
      * First collect the highest severity that touches each line, then paint
@@ -158,59 +231,7 @@ export function createHighlighter(editor: Editor): {
     }
   };
 
-  const applyFix = (fix: NonNullable<Diagnostic['fix']>): void => {
-    const from = editor.posFromIndex(fix.range.start);
-    const to = editor.posFromIndex(fix.range.end);
-
-    editor.replaceRange(fix.replacement, from, to, 'qlinter-fix');
-
-    if (tooltipElement) {
-      tooltipElement.style.display = 'none';
-    }
-    currentMarker = null;
-  };
-
-  const applyIgnore = (diagnostic: Diagnostic): void => {
-    const issueLineIdx = diagnostic.range.start.line - 1;
-    const issueLineText = editor.getLine(issueLineIdx) ?? '';
-    const indent = /^\s*/.exec(issueLineText)?.[0] ?? '';
-
-    const prevLineIdx = issueLineIdx - 1;
-    const prevLineText = prevLineIdx >= 0 ? (editor.getLine(prevLineIdx) ?? '') : '';
-    const prevMatch = /^(\s*)(\/\/\s*qlinter-disable-next-line)(?:\s+(.+?))?\s*$/.exec(prevLineText);
-
-    if (prevMatch) {
-      const existingList = prevMatch[3];
-
-      if (existingList === undefined) {
-        if (tooltipElement) {
-          tooltipElement.style.display = 'none';
-        }
-        currentMarker = null;
-        return;
-      }
-
-      const ids = existingList
-        .split(',')
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0);
-
-      if (!ids.includes(diagnostic.ruleId)) {
-        ids.push(diagnostic.ruleId);
-      }
-
-      const replacement = `${prevMatch[1]}${prevMatch[2]} ${ids.join(', ')}`;
-      editor.replaceRange(
-        replacement,
-        { line: prevLineIdx, ch: 0 },
-        { line: prevLineIdx, ch: prevLineText.length },
-        'qlinter-ignore',
-      );
-    } else {
-      const directive = `${indent}// qlinter-disable-next-line ${diagnostic.ruleId}\n`;
-      editor.replaceRange(directive, { line: issueLineIdx, ch: 0 }, { line: issueLineIdx, ch: 0 }, 'qlinter-ignore');
-    }
-
+  const closeTooltip = (): void => {
     if (tooltipElement) {
       tooltipElement.style.display = 'none';
     }
@@ -286,7 +307,8 @@ export function createHighlighter(editor: Editor): {
       fixButton.className = 'qlinter-tt-action';
       fixButton.textContent = 'Quick Fix';
       fixButton.addEventListener('click', () => {
-        applyFix(diagnostic.fix!);
+        applyFix(editor, linted, diagnostic.fix!);
+        closeTooltip();
       });
       actions.append(fixButton);
     }
@@ -296,7 +318,8 @@ export function createHighlighter(editor: Editor): {
     ignoreButton.className = 'qlinter-tt-action';
     ignoreButton.textContent = 'Ignore';
     ignoreButton.addEventListener('click', () => {
-      applyIgnore(diagnostic);
+      applyIgnore(editor, linted, diagnostic);
+      closeTooltip();
     });
     actions.append(ignoreButton);
 
