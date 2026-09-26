@@ -80,6 +80,12 @@ SQL SELECT OrderId,Amount FROM dbo.Orders WHERE Amount>0;
 
 The command runs to the first `;`, the same way a `Trace` message does.
 
+**A `;` on a line of its own after such a text is left where it stands.** A SQL
+command and a `Trace` message each run up to their `;` and take every line break
+on the way, so the start of the `;`'s line is still inside them: indentation
+written there would become part of the command or the message — and a `Trace`
+does print its line breaks. None of the indent rules touches that line.
+
 **The text of a `Rem` is kept exactly as written.** A `Rem` is a comment written
 as a statement: everything between the keyword and the next `;` is remark text,
 so it is not spaced, recased or rebroken, whatever script words it happens to
@@ -95,11 +101,16 @@ the right of its `=` without evaluating it — `Set x = 3 + 4;` holds `3 + 4`, a
 `Set x = Today();` holds `Today()` — so a space, a comma or a letter's case
 rewritten there is a different value. Whether that text is later expanded into an
 expression, a path, a delimiter or an SQL fragment is decided where the variable
-is used, which no rule can see. So everything after the `=` up to the `;` is left
-alone, blanks at either end included: the reference shows a single space after
-the `=` falling outside the value, but says nothing of more, of a tab, or of
-blanks before the `;`. The keyword and the variable name are formatted as usual.
-A `Let` evaluates its right-hand side, which therefore stays ordinary script.
+is used, which no rule can see. So the value itself is left alone.
+
+Its edges are not part of it, and are spaced like any other gap. The reference
+says nothing about them, so this rests on a measurement in Qlik Sense Enterprise
+on Windows May 2025 Patch 19: `Set x = 1.2;`, `Set x =1.2;`,
+`Set x =    1.2   ;` and `Set x = 1.2` with its `;` on the next line all hold
+`1.2`, three characters long. A tab was not measured, and Qlik's stripping of
+field values ([Verbatim](https://help.qlik.com/en-US/sense/May2025/Subsystems/Hub/Content/Sense_Hub/Scripting/SystemVariables/Verbatim.htm))
+leaves tabs alone, so a tab at the edge is kept as part of the value. A `Let`
+evaluates its right-hand side, which therefore stays ordinary script.
 
 ```qlik
 Set vFields = OrderId,Amount;
@@ -2771,8 +2782,8 @@ another concern:
 - The gap between an operator and a `;` right after it belongs to the
   terminator, and [semicolon-space](#semicolon-space) keeps it empty. An empty
   `Let vX =;` — the form that clears a variable — therefore stays as it is.
-- The `=` of a `Set` is spaced on the side of the name only. What follows it is
-  the variable's value, taken verbatim, and a blank there may be part of it (see
+- The `=` of a `Set` is spaced like any other: the spaces at the edges of a
+  `Set` value are not part of it (see
   [Text no rule touches](#text-no-rule-touches)).
 
 Arithmetic operators (`+`, `-`, `*`, `/`) are intentionally **out of scope**.
@@ -2798,7 +2809,6 @@ Examples of **correct** code for this rule:
 ```qlik
 LET vYear = 2026;
 SET vStart = 2025;
-SET vEnd =2030;
 LET vFlag = If(vYear >= 2025, 'new', 'old');
 LET vLabel = 'Year: ' & vYear;
 LET vEval = $(=Max(OrderDate));

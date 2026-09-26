@@ -11,7 +11,7 @@ describe('content', () => {
   describe('opaque text verdict', () => {
     it('reports a Set value that was respaced', () => {
       expect(changedOpaqueTexts('Set v = a,b;\n', 'Set v = a, b;\n')).toEqual([
-        'opaque text 1 changed: was " a,b", is " a, b"',
+        'opaque text 1 changed: was "a,b", is "a, b"',
       ]);
     });
 

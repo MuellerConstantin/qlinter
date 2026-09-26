@@ -91,6 +91,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `;` on a line of its own after a SQL command or a `Trace` message is no
+  longer indented. Those texts run up to their `;`, line breaks included, so the
+  indentation `continuation-indent` wrote in front of the `;` was read back as
+  part of the text — and a `Trace` prints it. The indent rules now leave a line
+  alone whose line break belongs to the token before it.
 - An include whose file name is built from a variable —
   `$(Must_Include=[$(vLib)common.qvs])` — is read whole again. The include ended
   at the first `)`, which is the one closing the inner `$(vLib)`, so the rest of
@@ -115,9 +120,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changed what the variable holds. Two of them also fought over the empty value
   in `Set vX =;` — one inserting a space after the `=`, the other removing the
   space before the `;` — until `format` gave up and threw, which ended a CLI
-  `--fix` run on the first script carrying one. Everything after a Set's `=` up to
-  its `;` now lexes as one opaque token, and `operator-spacing` spaces that `=` on
-  the side of the name only.
+  `--fix` run on the first script carrying one. The value now lexes as one opaque
+  token that no rule rewrites. Its edges do not: Qlik drops the spaces around a
+  `Set` value and the line breaks before its `;` — the reference is silent, so
+  this was measured in Qlik Sense Enterprise on Windows May 2025 Patch 19 — and
+  they are spaced like any other gap, `Set x =1.2 ;` becoming `Set x = 1.2;`. A
+  tab at the edge was not measured and stays inside the value.
 - The text of a `Rem` statement is no longer formatted. Everything between `Rem`
   and the next `;` is a comment, yet the rules read it as script: a banner such as
   `REM ===== Begin =====;` came out as `Rem = = = = = Begin = = = = = ;`, and two

@@ -87,3 +87,12 @@ Load
         If(Match([Region Name], 'South'), 0, [Region Name]
         )) as Compass2
 From X;
+
+// A ; on a line of its own sits right against the text before it, which runs
+// up to the ; and keeps whatever that line holds.
+SQL SELECT OrderId
+FROM dbo.Orders
+;
+
+Trace Loading orders
+;

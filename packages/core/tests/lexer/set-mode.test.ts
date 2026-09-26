@@ -6,14 +6,16 @@ import { builtinKeywordCase, recommended, variableCase } from '../../src/rules/i
 import { lintRule } from '../support.js';
 
 /*
- * A Set assigns the text to the right of its `=` without evaluating it.
+ * A Set assigns the text to the right of its `=` without evaluating it; the
+ * spaces and line breaks at its edges are dropped, which the reference does not
+ * say and was measured in Qlik Sense Enterprise on Windows May 2025 Patch 19.
  *
  * @see https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/work-with-variables-in-data-load-editor.htm
  */
 describe('set_head and set_value lexer modes', () => {
   const names = (source: string): string[] => lexer.tokenize(source).tokens.map((t) => t.tokenType.name);
 
-  it('lexes everything after the = as one value, blanks at both ends included', () => {
+  it('lexes the value as one token and the spaces at its edges as whitespace', () => {
     const { tokens, errors } = lexer.tokenize('SET vList = a,b ;');
 
     expect(errors).toEqual([]);
@@ -24,7 +26,7 @@ describe('set_head and set_value lexer modes', () => {
       'SetValue',
       'SetEnd',
     ]);
-    expect(tokens[3].image).toBe(' a,b ');
+    expect(tokens[3].image).toBe('a,b');
   });
 
   it('keeps the name, the = and the ; what they are to the rest of the engine', () => {
@@ -49,14 +51,14 @@ describe('set_head and set_value lexer modes', () => {
   it('takes an escaped quote as part of the quoted stretch', () => {
     const { tokens } = lexer.tokenize("Set x = 'it''s; fine';");
 
-    expect(tokens[3].image).toBe(" 'it''s; fine'");
+    expect(tokens[3].image).toBe("'it''s; fine'");
   });
 
   it('ends a value with a quote left open at the next ;', () => {
     const { tokens, errors } = lexer.tokenize("Set x = 'open;\nLet y = 1;");
 
     expect(errors).toEqual([]);
-    expect(tokens[3].image).toBe(" 'open");
+    expect(tokens[3].image).toBe("'open");
     expect(tokens[5].image).toBe('Let');
   });
 
@@ -68,7 +70,18 @@ describe('set_head and set_value lexer modes', () => {
     const { tokens, errors } = lexer.tokenize('Set vFields = A,\n  B;');
 
     expect(errors).toEqual([]);
-    expect(tokens.find((t) => t.tokenType === setValueToken)?.image).toBe(' A,\n  B');
+    expect(tokens.find((t) => t.tokenType === setValueToken)?.image).toBe('A,\n  B');
+  });
+
+  it('lexes the line break before a ; on the next line as whitespace', () => {
+    const { tokens, groups } = lexer.tokenize('Set x = 1.2\n;');
+
+    expect(tokens[3].image).toBe('1.2');
+    expect(groups.whitespace.map((t) => t.image)).toContain('\n');
+  });
+
+  it('keeps a tab at the edge inside the value, since only spaces were measured', () => {
+    expect(lexer.tokenize('Set x = \t1\t;').tokens[3].image).toBe('\t1\t');
   });
 
   it('lexes a dynamic name as ordinary script', () => {
@@ -115,10 +128,12 @@ describe('set_head and set_value lexer modes', () => {
 });
 
 describe('rules + set_value interaction', () => {
-  it('formats nothing inside the value', () => {
-    const source = 'Set vList = a,b;\nSet vSum = 3+4 ;\nSet vSep = ,;\nSet vEmpty =;\n';
+  it('formats nothing inside the value, and its edges like any gap', () => {
+    const source = 'Set vList =a,b;\nSet vSum = 3+4 ;\nSet vSep = ,;\nSet vEmpty =;\n';
 
-    expect(format(source, recommended).output).toBe(source);
+    expect(format(source, recommended).output).toBe(
+      'Set vList = a,b;\nSet vSum = 3+4;\nSet vSep = ,;\nSet vEmpty =;\n',
+    );
   });
 
   it('still recases the keyword and checks the name', () => {

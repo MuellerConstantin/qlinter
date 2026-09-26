@@ -61,6 +61,12 @@ export function hasExpectedIndent(
  * then belong to a token that opened on an earlier line — inline data, a
  * multi-line string, a block comment — where there is no indentation to speak
  * of and rewriting the run would corrupt the token carrying it.
+ *
+ * Undefined too when the line break ahead of the line is not a run of its own
+ * but the end of the token before it. A Set value, a SQL command or a Trace
+ * message runs up to its `;` and takes every line break on the way, so a `;`
+ * opening its own line sits right against that token: indentation written there
+ * is read back as part of the value, not as space before the `;`.
  */
 export function indentAnchor(whitespaces: IToken[], first: IToken, comments: readonly IToken[]): IToken | undefined {
   let anchor = first;
@@ -76,6 +82,11 @@ export function indentAnchor(whitespaces: IToken[], first: IToken, comments: rea
   }
 
   const lineStart = anchor.startOffset - ((anchor.startColumn ?? 1) - 1);
+  const breakAhead = runEndingAt(whitespaces, lineStart);
+
+  if (lineStart > 0 && (breakAhead === undefined || !isLineBreak(breakAhead))) {
+    return undefined;
+  }
 
   return runsSpanning(whitespaces, lineStart, anchor.startOffset) !== undefined ? anchor : undefined;
 }

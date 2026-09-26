@@ -56,3 +56,10 @@ Load * Inline [
 Name, Value
 Alice, 1
 ];
+
+Sub LogVersion
+
+    Trace Version 1.2
+;
+
+End Sub

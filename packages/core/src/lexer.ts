@@ -890,10 +890,16 @@ export const remTextToken = createToken({
 /*
  * A Set assigns "the text to the right of the equal sign" to its variable
  * without evaluating it — `set x = 3 + 4;` holds `'3 + 4'` — so a space or a
- * comma rewritten there is a different value. Everything after the Set's `=` up
- * to the terminator is therefore one opaque token, the blanks at either end
- * included: the reference shows one space after `=` falling outside the value,
- * but says nothing of more, of a tab, or of blanks before the `;`.
+ * comma rewritten inside the value is a different value, and the value lexes as
+ * one opaque token.
+ *
+ * Its edges are not part of it. The reference is silent on them, so this was
+ * measured, in Qlik Sense Enterprise on Windows May 2025 Patch 19: spaces
+ * before and after the value, and line breaks before its `;`, are dropped —
+ * `Set x =    1.2   ;` and `Set x = 1.2` with the `;` on the next line both hold
+ * `1.2`. Those edges lex as whitespace, for the rules to space like any other.
+ * A tab was not measured, and Qlik's stripping of field values leaves tabs
+ * alone, so a tab at the edge stays inside the value.
  *
  * The keyword opens a head in which the name lexes as usual; its `=` closes the
  * head and opens the value. A Let evaluates its right-hand side and stays
@@ -907,6 +913,7 @@ export const remTextToken = createToken({
  * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/ScriptRegularStatements/Set.htm | Set}
  * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/work-with-variables-in-data-load-editor.htm | Variables in the data load editor}
  * @see {@link https://help.qlik.com/en-US/sense/May2026/Subsystems/Hub/Content/Sense_Hub/Scripting/NumberInterpretationVariables/MoneyFormat.htm | MoneyFormat}
+ * @see {@link https://help.qlik.com/en-US/sense/May2025/Subsystems/Hub/Content/Sense_Hub/Scripting/SystemVariables/Verbatim.htm | Verbatim}
  */
 export const setKeywordToken = createToken({
   name: 'SetKeyword',
@@ -916,9 +923,12 @@ export const setKeywordToken = createToken({
   push_mode: 'set_head',
 });
 
+/* One piece of a Set value: a quoted or bracketed stretch, or a character that is neither a space nor a line break. */
+const SET_VALUE_PIECE = String.raw`'(?:[^']|'')*'|"(?:[^"]|"")*"|\[(?:[^\]]|\]\])*\]|[^;'"[ \r\n]|['"[]`;
+
 export const setValueToken = createToken({
   name: 'SetValue',
-  pattern: /(?:'(?:[^']|'')*'|"(?:[^"]|"")*"|\[(?:[^\]]|\]\])*\]|[^;'"[]|['"[])+/,
+  pattern: new RegExp(`(?:${SET_VALUE_PIECE})(?:[ \\r\\n]*(?:${SET_VALUE_PIECE}))*`),
   line_breaks: true,
 });
 
@@ -1100,6 +1110,8 @@ export const newlineToken = createToken({
   group: WHITESPACE_GROUP,
   line_breaks: true,
 });
+/* Around a Set value only spaces are dropped, so only spaces lex as whitespace there. */
+const setBlankToken = createToken({ name: 'SetBlank', pattern: / +/, group: WHITESPACE_GROUP });
 
 /*
  * Comments are routed to the 'comments' group instead of being skipped, so they
@@ -1186,7 +1198,7 @@ const setHeadModeTokens = [
   setHeadEndToken,
 ];
 
-const setValueModeTokens = [setEndToken, setValueToken];
+const setValueModeTokens = [setEndToken, setBlankToken, newlineToken, setValueToken];
 
 const remBodyModeTokens = [remEndToken, remTextToken];
 
@@ -1199,6 +1211,7 @@ export const allTokens = [
   setEqualsToken,
   setHeadEndToken,
   setValueToken,
+  setBlankToken,
   setEndToken,
   remTextToken,
   remEndToken,
