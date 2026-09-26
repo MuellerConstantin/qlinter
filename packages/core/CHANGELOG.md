@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `blank-line-after-table` requires a blank line below each table a script
+  builds, counting as a table what `blank-line-before-table` does. Every
+  statement following one is set off, a `Store` or `Drop` of that table
+  included. The end of the file, the end of a block body, a following table or
+  block — which ask for the gap themselves — and the source below a preceding
+  load are exempt.
 - `no-empty-statement` removes a `;` that opens the script or follows another
   `;`, ending a statement that says nothing. A `;` inside a string, a name, a
   `Set` value or inline data is not a terminator and is never flagged. After a

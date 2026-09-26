@@ -2,6 +2,7 @@ import type { AnyRule, RulesConfigOf } from '../types.js';
 export { CASE_STYLES } from './types.js';
 export type { CaseStyle, CaseRuleOptions } from './types';
 import { blankLineAfterBlock } from './blank-line-after-block.js';
+import { blankLineAfterTable } from './blank-line-after-table.js';
 import { blankLineBeforeBlock } from './blank-line-before-block.js';
 import { blankLineBeforeTable } from './blank-line-before-table.js';
 import { blockCommentStars } from './block-comment-stars.js';
@@ -64,6 +65,7 @@ export type { VariableCaseStyle, VariableCaseOptions } from './variable-case.js'
 export const allRules = [
   tableLabelBrackets,
   blankLineAfterBlock,
+  blankLineAfterTable,
   blankLineBeforeBlock,
   blankLineBeforeTable,
   blockCommentStars,
@@ -177,6 +179,7 @@ export function resolveConfig(config: LintConfig): LintConfig {
 
 export {
   blankLineAfterBlock,
+  blankLineAfterTable,
   blankLineBeforeBlock,
   blankLineBeforeTable,
   blockCommentStars,

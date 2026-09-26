@@ -6,6 +6,7 @@ import {
   equalsToken,
   identifierToken,
   semicolonToken,
+  sourceClauseToken,
   sqlSelectToken,
   statementTerminatorToken,
 } from '../../lexer.js';
@@ -292,4 +293,16 @@ export function opensTable(tokens: IToken[]): boolean {
   }
 
   return findLoadIndex(tokens) !== -1 || selectsFromDatabase(tokens);
+}
+
+/*
+ * Whether the statement is a preceding load: a `Load` naming no source, which
+ * reads its rows from the statement below it. The two are one table, so the gap
+ * between them is no gap between tables, and the rules spacing tables apart must
+ * agree on that.
+ */
+export function isPrecedingLoad(tokens: IToken[]): boolean {
+  return (
+    findLoadIndex(tokens) !== -1 && findAtTopLevel(tokens, (token) => tokenMatcher(token, sourceClauseToken)) === -1
+  );
 }

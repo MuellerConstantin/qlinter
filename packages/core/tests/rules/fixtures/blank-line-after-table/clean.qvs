@@ -1,0 +1,29 @@
+[Sales]:
+Load
+    OrderId,
+    Amount
+From [lib://qvd/sales.qvd] (qvd);
+
+Store Sales into [lib://qvd/sales_out.qvd] (qvd);
+
+Drop Table Sales;
+
+// A preceding load and its source are one table.
+[Orders]:
+Load
+    OrderId
+;
+SQL SELECT OrderId FROM dbo.Orders;
+[Customers]:
+Load
+    CustomerId
+Resident Src;
+
+If vRun Then
+
+    [Products]:
+    Load
+        ProductId
+    Resident Src;
+
+End If

@@ -2,7 +2,7 @@ import { tokenMatcher } from 'chevrotain';
 import { colonToken } from '../lexer.js';
 import { tokenRange } from '../token.js';
 import type { Finding, Rule } from '../types.js';
-import { classifyBlockLine, opensBody } from './utils/blocks.js';
+import { classifyBlockLine, closesBody } from './utils/blocks.js';
 import { commentOnlyLines, insertLineBefore, introductionStart, precededByBlankLine } from './utils/lines.js';
 import { collectStatementSpans, isPrecedingLoad, opensTable, type StatementSpan } from './utils/statements.js';
 
@@ -13,8 +13,8 @@ function labelOf(statement: StatementSpan): string | undefined {
   return second !== undefined && tokenMatcher(second, colonToken) ? statement.first.image : undefined;
 }
 
-export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = {
-  id: 'blank-line-before-table',
+export const blankLineAfterTable: Rule<undefined, 'blank-line-after-table'> = {
+  id: 'blank-line-after-table',
   defaultSeverity: 'warning',
   defaultOptions: undefined,
   check: ({ tokens, comments, whitespaces, lines: spans, lineEnding }) => {
@@ -24,34 +24,36 @@ export const blankLineBeforeTable: Rule<undefined, 'blank-line-before-table'> = 
 
     for (let index = 0; index < statements.length; index++) {
       const statement = statements[index];
-      const previous = statements[index - 1];
-      const label = labelOf(statement);
+      const next = statements[index + 1];
 
-      if (label === undefined && !opensTable(statement.tokens)) {
+      if (next === undefined || !opensTable(statement.tokens) || isPrecedingLoad(statement.tokens)) {
         continue;
       }
 
-      if (label === undefined && previous !== undefined && isPrecedingLoad(previous.tokens)) {
+      const kind = classifyBlockLine(next.tokens);
+
+      /*
+       * The end of a body is that body's edge, and what opens a section of its
+       * own asks for the gap above itself; claiming either here fills it twice.
+       */
+      if (closesBody(kind) || kind === 'open' || opensTable(next.tokens)) {
         continue;
       }
 
-      const top = introductionStart(commented, statement.line);
+      const top = introductionStart(commented, next.line);
 
       if (precededByBlankLine(whitespaces, spans, top)) {
         continue;
       }
 
-      /* The first statement of a block needs no gap between itself and the header it belongs to. */
-      if (previous !== undefined && opensBody(classifyBlockLine(previous.tokens))) {
-        continue;
-      }
+      const label = labelOf(statement);
 
       out.push({
         range: tokenRange(statement.first),
         message:
           label === undefined
-            ? 'A table should be preceded by a blank line.'
-            : `Table '${label}' should be preceded by a blank line.`,
+            ? 'A table should be followed by a blank line.'
+            : `Table '${label}' should be followed by a blank line.`,
         fix: insertLineBefore(spans, top, lineEnding),
       });
     }

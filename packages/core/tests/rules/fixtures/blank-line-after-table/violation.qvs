@@ -1,0 +1,16 @@
+[Sales]:
+Load
+    OrderId,
+    Amount
+From [lib://qvd/sales.qvd] (qvd);
+Store Sales into [lib://qvd/sales_out.qvd] (qvd);
+Drop Table Sales;
+
+Load
+    CustomerId
+Resident Src;
+// Counted for the log.
+Let vRows = NoOfRows('Customers');
+
+SQL SELECT Id FROM dbo.Orders;
+Trace done;

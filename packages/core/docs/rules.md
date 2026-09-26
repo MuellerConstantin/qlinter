@@ -3,6 +3,7 @@
 | Rule                                                      | Description                                                    |
 | :-------------------------------------------------------- | :------------------------------------------------------------- |
 | [blank-line-after-block](#blank-line-after-block)         | Require a blank line below each block a script closes.         |
+| [blank-line-after-table](#blank-line-after-table)         | Require a blank line below each table a script builds.         |
 | [blank-line-before-block](#blank-line-before-block)       | Require a blank line above each block a script opens.          |
 | [blank-line-before-table](#blank-line-before-table)       | Require a blank line above each table a script builds.         |
 | [block-comment-stars](#block-comment-stars)               | Align multi-line block comments with a leading ` *` rail.      |
@@ -175,6 +176,76 @@ Sub LoadSales
 End Sub
 
 Let vDone = 1;
+```
+
+### Options
+
+This rule has no options.
+
+---
+
+## blank-line-after-table
+
+Require a blank line below each table the script builds.
+
+### Rule Details
+
+A table is a section of the script, and what follows it — a `Store`, a `Drop`,
+a variable — is a statement of its own. Butted straight against the table, it
+reads as one more line of the `Load` rather than the next step. This rule is the
+counterpart to [blank-line-before-table](#blank-line-before-table) on the other
+side, and counts as a table what that rule counts: a labeled statement, any
+statement with a top-level `Load`, and any `Select`.
+
+**Every statement is set off, whatever it does with the table.** A `Store` or
+`Drop Table` naming the table above gets a blank line like any other statement;
+the load, the store and the drop are three steps, and the blank line above the
+next table already marks where they end.
+
+**It only fires where nothing else already asks for that gap.** Four cases are
+therefore exempt:
+
+- **The end of the file.** There is nothing below to separate.
+- **A closer, an `Else` or a `Case` following.** That is the edge of a body, and
+  the gap there belongs to [padded-blocks](#padded-blocks).
+- **A statement that opens a section of its own** — another table, or a block.
+  Those already ask for a blank line above themselves; claiming the gap here as
+  well would fill it twice.
+- **A preceding load.** A `Load` naming no source reads its rows from the
+  statement below it, and the two are one table.
+
+A comment introducing what follows belongs to it, so the blank line goes _above_
+the comment rather than between comment and statement.
+
+The autofix inserts a single line terminator — the one the file already uses.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);
+Store Sales into [lib://qvd/sales_out.qvd] (qvd);
+Drop Table Sales;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+[Sales]:
+Load
+    OrderId
+From [lib://qvd/sales.qvd] (qvd);
+
+Store Sales into [lib://qvd/sales_out.qvd] (qvd);
+Drop Table Sales;
+
+[Orders]:
+Load
+    OrderId
+;
+SQL SELECT OrderId FROM dbo.Orders;
 ```
 
 ### Options
