@@ -28,6 +28,7 @@
 | [multiline-call](#multiline-call)                         | Break the arguments of a call that made its line overlong.     |
 | [multiline-comment-block](#multiline-comment-block)       | Require a multi-line comment to be one block comment.          |
 | [no-blank-line-in-statement](#no-blank-line-in-statement) | Disallow a blank line inside a single statement.               |
+| [no-empty-statement](#no-empty-statement)                 | Disallow a `;` that ends an empty statement.                   |
 | [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.          |
 | [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.            |
 | [no-multiple-empty-lines](#no-multiple-empty-lines)       | Limit how many consecutive empty lines may appear.             |
@@ -667,7 +668,7 @@ Three terminators are left where they stand:
   A `Trace` prints them — measured in the same Qlik — and how a database driver
   reads the edges of a SQL command has not been measured.
 - **A `;` directly after another `;`.** It ends an empty statement, which has no
-  line to join.
+  line to join; [no-empty-statement](#no-empty-statement) removes it.
 - **A `;` on the same line as the statement.** Any space between the two is
   [semicolon-space](#semicolon-space)'s to remove.
 
@@ -2470,6 +2471,56 @@ RegionId, RegionName
 
 2, South
 ];
+```
+
+### Options
+
+This rule has no options.
+
+---
+
+## no-empty-statement
+
+Disallow a `;` that ends an empty statement.
+
+### Rule Details
+
+A `;` ends the statement before it. One that opens the script, or follows
+another `;` with nothing but whitespace and comments in between, ends a
+statement that says nothing — usually what is left over after the statement in
+front of it was deleted or commented out. The autofix removes it, together with
+its line when it stood alone there, or with the blanks separating it from the
+code before it.
+
+Only a `;` the lexer reads as a terminator counts. One inside a string, a quoted
+or bracketed name, a `Set` value, inline data or a comment is part of that text
+and never reaches this rule — `';;' as Separator` in a `Load` is a field.
+
+**After a SQL command or a `Trace` message, the `;` is reported but not
+removed.** Both run up to the first `;`, and whether Qlik reads a `;` inside
+quotes there as their end has not been measured. If it does not,
+`SQL SELECT ';;' FROM t;` is one command, and what looks like an empty statement
+after its end is part of the query. The same holds for every `;` that follows in
+a row. A `Rem` ends at the next `;` by definition, so the fix applies after one.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+;
+Let vYear = 2026;
+;
+
+Drop Table Src;;
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Let vYear = 2026;
+
+Load
+    ';;' as Separator
+Resident Src;
 ```
 
 ### Options

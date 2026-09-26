@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `no-empty-statement` removes a `;` that opens the script or follows another
+  `;`, ending a statement that says nothing. A `;` inside a string, a name, a
+  `Set` value or inline data is not a terminator and is never flagged. After a
+  SQL command or a `Trace` message the `;` is reported but kept, since whether
+  Qlik ends those at a quoted `;` is unmeasured.
 - `semicolon-style` puts a `;` on the last line of the statement it closes
   instead of on a line of its own, carrying any comment in between along. A
   `Set` value is unaffected: Qlik drops a line break before its `;`, measured

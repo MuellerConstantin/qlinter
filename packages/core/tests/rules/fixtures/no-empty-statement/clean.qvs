@@ -1,0 +1,13 @@
+Let vYear = 2026;
+
+[Sales]:
+Load
+    ';;' as Separator,
+    "Order;;Id",
+    [Amount;;Net]
+Resident Src;
+
+Set vFormat = '#,##0.00;;-#,##0.00';
+
+// done;;
+Drop Table Src; /* ;; */
