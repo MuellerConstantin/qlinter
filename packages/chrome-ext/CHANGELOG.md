@@ -5,7 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0]
+
+### Added
+
+- Five rules that come from the bundled Core engine, so a configuration on the
+  `recommended` preset picks them up without any change. `blank-line-after-table`
+  requires a blank line below each table, the counterpart to
+  `blank-line-before-table`. `comment-indent` indents a line holding only a
+  comment like the code below it, so a comment stays with the code it describes
+  when that code is reindented. `semicolon-style` puts a `;` on the last line of
+  its statement instead of on a line of its own. `no-empty-statement` removes a
+  `;` that ends nothing, such as one left over below a statement that already
+  had its own. `no-rem` writes a remark as a `//` comment instead of a `Rem`
+  statement.
+
+### Changed
+
+- Expect more findings on a script that passed under 0.3.0, from the five new
+  rules above.
+- `multiline-comment-block` folds a block comment directly above or below a run
+  of `//` lines into the same block. A script could otherwise settle in two
+  shapes, depending on the order the rules were configured in.
 
 ### Fixed
 
@@ -14,6 +35,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   applied the fix's offsets — or the ignore's line number — to text that had
   changed since, and edited the wrong characters. Such a click now does nothing;
   the pending lint redraws the marks, and the next click applies.
+- Text Qlik does not read as script is no longer formatted: the command of a SQL
+  statement, which the database driver receives exactly as written; the value
+  of a `Set`, which the variable holds unevaluated, so `a,b` spaced into `a, b`
+  was a different value; and the remark of a `Rem`. The spaces and line breaks
+  around a `Set` value are still tidied, since Qlik drops them — measured in
+  Qlik Sense Enterprise on Windows May 2025 Patch 19.
+- A `///` line comment, which marks a script section when a script is stored as
+  a text file, is kept as written instead of being respaced or folded into a
+  block comment.
+- An include whose file name is built from a variable —
+  `$(Must_Include=[$(vLib)common.qvs])` — is read whole instead of spilling the
+  rest of its file name out as script.
+- A `;` on a line of its own after a SQL command or a `Trace` message is no
+  longer indented; the indent became part of the text, and a `Trace` prints it.
+- Fix All formats a script holding `Let vX =;`, `Set vX =;` or a `Rem` banner.
+  Two rules undid each other's fix there until formatting gave up, and Fix All
+  left the whole script untouched.
 
 ## [0.3.0]
 
