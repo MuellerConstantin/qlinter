@@ -7,7 +7,8 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-ext",
-        "${workspaceFolder}/packages/vscode-ext/scratchpad"
+        "${workspaceFolder}/packages/vscode-ext/scratchpad",
+        "--disable-extensions"
       ],
       "outFiles": ["${workspaceFolder}/packages/vscode-ext/dist/**/*.js"],
       "preLaunchTask": "prepare:vscode-ext"
