@@ -18,6 +18,7 @@
 - [Introduction](#introduction)
 - [Formatting](#formatting)
 - [Configuration](#configuration)
+- [Conformance score](#conformance-score)
 - [Privacy](#privacy)
 
 ## Introduction
@@ -79,6 +80,15 @@ value it receives is always an explicit setting. The status bar item shows the a
 
 A broken `qlinter.json` is surfaced as an error notification rather than silently ignored, and no
 diagnostics are shown for that file until it is fixed.
+
+## Conformance score
+
+Next to the configuration source, the status bar shows the share of lines in the open script
+that carry no finding, as a percentage; click it to open the Problems panel. It updates with
+every lint pass, and stays hidden for a script under ten lines, where a single finding would
+swing the figure further than the style it describes, and when no rules are configured. What
+the score measures is written up in the
+[score reference](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/score.md).
 
 ## Privacy
 

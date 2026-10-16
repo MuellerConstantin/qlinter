@@ -1,5 +1,13 @@
 import * as vscode from 'vscode';
-import { format, lint, type Diagnostic, type Fix, type LintConfig, type Severity } from '@qlinter/core';
+import {
+  conformanceScore,
+  format,
+  lint,
+  type Diagnostic,
+  type Fix,
+  type LintConfig,
+  type Severity,
+} from '@qlinter/core';
 import { resolveConfig, type ResolvedConfig, type SettingsInput } from './config.js';
 import { ignoreEdit } from './ignore.js';
 
@@ -157,7 +165,13 @@ export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('qlinter');
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
   statusBar.command = SHOW_CONFIG_COMMAND;
-  context.subscriptions.push(collection, output, statusBar);
+  const scoreItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -1);
+  scoreItem.command = 'workbench.actions.view.problems';
+  context.subscriptions.push(collection, output, statusBar, scoreItem);
+
+  // Scores of open documents, keyed by URI, kept from the last lint pass so the
+  // status bar never lints a second time to show one.
+  const scores = new Map<string, number | null>();
 
   // Resolved configs are cached per workspace folder (loose files share one
   // entry) so a `qlinter.json` is not re-read on every keystroke. The cache is
@@ -195,6 +209,8 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   function refreshDiagnostics(document: vscode.TextDocument): void {
+    scores.delete(document.uri.toString());
+
     if (document.languageId !== QLIK_LANGUAGE_ID) {
       collection.delete(document.uri);
       return;
@@ -207,12 +223,37 @@ export function activate(context: vscode.ExtensionContext): void {
       return;
     }
 
-    const diagnostics = lint(document.getText(), result.resolved.config).map(toVscodeDiagnostic);
-    collection.set(document.uri, diagnostics);
+    const source = document.getText();
+    const diagnostics = lint(source, result.resolved.config);
+    collection.set(document.uri, diagnostics.map(toVscodeDiagnostic));
+
+    // With no rules every line is clean, and a perfect score would say nothing.
+    if (!isEmptyConfig(result.resolved.config)) {
+      scores.set(document.uri.toString(), conformanceScore(source, diagnostics));
+    }
+
+    if (document === vscode.window.activeTextEditor?.document) {
+      updateScore(document);
+    }
+  }
+
+  function updateScore(document: vscode.TextDocument | undefined): void {
+    const score = document === undefined ? undefined : scores.get(document.uri.toString());
+
+    // `null` is Core declining to score a script too short for the figure to mean anything.
+    if (score === undefined || score === null) {
+      scoreItem.hide();
+      return;
+    }
+
+    scoreItem.text = `$(pass) ${score}%`;
+    scoreItem.tooltip = `qlinter conformance: ${score}% of lines carry no finding. Click to open the Problems panel.`;
+    scoreItem.show();
   }
 
   function updateStatusBar(editor: vscode.TextEditor | undefined): void {
     const document = editor?.document;
+    updateScore(document);
 
     if (document === undefined || document.languageId !== QLIK_LANGUAGE_ID) {
       statusBar.hide();
@@ -427,7 +468,10 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.workspace.onDidOpenTextDocument((document) => refreshDiagnostics(document)),
     vscode.workspace.onDidChangeTextDocument((event) => refreshDiagnostics(event.document)),
-    vscode.workspace.onDidCloseTextDocument((document) => collection.delete(document.uri)),
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      collection.delete(document.uri);
+      scores.delete(document.uri.toString());
+    }),
     vscode.window.onDidChangeActiveTextEditor((editor) => updateStatusBar(editor)),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('qlinter')) {

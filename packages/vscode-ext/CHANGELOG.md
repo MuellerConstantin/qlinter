@@ -40,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no rules. The extension never writes to the user's `settings.json`.
 - Status bar item showing the active configuration source (`qlinter.json`,
   `settings`, or `no rules`); clicking it opens the `qlinter.json` or the settings.
+- A conformance score in the status bar beside it: the share of lines in the
+  open script that no diagnostic points at, as a percentage, updated with every
+  lint pass. Clicking it opens the Problems panel. It stays hidden for a script
+  under ten lines, which Core declines to score, and when no rules are
+  configured.
 - Resolved configs cached per workspace folder and invalidated on settings
   changes and via a `qlinter.json` file watcher, so a config edit re-lints open
   documents without a reload.
