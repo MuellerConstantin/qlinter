@@ -89,6 +89,7 @@
   },
   "scripts": {
     "build": "tsdown",
+    "scratchpad": "node -e \"const fs = require('node:fs'); fs.rmSync('scratchpad', { recursive: true, force: true }); fs.cpSync('../core/tests/rules/fixtures', 'scratchpad', { recursive: true })\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",

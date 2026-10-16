@@ -2,6 +2,7 @@
 # assets (icon + README logo), and the README ship in the VSIX.
 src/**
 tests/**
+scratchpad/**
 node_modules/**
 tsconfig.json
 tsdown.config.ts

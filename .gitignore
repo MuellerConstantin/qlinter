@@ -325,5 +325,9 @@ packages/vscode-ext/LICENSE.md
 packages/core/LICENSE.md
 packages/cli/LICENSE.md
 
+# Throwaway copy of the core rule fixtures, rebuilt on every vscode-ext launch so
+# edits in the development host never reach the real fixtures.
+packages/vscode-ext/scratchpad/
+
 # Upload artifact built by the chrome-ext `package` script.
 packages/chrome-ext/*.zip

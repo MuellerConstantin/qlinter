@@ -7,6 +7,18 @@
       "script": "build:vscode-ext",
       "group": "build",
       "problemMatcher": []
+    },
+    {
+      "label": "scratchpad:vscode-ext",
+      "type": "npm",
+      "script": "scratchpad:vscode-ext",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepare:vscode-ext",
+      "dependsOn": ["build:vscode-ext", "scratchpad:vscode-ext"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
     }
   ]
 }

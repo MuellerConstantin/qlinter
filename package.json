@@ -21,6 +21,7 @@
     "build:vscode-ext": "npm run build -w qlinter-vscode-ext",
     "package:chrome-ext": "npm run package -w @qlinter/chrome-ext",
     "package:vscode-ext": "npm run package -w qlinter-vscode-ext",
+    "scratchpad:vscode-ext": "npm run scratchpad -w qlinter-vscode-ext",
     "test": "npm test -w @qlinter/core && npm test -w @qlinter/cli && npm test -w @qlinter/chrome-ext && npm test -w qlinter-vscode-ext",
     "test:core": "npm test -w @qlinter/core",
     "test:cli": "npm test -w @qlinter/cli",
