@@ -15,6 +15,9 @@ const DIAGNOSTIC_SOURCE = 'qlinter';
 /** Command wired to the status bar item; reveals the active config source. */
 const SHOW_CONFIG_COMMAND = 'qlinter.showConfig';
 
+/** Command that applies every autofix to the active script in one pass. */
+const FIX_ALL_COMMAND = 'qlinter.fixAll';
+
 /** Rule reference whose sections are headed by rule id, so `#<rule id>` lands on one. */
 const DOCS_URL = 'https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md';
 
@@ -405,6 +408,22 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       await vscode.commands.executeCommand('workbench.action.openSettings', 'qlinter');
+    }),
+    vscode.commands.registerTextEditorCommand(FIX_ALL_COMMAND, (editor, edit) => {
+      const document = editor.document;
+
+      if (document.languageId !== QLIK_LANGUAGE_ID || !getConfig(document).ok) {
+        return;
+      }
+
+      const formatted = formatDocument(document);
+
+      if (formatted === undefined) {
+        vscode.window.setStatusBarMessage('qlinter: nothing to fix', 3000);
+        return;
+      }
+
+      edit.replace(fullRange(document), formatted);
     }),
     vscode.workspace.onDidOpenTextDocument((document) => refreshDiagnostics(document)),
     vscode.workspace.onDidChangeTextDocument((event) => refreshDiagnostics(event.document)),

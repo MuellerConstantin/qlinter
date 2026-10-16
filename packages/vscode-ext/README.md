@@ -40,7 +40,8 @@ Diagnostics come with fixes at three levels:
 - **Format Document** (`Shift+Alt+F`) — reformats the whole script through Core's formatter.
   Enable `"editor.formatOnSave": true` (optionally scoped to the `qlik` language) to run it on
   every save.
-- **Fix All** — applies every autofix in one pass. Wire it into save with:
+- **Fix All** — applies every autofix in one pass, on demand through **qlinter: Fix all
+  auto-fixable problems** in the Command Palette. Wire it into save with:
 
   ```jsonc
   "[qlik]": {

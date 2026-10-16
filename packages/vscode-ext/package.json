@@ -60,8 +60,20 @@
       {
         "command": "qlinter.showConfig",
         "title": "qlinter: Show active configuration"
+      },
+      {
+        "command": "qlinter.fixAll",
+        "title": "qlinter: Fix all auto-fixable problems"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "qlinter.fixAll",
+          "when": "editorLangId == qlik"
+        }
+      ]
+    },
     "configuration": {
       "title": "qlinter",
       "properties": {

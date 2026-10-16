@@ -25,7 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Document" and `editor.formatOnSave` reformat Qlik scripts through Core's
   `format()`.
 - A `source.fixAll` code action that applies every autofix in one pass, wired for
-  the "Fix All" command and `editor.codeActionsOnSave`.
+  the "Fix All" command and `editor.codeActionsOnSave`, and a
+  "qlinter: Fix all auto-fixable problems" command in the Command Palette that
+  applies the same pass to the open script.
 - Per-document configuration resolution with strict precedence: a `qlinter.json`
   at the workspace folder root wins, otherwise the `qlinter.presets` and
   `qlinter.rules` settings apply. Loose `.qvs` files with no workspace folder fall
