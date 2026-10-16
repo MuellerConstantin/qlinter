@@ -14,6 +14,9 @@ const DIAGNOSTIC_SOURCE = 'qlinter';
 /** Command wired to the status bar item; reveals the active config source. */
 const SHOW_CONFIG_COMMAND = 'qlinter.showConfig';
 
+/** Rule reference whose sections are headed by rule id, so `#<rule id>` lands on one. */
+const DOCS_URL = 'https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md';
+
 /**
  * Kind for the whole-document autofix action. Nested under `source.fixAll` so it
  * runs when the editor requests `source.fixAll` on save (via
@@ -51,7 +54,10 @@ function toVscodeRange(range: Diagnostic['range']): vscode.Range {
   );
 }
 
-/** Maps a Core {@link Diagnostic} to a VS Code diagnostic. */
+/**
+ * Maps a Core {@link Diagnostic} to a VS Code diagnostic. The rule id becomes a
+ * code with a target, which the editor renders as a link to the rule reference.
+ */
 function toVscodeDiagnostic(diagnostic: Diagnostic): vscode.Diagnostic {
   const result = new vscode.Diagnostic(
     toVscodeRange(diagnostic.range),
@@ -59,9 +65,14 @@ function toVscodeDiagnostic(diagnostic: Diagnostic): vscode.Diagnostic {
     SEVERITY_MAP[diagnostic.severity],
   );
   result.source = DIAGNOSTIC_SOURCE;
-  result.code = diagnostic.ruleId;
+  result.code = { value: diagnostic.ruleId, target: vscode.Uri.parse(`${DOCS_URL}#${diagnostic.ruleId}`) };
 
   return result;
+}
+
+/** The rule id a qlinter diagnostic was created with by {@link toVscodeDiagnostic}. */
+function ruleIdOf(diagnostic: vscode.Diagnostic): string | number | undefined {
+  return typeof diagnostic.code === 'object' ? diagnostic.code.value : diagnostic.code;
 }
 
 /**
@@ -256,7 +267,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const match = coreDiagnostics.find(
         (core) =>
           core.fix !== undefined &&
-          core.ruleId === diagnostic.code &&
+          core.ruleId === ruleIdOf(diagnostic) &&
           toVscodeRange(core.range).isEqual(diagnostic.range),
       );
 

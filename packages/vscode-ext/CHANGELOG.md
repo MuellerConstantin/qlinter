@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and activating on first open.
 - Inline lint feedback published to the Problems panel and rendered against the
   offending ranges, refreshed live as the document changes and cleared when it
-  closes.
+  closes. Each diagnostic's rule id links to that rule in the
+  [rule reference](../core/docs/rules.md).
 - Core autofixes surfaced as Quick Fix code actions on each fixable diagnostic.
 - Whole-document formatting via a document formatting provider, so "Format
   Document" and `editor.formatOnSave` reformat Qlik scripts through Core's
