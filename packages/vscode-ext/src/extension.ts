@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { format, lint, type Diagnostic, type Fix, type LintConfig, type Severity } from '@qlinter/core';
 import { resolveConfig, type ResolvedConfig, type SettingsInput } from './config.js';
+import { ignoreEdit } from './ignore.js';
 
 /**
  * Language identifier contributed for Qlik load scripts. Kept in sync with the
@@ -92,6 +93,36 @@ function createFixAction(document: vscode.TextDocument, diagnostic: vscode.Diagn
     new vscode.Range(document.positionAt(fix.range.start), document.positionAt(fix.range.end)),
     fix.replacement,
   );
+
+  return action;
+}
+
+/**
+ * Builds a quick-fix code action that disables `ruleId` on `line` through a
+ * disable directive, or `undefined` when the rule is already disabled there.
+ */
+function createIgnoreAction(
+  document: vscode.TextDocument,
+  diagnostics: vscode.Diagnostic[],
+  line: number,
+  ruleId: string,
+): vscode.CodeAction | undefined {
+  const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+  const change = ignoreEdit((index) => document.lineAt(index).text, line, ruleId, eol);
+
+  if (change === undefined) {
+    return undefined;
+  }
+
+  const action = new vscode.CodeAction(`Ignore ${ruleId} for this line`, vscode.CodeActionKind.QuickFix);
+  action.diagnostics = diagnostics;
+  action.edit = new vscode.WorkspaceEdit();
+
+  if (change.kind === 'insert') {
+    action.edit.insert(document.uri, new vscode.Position(change.line, 0), change.text);
+  } else {
+    action.edit.replace(document.uri, document.lineAt(change.line).range, change.text);
+  }
 
   return action;
 }
@@ -248,7 +279,7 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   };
 
-  /** Builds per-diagnostic quick fixes for the qlinter diagnostics in `context`. */
+  /** Builds the autofix and ignore quick fixes for the qlinter diagnostics in `context`. */
   function quickFixes(
     document: vscode.TextDocument,
     config: LintConfig,
@@ -273,6 +304,26 @@ export function activate(context: vscode.ExtensionContext): void {
 
       if (match?.fix) {
         actions.push(createFixAction(document, diagnostic, match.fix));
+      }
+    }
+
+    // One rule can report several findings on a line, but one directive covers them all.
+    const ignored = new Map<string, { line: number; ruleId: string; diagnostics: vscode.Diagnostic[] }>();
+
+    for (const diagnostic of qlinterDiagnostics) {
+      const ruleId = String(ruleIdOf(diagnostic));
+      const line = diagnostic.range.start.line;
+      const key = `${line}:${ruleId}`;
+      const entry = ignored.get(key) ?? { line, ruleId, diagnostics: [] };
+      entry.diagnostics.push(diagnostic);
+      ignored.set(key, entry);
+    }
+
+    for (const { line, ruleId, diagnostics } of ignored.values()) {
+      const action = createIgnoreAction(document, diagnostics, line, ruleId);
+
+      if (action) {
+        actions.push(action);
       }
     }
 

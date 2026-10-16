@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   closes. Each diagnostic's rule id links to that rule in the
   [rule reference](../core/docs/rules.md).
 - Core autofixes surfaced as Quick Fix code actions on each fixable diagnostic.
+- An "Ignore … for this line" Quick Fix on every diagnostic, which writes a
+  `// qlinter-disable-next-line` directive above the line, or adds the rule to
+  the directive already there. The inserted line ends with the line break the
+  script already uses.
 - Whole-document formatting via a document formatting provider, so "Format
   Document" and `editor.formatOnSave` reformat Qlik scripts through Core's
   `format()`.

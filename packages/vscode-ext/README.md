@@ -48,6 +48,10 @@ Diagnostics come with fixes at three levels:
   }
   ```
 
+A finding you mean to keep can be silenced from the same lightbulb: **Ignore … for this line**
+writes `// qlinter-disable-next-line <rule>` above it, or adds the rule to the directive already
+there.
+
 All three run entirely locally through the bundled Core engine, using the same resolved config
 as the diagnostics.
 
