@@ -32,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at the workspace folder root wins, otherwise the `qlinter.presets` and
   `qlinter.rules` settings apply. Loose `.qvs` files with no workspace folder fall
   through to settings.
+- A JSON schema for `qlinter.json`, so the editor completes rule ids,
+  severities, presets and each rule's options, flags an unknown rule or option
+  and a value out of range, and links each rule to its reference on hover. It
+  is generated from the bundled Core engine at build time and cannot fall
+  behind the rules it ships.
 - `qlinter.presets` and `qlinter.rules` settings contributed to VS Code's native
   settings UI, with the preset picker offering the built-in presets.
   `qlinter.presets` declares `["recommended"]` as its manifest default, so a fresh

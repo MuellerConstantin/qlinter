@@ -9,6 +9,7 @@ import {
   type Severity,
 } from '@qlinter/core';
 import { resolveConfig, type ResolvedConfig, type SettingsInput } from './config.js';
+import { ruleDocsUrl } from './docs.js';
 import { ignoreEdit } from './ignore.js';
 
 /**
@@ -25,9 +26,6 @@ const SHOW_CONFIG_COMMAND = 'qlinter.showConfig';
 
 /** Command that applies every autofix to the active script in one pass. */
 const FIX_ALL_COMMAND = 'qlinter.fixAll';
-
-/** Rule reference whose sections are headed by rule id, so `#<rule id>` lands on one. */
-const DOCS_URL = 'https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md';
 
 /**
  * Kind for the whole-document autofix action. Nested under `source.fixAll` so it
@@ -77,7 +75,7 @@ function toVscodeDiagnostic(diagnostic: Diagnostic): vscode.Diagnostic {
     SEVERITY_MAP[diagnostic.severity],
   );
   result.source = DIAGNOSTIC_SOURCE;
-  result.code = { value: diagnostic.ruleId, target: vscode.Uri.parse(`${DOCS_URL}#${diagnostic.ruleId}`) };
+  result.code = { value: diagnostic.ruleId, target: vscode.Uri.parse(ruleDocsUrl(diagnostic.ruleId)) };
 
   return result;
 }

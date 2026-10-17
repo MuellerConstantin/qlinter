@@ -64,7 +64,9 @@ merged:
 
 1. **`qlinter.json` at the workspace folder root.** Same file and shape the [CLI](https://github.com/MuellerConstantin/qlinter/tree/main/packages/cli)
    uses (`{ "presets": "recommended", "rules": { … } }`). When present, it wins. This is the
-   right home for a shared, checked-in team style.
+   right home for a shared, checked-in team style. While you edit it, VS Code completes rule
+   ids, severities and options, flags anything qlinter would reject, and links each rule to its
+   reference on hover.
 2. **VS Code settings**, used when no `qlinter.json` is found. Qlik scripts often open as a lone
    `.qvs` file with no project — settings cover exactly that case:
    - `qlinter.presets` — preset(s) to use as a base. Defaults to `["recommended"]`.
