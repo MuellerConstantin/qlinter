@@ -107,7 +107,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "scratchpad": "node -e \"const fs = require('node:fs'); fs.rmSync('scratchpad', { recursive: true, force: true }); fs.cpSync('../core/tests/rules/fixtures', 'scratchpad', { recursive: true })\"",
+    "scratchpad": "node -e \"const fs = require('node:fs'); const fixtures = '../core/tests/rules/fixtures/'; fs.rmSync('scratchpad', { recursive: true, force: true }); fs.mkdirSync('scratchpad'); for (const rule of fs.readdirSync(fixtures)) { fs.copyFileSync(fixtures + rule + '/violation.qvs', 'scratchpad/' + rule + '.qvs'); }\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
