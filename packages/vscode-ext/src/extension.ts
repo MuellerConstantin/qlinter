@@ -186,10 +186,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
 
     const settingsScope = vscode.workspace.getConfiguration('qlinter', document.uri);
-    const settings: SettingsInput = {
-      presets: settingsScope.get('presets'),
-      rules: settingsScope.get('rules'),
-    };
+    const settings: SettingsInput = { presets: settingsScope.get('presets') };
 
     let result: ConfigResult;
 
@@ -268,10 +265,12 @@ export function activate(context: vscode.ExtensionContext): void {
       statusBar.tooltip = `Using ${result.resolved.path}`;
     } else if (isEmptyConfig(result.resolved.config)) {
       statusBar.text = '$(warning) qlinter: no rules';
-      statusBar.tooltip = 'No qlinter.json found and no rules configured. Click to open settings.';
+      statusBar.tooltip = 'No qlinter.json found and no preset selected. Click to open settings.';
     } else {
       statusBar.text = '$(check) qlinter: settings';
-      statusBar.tooltip = 'Configured via VS Code settings. Click to open settings.';
+      statusBar.tooltip =
+        'Linting with the preset from VS Code settings. Individual rules are configured in a qlinter.json. ' +
+        'Click to open settings.';
     }
 
     statusBar.show();

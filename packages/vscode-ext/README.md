@@ -67,11 +67,15 @@ merged:
    right home for a shared, checked-in team style. While you edit it, VS Code completes rule
    ids, severities and options, flags anything qlinter would reject, and links each rule to its
    reference on hover.
-2. **VS Code settings**, used when no `qlinter.json` is found. Qlik scripts often open as a lone
-   `.qvs` file with no project — settings cover exactly that case:
-   - `qlinter.presets` — preset(s) to use as a base. Defaults to `["recommended"]`.
-   - `qlinter.rules` — per-rule overrides (a severity string, or a `[severity, options]` pair;
-     `null` as the severity sets options without pinning one). Defaults to `{}`.
+2. **The `qlinter.presets` setting**, used when no `qlinter.json` is found. Qlik scripts often
+   open as a lone `.qvs` file with no project — the setting covers exactly that case. It names
+   the preset(s) to lint with and defaults to `["recommended"]`.
+
+Individual rules — turning one off, changing its severity, setting its options — are configured
+in a `qlinter.json` only. There is no setting for them: a `qlinter.json` is the one place where
+the editor completes and checks every entry, and keeping rules there means a team never lints
+differently because of someone's personal settings. A single line can still be exempted from a
+rule with `// qlinter-disable-next-line <rule>`.
 
 A fresh install therefore lints with the `recommended` preset out of the box. The default is
 declared in the extension manifest, so VS Code shows it in the Settings UI like any other
@@ -97,7 +101,7 @@ the score measures is written up in the
 Nothing is collected, nothing is transmitted, and no telemetry is emitted — the extension contains no
 network calls at all. Your scripts are analysed by the bundled engine inside the editor host and never
 leave your machine. The extension stores nothing of its own: it reads the open document, your
-`qlinter.json` or `qlinter.*` settings, and keeps the resolved config in memory for the session.
+`qlinter.json` or the `qlinter.presets` setting, and keeps the resolved config in memory for the session.
 
 Full details are in the
 [privacy policy](https://github.com/MuellerConstantin/qlinter/blob/main/docs/PRIVACY.md).

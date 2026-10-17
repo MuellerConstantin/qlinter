@@ -44,22 +44,16 @@ describe('loadConfigFile', () => {
 });
 
 describe('configFromSettings', () => {
-  it('collapses empty values to an empty config, which runs no rules', () => {
-    expect(configFromSettings({ presets: [], rules: {} })).toEqual({});
+  it('collapses an empty preset list to an empty config, which runs no rules', () => {
+    expect(configFromSettings({ presets: [] })).toEqual({});
   });
 
   it('keeps a named preset', () => {
-    expect(configFromSettings({ presets: ['recommended'], rules: {} })).toEqual({ presets: ['recommended'] });
-  });
-
-  it('keeps per-rule overrides', () => {
-    expect(configFromSettings({ presets: [], rules: { 'trailing-whitespace': 'off' } })).toEqual({
-      rules: { 'trailing-whitespace': 'off' },
-    });
+    expect(configFromSettings({ presets: ['recommended'] })).toEqual({ presets: ['recommended'] });
   });
 
   it('throws when settings name an unknown preset', () => {
-    expect(() => configFromSettings({ presets: ['strict'], rules: {} })).toThrow(/unknown preset "strict"/);
+    expect(() => configFromSettings({ presets: ['strict'] })).toThrow(/unknown preset "strict"/);
   });
 });
 
@@ -80,12 +74,13 @@ describe('manifest defaults', () => {
   });
 
   it('declares a default that resolves to an explicit, valid config', () => {
-    const config = configFromSettings({
-      presets: properties['qlinter.presets'].default,
-      rules: properties['qlinter.rules'].default,
-    });
+    const config = configFromSettings({ presets: properties['qlinter.presets'].default });
 
     expect(config).toEqual({ presets: ['recommended'] });
+  });
+
+  it('offers no setting for individual rules, which belong in a qlinter.json', () => {
+    expect(Object.keys(properties)).toEqual(['qlinter.presets']);
   });
 });
 
@@ -100,7 +95,7 @@ describe('resolveConfig', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  const settings = { presets: ['recommended'], rules: {} };
+  const settings = { presets: ['recommended'] };
 
   it('prefers a qlinter.json at the folder root over settings', () => {
     writeFileSync(join(dir, 'qlinter.json'), JSON.stringify({ rules: { 'trailing-whitespace': 'off' } }), 'utf8');
@@ -127,6 +122,6 @@ describe('resolveConfig', () => {
   });
 
   it('resolves to an empty config when neither a file nor settings apply', () => {
-    expect(resolveConfig(dir, { presets: [], rules: {} })).toEqual({ config: {}, source: 'settings' });
+    expect(resolveConfig(dir, { presets: [] })).toEqual({ config: {}, source: 'settings' });
   });
 });

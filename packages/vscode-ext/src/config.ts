@@ -15,10 +15,13 @@ export interface ResolvedConfig {
   readonly path?: string;
 }
 
-/** Raw `qlinter.*` setting values, as read from VS Code's configuration. */
+/**
+ * Raw `qlinter.*` setting values, as read from VS Code's configuration. Rules
+ * have no setting: they are configured in a `qlinter.json`, the one place with a
+ * schema the editor completes against.
+ */
 export interface SettingsInput {
   readonly presets: unknown;
-  readonly rules: unknown;
 }
 
 /**
@@ -51,8 +54,8 @@ export function loadConfigFile(path: string): LintConfig {
 }
 
 /**
- * Builds a {@link LintConfig} from VS Code setting values. Empty values
- * (`presets: []`, `rules: {}`) collapse to an empty config, which runs no rules.
+ * Builds a {@link LintConfig} from VS Code setting values. An empty preset list
+ * collapses to an empty config, which runs no rules.
  *
  * Core still applies nothing implicitly: `qlinter.presets` simply *declares*
  * `["recommended"]` as its default in the manifest, so the value arriving here
@@ -66,10 +69,6 @@ export function configFromSettings(input: SettingsInput): LintConfig {
 
   if (Array.isArray(input.presets) && input.presets.length > 0) {
     raw.presets = input.presets;
-  }
-
-  if (input.rules !== null && typeof input.rules === 'object' && Object.keys(input.rules).length > 0) {
-    raw.rules = input.rules;
   }
 
   return validateConfig(raw, 'VS Code settings');

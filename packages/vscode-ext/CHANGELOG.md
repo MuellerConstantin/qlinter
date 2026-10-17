@@ -29,16 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "qlinter: Fix all auto-fixable problems" command in the Command Palette that
   applies the same pass to the open script.
 - Per-document configuration resolution with strict precedence: a `qlinter.json`
-  at the workspace folder root wins, otherwise the `qlinter.presets` and
-  `qlinter.rules` settings apply. Loose `.qvs` files with no workspace folder fall
-  through to settings.
+  at the workspace folder root wins, otherwise the `qlinter.presets` setting
+  applies. Loose `.qvs` files with no workspace folder fall through to the
+  setting. Individual rules are configured in a `qlinter.json` only.
 - A JSON schema for `qlinter.json`, so the editor completes rule ids,
   severities, presets and each rule's options, flags an unknown rule or option
   and a value out of range, and links each rule to its reference on hover. It
   is generated from the bundled Core engine at build time and cannot fall
   behind the rules it ships.
-- `qlinter.presets` and `qlinter.rules` settings contributed to VS Code's native
-  settings UI, with the preset picker offering the built-in presets.
+- A `qlinter.presets` setting contributed to VS Code's native settings UI, with
+  the preset picker offering the built-in presets.
   `qlinter.presets` declares `["recommended"]` as its manifest default, so a fresh
   install lints out of the box while the value stays an explicit, user-visible
   setting — VS Code shows it in the Settings UI and it can be set to `[]` to run

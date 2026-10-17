@@ -60,8 +60,8 @@ the open document and the configuration that applies to it.
 
 - The **content of open Qlik script documents**, from VS Code's in-memory document model, to produce
   diagnostics and formatting edits.
-- A **`qlinter.json`** at the workspace folder root, if present, and otherwise your `qlinter.presets` and
-  `qlinter.rules` settings.
+- A **`qlinter.json`** at the workspace folder root, if present, and otherwise your `qlinter.presets`
+  setting.
 
 **Stores**
 

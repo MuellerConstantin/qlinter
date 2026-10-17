@@ -95,12 +95,7 @@
           "default": [
             "recommended"
           ],
-          "markdownDescription": "Preset(s) to use as a base when no `qlinter.json` is found in the workspace. Defaults to `recommended`; set it to an empty array to run no rules at all. A workspace `qlinter.json` always takes precedence over this setting."
-        },
-        "qlinter.rules": {
-          "type": "object",
-          "default": {},
-          "markdownDescription": "Per-rule overrides (a severity string, or a `[severity, options]` pair) used when no `qlinter.json` is found in the workspace. See the [rule reference](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md). A workspace `qlinter.json` always takes precedence over this setting."
+          "markdownDescription": "Preset(s) to lint with when no `qlinter.json` is found in the workspace. Defaults to `recommended`; set it to an empty array to run no rules at all. A workspace `qlinter.json` always takes precedence over this setting. Individual rules are configured in a `qlinter.json`, not here — see the [rule reference](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md)."
         }
       }
     }
