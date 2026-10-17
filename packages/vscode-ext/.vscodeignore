@@ -1,7 +1,9 @@
 # Sources and build config — only the bundled `dist/` output, the `images/`
-# assets (icon + README logo), and the README ship in the VSIX.
+# assets (icon + README logo), and the README ship in the VSIX. The README's
+# screenshots in `docs/` stay out: the Marketplace loads them from GitHub.
 src/**
 tests/**
+docs/**
 scratchpad/**
 node_modules/**
 tsconfig.json

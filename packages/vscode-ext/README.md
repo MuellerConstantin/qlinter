@@ -11,106 +11,92 @@
   <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" />
 </p>
 
+<table align="center">
+  <tr><td align="center"><img src="./docs/images/demo.gif" width="600" alt="Demo"></td></tr>
+  <tr><td align="center"><b>Demo:</b> Extension in action</td></tr>
+</table>
+
 <br />
 
-## Table of contents
+Everyone on your team writes Qlik script their own way? qlinter checks every `.qvs` file against
+one opinionated style guide, shows what is off right where you write, and fixes most of it for
+you.
 
-- [Introduction](#introduction)
-- [Formatting](#formatting)
-- [Configuration](#configuration)
-- [Conformance score](#conformance-score)
-- [Privacy](#privacy)
+## Features
 
-## Introduction
+**Findings inline.** Style issues are underlined as you type and listed in the Problems panel.
+Hover one to see what is wrong, with a link to the rule's reference.
 
-Everyone on your team writes Qlik script their own way? Nothing consistent, code hard to
-read and a pain to maintain? This extension aims to fix that — bringing qlinter's opinionated
-style guide, on-demand autoformatting, and inline diagnostics directly into VS Code, right
-where you write the script.
+<img src="./docs/images/hover.png" width="600" alt="Hover over a finding">
 
-A editor binding around [`@qlinter/core`](https://github.com/MuellerConstantin/qlinter/tree/main/packages/core):
-the extension owns the platform concerns — activating in the editor, surfacing diagnostics, and
-wiring up editor commands — and delegates every linting and formatting decision to Core. No style
-logic lives here; the binding only translates between VS Code and Core's string-in, diagnostics-out API.
+**Fix or ignore in one click.** The lightbulb fixes a single finding, or adds
+`// qlinter-disable-next-line <rule>` above the line when you mean to keep it.
 
-The extension's own interface — commands, status bar, quick fixes, notifications — follows VS
-Code's display language in English and German. The findings themselves come from Core and are in
-English.
+<img src="./docs/images/quick-fix.png" width="600" alt="Quick fix menu">
 
-## Formatting
+**Format the whole script.** _Format Document_ (`Shift+Alt+F`) or **qlinter: Fix all auto-fixable
+problems** applies every fix at once — on save too, if you like.
 
-Diagnostics come with fixes at three levels:
+**Conformance score.** The status bar shows how many lines of the open script are free of
+findings, as a percentage.
 
-- **Quick Fix** — the lightbulb on a single fixable problem applies just that fix.
-- **Format Document** (`Shift+Alt+F`) — reformats the whole script through Core's formatter.
-  Enable `"editor.formatOnSave": true` (optionally scoped to the `qlik` language) to run it on
-  every save.
-- **Fix All** — applies every autofix in one pass, on demand through **qlinter: Fix all
-  auto-fixable problems** in the Command Palette. Wire it into save with:
+**Team config with autocompletion.** Put a `qlinter.json` in your project and VS Code completes
+rule names, severities and options, and flags anything qlinter would reject.
 
-  ```jsonc
-  "[qlik]": {
-    "editor.codeActionsOnSave": { "source.fixAll": "explicit" }
-  }
-  ```
+<img src="./docs/images/config.png" width="600" alt="Autocompletion in qlinter.json">
 
-A finding you mean to keep can be silenced from the same lightbulb: **Ignore … for this line**
-writes `// qlinter-disable-next-line <rule>` above it, or adds the rule to the directive already
-there.
+**Private by design.** Everything runs locally; your scripts never leave your machine. The
+interface is available in English and German.
 
-All three run entirely locally through the bundled Core engine, using the same resolved config
-as the diagnostics.
+## Getting started
+
+1. Install the extension.
+2. Open a `.qvs` file. It is checked right away with the `recommended` preset — no setup needed.
+
+qlinter checks and formats your scripts but does not color them. For syntax highlighting, add an
+extension that provides the `qlik` language, such as
+[Assorted Languages](https://marketplace.visualstudio.com/items?itemName=EdwinKofler.vscode-assorted-languages).
+
+To format on every save, add this to your `settings.json`:
+
+```jsonc
+"[qlik]": {
+  "editor.formatOnSave": true
+}
+```
 
 ## Configuration
 
-The config for a script is resolved with a strict, two-level precedence — the two are never
-merged:
+To adjust rules, run **qlinter: Create qlinter.json** from the Command Palette. It creates a
+`qlinter.json` in your workspace folder, the same file the
+[qlinter CLI](https://github.com/MuellerConstantin/qlinter/tree/main/packages/cli) reads:
 
-1. **`qlinter.json` at the workspace folder root.** Same file and shape the [CLI](https://github.com/MuellerConstantin/qlinter/tree/main/packages/cli)
-   uses (`{ "presets": "recommended", "rules": { … } }`). When present, it wins. This is the
-   right home for a shared, checked-in team style. While you edit it, VS Code completes rule
-   ids, severities and options, flags anything qlinter would reject, and links each rule to its
-   reference on hover.
-2. **The `qlinter.presets` setting**, used when no `qlinter.json` is found. Qlik scripts often
-   open as a lone `.qvs` file with no project — the setting covers exactly that case. It names
-   the preset(s) to lint with and defaults to `["recommended"]`.
+```json
+{
+  "presets": "recommended",
+  "rules": {
+    "max-line-length": "off",
+    "block-indent": [null, { "size": 4 }]
+  }
+}
+```
 
-Individual rules — turning one off, changing its severity, setting its options — are configured
-in a `qlinter.json` only. There is no setting for them: a `qlinter.json` is the one place where
-the editor completes and checks every entry, and keeping rules there means a team never lints
-differently because of someone's personal settings. A single line can still be exempted from a
-rule with `// qlinter-disable-next-line <rule>`.
+When a `qlinter.json` is present, it is used for every script in that folder. Without one — for
+example for a single `.qvs` file opened on its own — the `qlinter.presets` setting applies. The
+status bar shows which one is in effect. All rules and their options are described in the
+[rule reference](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md).
 
-**qlinter: Create qlinter.json** in the Command Palette starts one: it writes the same starter
-file as the CLI's `qlinter init` (`{ "presets": "recommended", "rules": {} }`) to the workspace
-folder of the open script, asking which folder when that is ambiguous, and opens it. An existing
-`qlinter.json` is opened, never overwritten.
+| Command                                  | What it does                                      |
+| ---------------------------------------- | ------------------------------------------------- |
+| `qlinter: Fix all auto-fixable problems` | Applies every available fix to the open script    |
+| `qlinter: Create qlinter.json`           | Creates a `qlinter.json`, or opens the one there  |
+| `qlinter: Show active configuration`     | Opens the `qlinter.json` or settings in effect    |
 
-A fresh install therefore lints with the `recommended` preset out of the box. The default is
-declared in the extension manifest, so VS Code shows it in the Settings UI like any other
-setting and you can change it — set `qlinter.presets` to `[]` to run no rules at all. The
-extension never writes to your `settings.json`, and Core still applies nothing implicitly: the
-value it receives is always an explicit setting. The status bar item shows the active source
-(`qlinter.json`, `settings`, or `no rules`); click it to open the config or the settings.
-
-A broken `qlinter.json` is surfaced as an error notification rather than silently ignored, and no
-diagnostics are shown for that file until it is fixed.
-
-## Conformance score
-
-Next to the configuration source, the status bar shows the share of lines in the open script
-that carry no finding, as a percentage; click it to open the Problems panel. It updates with
-every lint pass, and stays hidden for a script under ten lines, where a single finding would
-swing the figure further than the style it describes, and when no rules are configured. What
-the score measures is written up in the
-[score reference](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/score.md).
+| Setting           | Default           | What it does                                          |
+| ----------------- | ----------------- | ----------------------------------------------------- |
+| `qlinter.presets` | `["recommended"]` | Presets to lint with when there is no `qlinter.json`  |
 
 ## Privacy
 
-Nothing is collected, nothing is transmitted, and no telemetry is emitted — the extension contains no
-network calls at all. Your scripts are analysed by the bundled engine inside the editor host and never
-leave your machine. The extension stores nothing of its own: it reads the open document, your
-`qlinter.json` or the `qlinter.presets` setting, and keeps the resolved config in memory for the session.
-
-Full details are in the
+qlinter collects nothing and makes no network requests. Details are in the
 [privacy policy](https://github.com/MuellerConstantin/qlinter/blob/main/docs/PRIVACY.md).
