@@ -1,0 +1,135 @@
+name: Release VS Code Extension
+
+# Builds the Marketplace-ready VSIX and attaches it to a GitHub release; the upload to
+# the Visual Studio Marketplace stays manual, so this workflow holds no Marketplace
+# credentials and its only external side effect is the release itself.
+#
+# Two modes, one code path: a tag push creates the release, a manual dispatch rehearses
+# the identical steps with nothing leaving the runner. Any step with an external side
+# effect MUST therefore carry an `if: github.event_name == 'push'`.
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('Rehearsal (dry run) — {0}', github.ref_name)
+      || format('Release — {0}', github.ref_name) }}
+
+on:
+  push:
+    tags: ['vscode-ext-v*.*.*']
+  # Rehearsal against any branch: everything runs, but no release is created.
+  # Version comes from package.json, since there is no tag.
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+
+      # Cheapest possible failure: a mismatched tag should never cost a full test run.
+      # A semver prerelease is refused here too: vsce packages one without complaint, but
+      # the Marketplace accepts only major.minor.patch, so it would fail at the manual upload.
+      # https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          VERSION="$(node -p "require('./packages/vscode-ext/package.json').version")"
+          case "$VERSION" in
+            *-*)
+              echo "::error::Version $VERSION is a semver prerelease, which the Marketplace does not accept"
+              exit 1
+              ;;
+          esac
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#vscode-ext-v}"
+            if [ "$TAG_VERSION" != "$VERSION" ]; then
+              echo "::error::Tag version ($TAG_VERSION) does not match packages/vscode-ext/package.json ($VERSION)"
+              exit 1
+            fi
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Write run summary
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            MODE='Release — creates a GitHub release with the packaged VSIX attached'
+          else
+            MODE='Rehearsal — dry run, no release is created'
+          fi
+          {
+            echo "## qlinter VS Code extension $VERSION"
+            echo ""
+            echo "- **Mode:** $MODE"
+            echo "- **Visual Studio Marketplace:** manual — upload the attached VSIX via the publisher management page"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Extract changelog section
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          awk -v head="## [$VERSION]" '
+            index($0, head) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' packages/vscode-ext/CHANGELOG.md | sed -e '/./,$!d' > "$RUNNER_TEMP/release-notes.md"
+          if [ ! -s "$RUNNER_TEMP/release-notes.md" ]; then
+            echo "::error::packages/vscode-ext/CHANGELOG.md has no '## [$VERSION]' section"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # Re-validated here on purpose: a tag can point at any commit, not just one CI has seen.
+      - name: Check formatting
+        run: npm run prettier
+      - name: Lint
+        run: npm run lint
+
+      # Core must be built first. Without its dist/, tsdown cannot resolve @qlinter/core:
+      # the bundle would import a bare specifier the extension host cannot resolve, and the
+      # build config, which generates the qlinter.json schema from Core, would not load.
+      - name: Build core
+        run: npm run build:core
+      - name: Type check
+        run: npm run typecheck -w qlinter-vscode-ext
+      - name: Test
+        run: npm test -w qlinter-vscode-ext
+
+      # Builds and packs in one step; vsce names the archive after the package.json version.
+      - name: Package
+        run: npm run package:vscode-ext
+
+      # A rehearsal has no release to attach the VSIX to, so it goes to the run's artifacts
+      # instead — that archive is the whole point of rehearsing, and it can be installed
+      # with "Extensions: Install from VSIX…" to verify the build before a tag is ever pushed.
+      - name: Upload build artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qlinter-vscode-ext-${{ steps.meta.outputs.version }}
+          path: packages/vscode-ext/qlinter-vscode-ext-${{ steps.meta.outputs.version }}.vsix
+          if-no-files-found: error
+
+      # The attached VSIX is the release: it is what gets uploaded to the Marketplace by
+      # hand, so the published extension traces back to this exact commit and build.
+      - name: Create GitHub release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 'qlinter VS Code extension v${{ steps.meta.outputs.version }}'
+          body_path: ${{ runner.temp }}/release-notes.md
+          files: packages/vscode-ext/qlinter-vscode-ext-${{ steps.meta.outputs.version }}.vsix
