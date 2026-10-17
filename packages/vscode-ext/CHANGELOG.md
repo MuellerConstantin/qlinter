@@ -63,3 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fully local processing: the bundled Core engine runs entirely in the editor
   host; scripts never leave the machine. No telemetry is emitted and no network
   request is made; see the [privacy policy](../../docs/PRIVACY.md).
+- English and German interface, following VS Code's display language: command
+  titles, the setting description, the status bar, quick fixes and
+  notifications. Findings come from Core and stay in English.

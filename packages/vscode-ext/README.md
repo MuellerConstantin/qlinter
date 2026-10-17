@@ -33,6 +33,10 @@ the extension owns the platform concerns — activating in the editor, surfacing
 wiring up editor commands — and delegates every linting and formatting decision to Core. No style
 logic lives here; the binding only translates between VS Code and Core's string-in, diagnostics-out API.
 
+The extension's own interface — commands, status bar, quick fixes, notifications — follows VS
+Code's display language in English and German. The findings themselves come from Core and are in
+English.
+
 ## Formatting
 
 Diagnostics come with fixes at three levels:

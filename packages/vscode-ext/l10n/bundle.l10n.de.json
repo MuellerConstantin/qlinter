@@ -1,0 +1,18 @@
+{
+  "Fix: {0}": "Beheben: {0}",
+  "Ignore {0} for this line": "{0} für diese Zeile ignorieren",
+  "qlinter: Open a folder first. A qlinter.json applies to the workspace folder it sits in.": "qlinter: Öffne zuerst einen Ordner. Eine qlinter.json gilt für den Workspace-Ordner, in dem sie liegt.",
+  "Folder to create the qlinter.json in": "Ordner, in dem die qlinter.json angelegt wird",
+  "qlinter: {0}": "qlinter: {0}",
+  "{0}%": "{0} %",
+  "qlinter conformance: {0}% of lines carry no finding. Click to open the Problems panel.": "qlinter-Konformität: {0} % der Zeilen sind ohne Befund. Klicken, um das Problems-Panel zu öffnen.",
+  "qlinter: config error": "qlinter: Konfigurationsfehler",
+  "Using {0}": "Verwendet {0}",
+  "qlinter: no rules": "qlinter: keine Regeln",
+  "No qlinter.json found and no preset selected. Click to open settings.": "Keine qlinter.json gefunden und kein Preset gewählt. Klicken, um die Einstellungen zu öffnen.",
+  "qlinter: settings": "qlinter: Einstellungen",
+  "Linting with the preset from VS Code settings. Individual rules are configured in a qlinter.json; run \"qlinter: Create qlinter.json\" to start one. Click to open settings.": "Lintet mit dem Preset aus den VS Code-Einstellungen. Einzelne Regeln werden in einer qlinter.json eingestellt; \"qlinter: qlinter.json anlegen\" legt eine an. Klicken, um die Einstellungen zu öffnen.",
+  "qlinter: Fix all auto-fixable problems": "qlinter: Alle automatisch behebbaren Probleme beheben",
+  "qlinter: nothing to fix": "qlinter: nichts zu beheben",
+  "qlinter: Created {0}. It now applies to \"{1}\" in place of the qlinter.presets setting.": "qlinter: {0} angelegt. Sie gilt ab jetzt für „{1}“ anstelle der Einstellung qlinter.presets."
+}

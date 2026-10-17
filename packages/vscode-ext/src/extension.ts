@@ -95,7 +95,7 @@ function ruleIdOf(diagnostic: vscode.Diagnostic): string | number | undefined {
  * diagnostic so the editor marks the problem as fixable.
  */
 function createFixAction(document: vscode.TextDocument, diagnostic: vscode.Diagnostic, fix: Fix): vscode.CodeAction {
-  const action = new vscode.CodeAction(`Fix: ${diagnostic.message}`, vscode.CodeActionKind.QuickFix);
+  const action = new vscode.CodeAction(vscode.l10n.t('Fix: {0}', diagnostic.message), vscode.CodeActionKind.QuickFix);
   action.diagnostics = [diagnostic];
   action.isPreferred = true;
 
@@ -126,7 +126,10 @@ function createIgnoreAction(
     return undefined;
   }
 
-  const action = new vscode.CodeAction(`Ignore ${ruleId} for this line`, vscode.CodeActionKind.QuickFix);
+  const action = new vscode.CodeAction(
+    vscode.l10n.t('Ignore {0} for this line', ruleId),
+    vscode.CodeActionKind.QuickFix,
+  );
   action.diagnostics = diagnostics;
   action.edit = new vscode.WorkspaceEdit();
 
@@ -157,7 +160,7 @@ async function pickConfigFolder(): Promise<vscode.WorkspaceFolder | undefined> {
 
   if (folders.length === 0) {
     void vscode.window.showInformationMessage(
-      'qlinter: Open a folder first. A qlinter.json applies to the workspace folder it sits in.',
+      vscode.l10n.t('qlinter: Open a folder first. A qlinter.json applies to the workspace folder it sits in.'),
     );
     return undefined;
   }
@@ -166,7 +169,7 @@ async function pickConfigFolder(): Promise<vscode.WorkspaceFolder | undefined> {
     return folders[0];
   }
 
-  return vscode.window.showWorkspaceFolderPick({ placeHolder: 'Folder to create the qlinter.json in' });
+  return vscode.window.showWorkspaceFolderPick({ placeHolder: vscode.l10n.t('Folder to create the qlinter.json in') });
 }
 
 /** A range spanning the entire document, used to replace it wholesale. */
@@ -229,7 +232,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const message = err instanceof Error ? err.message : String(err);
       result = { ok: false, message };
       output.appendLine(message);
-      void vscode.window.showErrorMessage(`qlinter: ${message}`);
+      void vscode.window.showErrorMessage(vscode.l10n.t('qlinter: {0}', message));
     }
 
     cache.set(key, result);
@@ -274,8 +277,11 @@ export function activate(context: vscode.ExtensionContext): void {
       return;
     }
 
-    scoreItem.text = `$(pass) ${score}%`;
-    scoreItem.tooltip = `qlinter conformance: ${score}% of lines carry no finding. Click to open the Problems panel.`;
+    scoreItem.text = `$(pass) ${vscode.l10n.t('{0}%', score)}`;
+    scoreItem.tooltip = vscode.l10n.t(
+      'qlinter conformance: {0}% of lines carry no finding. Click to open the Problems panel.',
+      score,
+    );
     scoreItem.show();
   }
 
@@ -291,19 +297,19 @@ export function activate(context: vscode.ExtensionContext): void {
     const result = getConfig(document);
 
     if (!result.ok) {
-      statusBar.text = '$(error) qlinter: config error';
+      statusBar.text = `$(error) ${vscode.l10n.t('qlinter: config error')}`;
       statusBar.tooltip = result.message;
     } else if (result.resolved.source === 'qlinter.json') {
       statusBar.text = '$(check) qlinter: qlinter.json';
-      statusBar.tooltip = `Using ${result.resolved.path}`;
+      statusBar.tooltip = vscode.l10n.t('Using {0}', result.resolved.path ?? CONFIG_FILENAME);
     } else if (isEmptyConfig(result.resolved.config)) {
-      statusBar.text = '$(warning) qlinter: no rules';
-      statusBar.tooltip = 'No qlinter.json found and no preset selected. Click to open settings.';
+      statusBar.text = `$(warning) ${vscode.l10n.t('qlinter: no rules')}`;
+      statusBar.tooltip = vscode.l10n.t('No qlinter.json found and no preset selected. Click to open settings.');
     } else {
-      statusBar.text = '$(check) qlinter: settings';
-      statusBar.tooltip =
-        'Linting with the preset from VS Code settings. Individual rules are configured in a qlinter.json; ' +
-        'run "qlinter: Create qlinter.json" to start one. Click to open settings.';
+      statusBar.text = `$(check) ${vscode.l10n.t('qlinter: settings')}`;
+      statusBar.tooltip = vscode.l10n.t(
+        'Linting with the preset from VS Code settings. Individual rules are configured in a qlinter.json; run "qlinter: Create qlinter.json" to start one. Click to open settings.',
+      );
     }
 
     statusBar.show();
@@ -341,7 +347,7 @@ export function activate(context: vscode.ExtensionContext): void {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       output.appendLine(message);
-      void vscode.window.showErrorMessage(`qlinter: ${message}`);
+      void vscode.window.showErrorMessage(vscode.l10n.t('qlinter: {0}', message));
       return undefined;
     }
   }
@@ -412,7 +418,7 @@ export function activate(context: vscode.ExtensionContext): void {
       return undefined;
     }
 
-    const action = new vscode.CodeAction('qlinter: Fix all auto-fixable problems', FIX_ALL_KIND);
+    const action = new vscode.CodeAction(vscode.l10n.t('qlinter: Fix all auto-fixable problems'), FIX_ALL_KIND);
     action.edit = new vscode.WorkspaceEdit();
     action.edit.replace(document.uri, fullRange(document), formatted);
 
@@ -490,7 +496,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const formatted = formatDocument(document);
 
       if (formatted === undefined) {
-        vscode.window.setStatusBarMessage('qlinter: nothing to fix', 3000);
+        vscode.window.setStatusBarMessage(vscode.l10n.t('qlinter: nothing to fix'), 3000);
         return;
       }
 
@@ -510,7 +516,7 @@ export function activate(context: vscode.ExtensionContext): void {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         output.appendLine(message);
-        void vscode.window.showErrorMessage(`qlinter: ${message}`);
+        void vscode.window.showErrorMessage(vscode.l10n.t('qlinter: {0}', message));
         return;
       }
 
@@ -518,7 +524,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
       if (created.created) {
         void vscode.window.showInformationMessage(
-          `qlinter: Created ${CONFIG_FILENAME}. It now applies to "${folder.name}" in place of the qlinter.presets setting.`,
+          vscode.l10n.t(
+            'qlinter: Created {0}. It now applies to "{1}" in place of the qlinter.presets setting.',
+            CONFIG_FILENAME,
+            folder.name,
+          ),
         );
       }
     }),

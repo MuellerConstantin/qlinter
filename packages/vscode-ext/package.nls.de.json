@@ -1,0 +1,6 @@
+{
+  "command.showConfig.title": "qlinter: Aktive Konfiguration anzeigen",
+  "command.fixAll.title": "qlinter: Alle automatisch behebbaren Probleme beheben",
+  "command.createConfig.title": "qlinter: qlinter.json anlegen",
+  "config.presets.description": "Preset(s), mit denen gelintet wird, wenn im Workspace keine `qlinter.json` liegt. Standard ist `recommended`; eine leere Liste schaltet alle Regeln ab. Eine `qlinter.json` im Workspace hat immer Vorrang vor dieser Einstellung. Einzelne Regeln werden in einer `qlinter.json` eingestellt, nicht hier – siehe die [Regelreferenz](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md)."
+}

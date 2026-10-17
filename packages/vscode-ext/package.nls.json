@@ -1,0 +1,6 @@
+{
+  "command.showConfig.title": "qlinter: Show active configuration",
+  "command.fixAll.title": "qlinter: Fix all auto-fixable problems",
+  "command.createConfig.title": "qlinter: Create qlinter.json",
+  "config.presets.description": "Preset(s) to lint with when no `qlinter.json` is found in the workspace. Defaults to `recommended`; set it to an empty array to run no rules at all. A workspace `qlinter.json` always takes precedence over this setting. Individual rules are configured in a `qlinter.json`, not here — see the [rule reference](https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md)."
+}
