@@ -115,7 +115,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "package": "npm run build && node -e \"require('node:fs').copyFileSync('../../LICENSE.md', 'LICENSE.md')\" && vsce package --no-dependencies"
+    "package": "npm run build && node -e \"require('node:fs').copyFileSync('../../LICENSE.md', 'LICENSE.md')\" && vsce package --no-dependencies --baseContentUrl https://github.com/MuellerConstantin/qlinter/blob/main/packages/vscode-ext --baseImagesUrl https://github.com/MuellerConstantin/qlinter/raw/main/packages/vscode-ext"
   },
   "devDependencies": {
     "@qlinter/core": "file:../core",
