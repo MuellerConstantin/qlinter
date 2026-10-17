@@ -1,9 +1,12 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { validateConfig, type LintConfig } from '@qlinter/core';
 
 /** Conventional config filename, matching the CLI's `--config` convention. */
 export const CONFIG_FILENAME = 'qlinter.json';
+
+/** Starter config, byte for byte what the CLI's `qlinter init` writes. */
+const STARTER_CONFIG = `${JSON.stringify({ presets: 'recommended', rules: {} }, null, 2)}\n`;
 
 /** Where a resolved config came from, surfaced in the status bar. */
 export type ConfigSource = 'qlinter.json' | 'settings';
@@ -51,6 +54,28 @@ export function loadConfigFile(path: string): LintConfig {
   }
 
   return validateConfig(parsed, path);
+}
+
+/**
+ * Writes a starter `qlinter.json` to `dir` unless one is already there, which is
+ * never overwritten (the `wx` flag makes the check and the write one step).
+ *
+ * @returns The file's path, and whether this call created it.
+ */
+export function createConfigFile(dir: string): { readonly path: string; readonly created: boolean } {
+  const path = join(dir, CONFIG_FILENAME);
+
+  try {
+    writeFileSync(path, STARTER_CONFIG, { flag: 'wx' });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
+      return { path, created: false };
+    }
+
+    throw err;
+  }
+
+  return { path, created: true };
 }
 
 /**

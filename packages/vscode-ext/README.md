@@ -77,6 +77,11 @@ the editor completes and checks every entry, and keeping rules there means a tea
 differently because of someone's personal settings. A single line can still be exempted from a
 rule with `// qlinter-disable-next-line <rule>`.
 
+**qlinter: Create qlinter.json** in the Command Palette starts one: it writes the same starter
+file as the CLI's `qlinter init` (`{ "presets": "recommended", "rules": {} }`) to the workspace
+folder of the open script, asking which folder when that is ambiguous, and opens it. An existing
+`qlinter.json` is opened, never overwritten.
+
 A fresh install therefore lints with the `recommended` preset out of the box. The default is
 declared in the extension manifest, so VS Code shows it in the Settings UI like any other
 setting and you can change it — set `qlinter.presets` to `[]` to run no rules at all. The

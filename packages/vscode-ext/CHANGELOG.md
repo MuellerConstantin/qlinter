@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   install lints out of the box while the value stays an explicit, user-visible
   setting — VS Code shows it in the Settings UI and it can be set to `[]` to run
   no rules. The extension never writes to the user's `settings.json`.
+- A "qlinter: Create qlinter.json" command that writes the same starter file as
+  the CLI's `qlinter init` to the open script's workspace folder and opens it,
+  so the step to configuring individual rules is one command. An existing
+  `qlinter.json` is opened instead, never overwritten.
 - Status bar item showing the active configuration source (`qlinter.json`,
   `settings`, or `no rules`); clicking it opens the `qlinter.json` or the settings.
 - A conformance score in the status bar beside it: the share of lines in the

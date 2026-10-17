@@ -64,6 +64,10 @@
       {
         "command": "qlinter.fixAll",
         "title": "qlinter: Fix all auto-fixable problems"
+      },
+      {
+        "command": "qlinter.createConfig",
+        "title": "qlinter: Create qlinter.json"
       }
     ],
     "jsonValidation": [
@@ -77,6 +81,10 @@
         {
           "command": "qlinter.fixAll",
           "when": "editorLangId == qlik"
+        },
+        {
+          "command": "qlinter.createConfig",
+          "when": "workspaceFolderCount > 0"
         }
       ]
     },

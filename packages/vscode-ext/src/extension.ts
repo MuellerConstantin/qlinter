@@ -8,7 +8,7 @@ import {
   type LintConfig,
   type Severity,
 } from '@qlinter/core';
-import { resolveConfig, type ResolvedConfig, type SettingsInput } from './config.js';
+import { CONFIG_FILENAME, createConfigFile, resolveConfig, type ResolvedConfig, type SettingsInput } from './config.js';
 import { ruleDocsUrl } from './docs.js';
 import { ignoreEdit } from './ignore.js';
 
@@ -26,6 +26,9 @@ const SHOW_CONFIG_COMMAND = 'qlinter.showConfig';
 
 /** Command that applies every autofix to the active script in one pass. */
 const FIX_ALL_COMMAND = 'qlinter.fixAll';
+
+/** Command that scaffolds a `qlinter.json`, the one place individual rules are configured. */
+const CREATE_CONFIG_COMMAND = 'qlinter.createConfig';
 
 /**
  * Kind for the whole-document autofix action. Nested under `source.fixAll` so it
@@ -134,6 +137,36 @@ function createIgnoreAction(
   }
 
   return action;
+}
+
+/**
+ * The workspace folder a new `qlinter.json` belongs in: the active document's,
+ * the only one, or the one the user picks. `undefined` when there is none or the
+ * pick is cancelled — a loose file reads no `qlinter.json`, so there is nowhere
+ * useful to put one.
+ */
+async function pickConfigFolder(): Promise<vscode.WorkspaceFolder | undefined> {
+  const active = vscode.window.activeTextEditor?.document.uri;
+  const activeFolder = active === undefined ? undefined : vscode.workspace.getWorkspaceFolder(active);
+
+  if (activeFolder !== undefined) {
+    return activeFolder;
+  }
+
+  const folders = vscode.workspace.workspaceFolders ?? [];
+
+  if (folders.length === 0) {
+    void vscode.window.showInformationMessage(
+      'qlinter: Open a folder first. A qlinter.json applies to the workspace folder it sits in.',
+    );
+    return undefined;
+  }
+
+  if (folders.length === 1) {
+    return folders[0];
+  }
+
+  return vscode.window.showWorkspaceFolderPick({ placeHolder: 'Folder to create the qlinter.json in' });
 }
 
 /** A range spanning the entire document, used to replace it wholesale. */
@@ -269,8 +302,8 @@ export function activate(context: vscode.ExtensionContext): void {
     } else {
       statusBar.text = '$(check) qlinter: settings';
       statusBar.tooltip =
-        'Linting with the preset from VS Code settings. Individual rules are configured in a qlinter.json. ' +
-        'Click to open settings.';
+        'Linting with the preset from VS Code settings. Individual rules are configured in a qlinter.json; ' +
+        'run "qlinter: Create qlinter.json" to start one. Click to open settings.';
     }
 
     statusBar.show();
@@ -462,6 +495,32 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       edit.replace(fullRange(document), formatted);
+    }),
+    vscode.commands.registerCommand(CREATE_CONFIG_COMMAND, async () => {
+      const folder = await pickConfigFolder();
+
+      if (folder === undefined) {
+        return;
+      }
+
+      let created: ReturnType<typeof createConfigFile>;
+
+      try {
+        created = createConfigFile(folder.uri.fsPath);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        output.appendLine(message);
+        void vscode.window.showErrorMessage(`qlinter: ${message}`);
+        return;
+      }
+
+      await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(created.path));
+
+      if (created.created) {
+        void vscode.window.showInformationMessage(
+          `qlinter: Created ${CONFIG_FILENAME}. It now applies to "${folder.name}" in place of the qlinter.presets setting.`,
+        );
+      }
     }),
     vscode.workspace.onDidOpenTextDocument((document) => refreshDiagnostics(document)),
     vscode.workspace.onDidChangeTextDocument((event) => refreshDiagnostics(event.document)),

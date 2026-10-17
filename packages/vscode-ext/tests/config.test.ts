@@ -1,9 +1,9 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { presetNames } from '@qlinter/core';
-import { configFromSettings, loadConfigFile, resolveConfig } from '../src/config.js';
+import { configFromSettings, createConfigFile, loadConfigFile, resolveConfig } from '../src/config.js';
 import manifest from '../package.json' with { type: 'json' };
 
 describe('loadConfigFile', () => {
@@ -123,5 +123,37 @@ describe('resolveConfig', () => {
 
   it('resolves to an empty config when neither a file nor settings apply', () => {
     expect(resolveConfig(dir, { presets: [] })).toEqual({ config: {}, source: 'settings' });
+  });
+});
+
+describe('createConfigFile', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'qlinter-vscode-create-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('writes the same starter file as the CLI', () => {
+    const { path, created } = createConfigFile(dir);
+
+    expect(created).toBe(true);
+    expect(path).toBe(join(dir, 'qlinter.json'));
+    expect(readFileSync(path, 'utf8')).toBe('{\n  "presets": "recommended",\n  "rules": {}\n}\n');
+  });
+
+  it('produces a file that loadConfigFile accepts', () => {
+    expect(loadConfigFile(createConfigFile(dir).path)).toEqual({ presets: 'recommended', rules: {} });
+  });
+
+  it('leaves an existing config file untouched', () => {
+    const existing = '{ "rules": {} }';
+    writeFileSync(join(dir, 'qlinter.json'), existing, 'utf8');
+
+    expect(createConfigFile(dir)).toEqual({ path: join(dir, 'qlinter.json'), created: false });
+    expect(readFileSync(join(dir, 'qlinter.json'), 'utf8')).toBe(existing);
   });
 });
