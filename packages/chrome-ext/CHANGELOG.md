@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The Data Load Editor no longer stalls for a moment after each pause in
+  typing. Redrawing the underlines on a script with many findings blocked the
+  page for up to half a second; it now takes a few milliseconds.
+
 ## [0.4.0]
 
 ### Added

@@ -186,7 +186,16 @@ export function createHighlighter(editor: Editor): {
     currentMarker = null;
   };
 
+  /*
+   * Outside an operation CodeMirror runs a full update for every single
+   * markText and line-class call, which blocks the page for hundreds of
+   * milliseconds on a script with a few thousand findings.
+   */
   const apply = (diagnostics: Diagnostic[], source: string): void => {
+    editor.operation(() => paint(diagnostics, source));
+  };
+
+  const paint = (diagnostics: Diagnostic[], source: string): void => {
     clear();
     linted = source;
 
