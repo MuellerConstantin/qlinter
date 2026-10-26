@@ -3,6 +3,8 @@ import type { Diagnostic, Severity } from '@qlinter/core';
 
 const STYLE_ID = 'qlinter-styles';
 const TOOLTIP_HIDE_DELAY_MS = 200;
+// Long enough that a pointer passing over marked code on its way to a click opens nothing.
+const TOOLTIP_SHOW_DELAY_MS = 500;
 
 export function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) {
@@ -170,8 +172,25 @@ export function createHighlighter(editor: Editor): {
   const lineDecorations: { handle: LineHandle; className: string }[] = [];
   let tooltipElement: HTMLDivElement | null = null;
   let hideTimer: ReturnType<typeof setTimeout> | undefined;
+  let showTimer: ReturnType<typeof setTimeout> | undefined;
   let currentMarker: TextMarker | null = null;
   let linted = '';
+
+  const closeTooltip = (): void => {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+
+    if (tooltipElement) {
+      tooltipElement.style.display = 'none';
+    }
+    currentMarker = null;
+  };
+
+  const hideTooltip = (): void => {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(closeTooltip, TOOLTIP_HIDE_DELAY_MS);
+  };
 
   const clear = (): void => {
     for (const marker of byMarker.keys()) {
@@ -192,6 +211,8 @@ export function createHighlighter(editor: Editor): {
    * milliseconds on a script with a few thousand findings.
    */
   const apply = (diagnostics: Diagnostic[], source: string): void => {
+    // The open tooltip belongs to a marker this repaint is about to remove.
+    closeTooltip();
     editor.operation(() => paint(diagnostics, source));
   };
 
@@ -238,22 +259,6 @@ export function createHighlighter(editor: Editor): {
       const handle = editor.addLineClass(line, 'wrap', className);
       lineDecorations.push({ handle, className });
     }
-  };
-
-  const closeTooltip = (): void => {
-    if (tooltipElement) {
-      tooltipElement.style.display = 'none';
-    }
-    currentMarker = null;
-  };
-
-  const hideTooltip = (): void => {
-    hideTimer = setTimeout(() => {
-      if (tooltipElement) {
-        tooltipElement.style.display = 'none';
-      }
-      currentMarker = null;
-    }, TOOLTIP_HIDE_DELAY_MS);
   };
 
   const showTooltipFor = (marker: TextMarker, diagnostic: Diagnostic, mouseX: number): void => {
@@ -362,21 +367,42 @@ export function createHighlighter(editor: Editor): {
   };
 
   const onMouseMove = (event: MouseEvent): void => {
+    // A held button means a selection is being dragged.
+    if (event.buttons !== 0) {
+      return;
+    }
+
     const pos = editor.coordsChar({ left: event.clientX, top: event.clientY }, 'window');
 
     for (const marker of editor.findMarksAt(pos)) {
       const diagnostic = byMarker.get(marker);
 
-      if (diagnostic) {
+      if (!diagnostic) {
+        continue;
+      }
+
+      // Once a tooltip is open, moving to a neighbouring marker swaps it without a second wait.
+      if (tooltipElement?.style.display === 'block') {
         showTooltipFor(marker, diagnostic, event.clientX);
         return;
       }
+
+      // Restarted on every move, so the tooltip opens only once the pointer rests.
+      clearTimeout(showTimer);
+      showTimer = setTimeout(() => showTooltipFor(marker, diagnostic, event.clientX), TOOLTIP_SHOW_DELAY_MS);
+      return;
     }
 
     hideTooltip();
   };
 
-  editor.getWrapperElement().addEventListener('mousemove', onMouseMove);
+  const wrapper = editor.getWrapperElement();
+  wrapper.addEventListener('mousemove', onMouseMove);
+  wrapper.addEventListener('mouseleave', hideTooltip);
+  editor.on('mousedown', closeTooltip);
+  editor.on('keydown', closeTooltip);
+  // The tooltip is fixed to the window, so after a scroll it would cover unrelated code.
+  editor.on('scroll', closeTooltip);
 
   return { apply, clear };
 }

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Data Load Editor no longer stalls for a moment after each pause in
   typing. Redrawing the underlines on a script with many findings blocked the
   page for up to half a second; it now takes a few milliseconds.
+- The tooltip on a finding no longer gets in the way while writing code. It
+  opens only once the pointer rests on the finding for half a second, not while
+  a selection is dragged, and it closes on typing, clicking into the editor,
+  scrolling and on every relint.
 
 ## [0.4.0]
 
