@@ -28,7 +28,8 @@ rather than inside the repo, because it quotes the scripts.
 | `opaque-content`   | a SQL command, `Set` value, `Trace` message or string came out changed |
 | `comment-content`  | a comment lost, gained or changed a word, or a `///` line changed at all |
 | `bare-lf`          | a CRLF script comes out with a bare LF                                   |
-| `second-pass`      | a second `format` still changes something; `throws` if it never settles |
+| `second-pass`      | a second `format` still changes something                                |
+| `throws`           | a check threw; one finding per message and script, naming every check that threw it |
 | `not-utf8`         | the file is not valid UTF-8, so the CLI skips it                         |
 
 ## Growing the corpus

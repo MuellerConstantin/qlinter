@@ -110,14 +110,22 @@ function main(): void {
       findings.push({ file, check: 'input-lex-error', detail });
     }
 
+    // Most checks run `format` first, so one failure there would otherwise count once per check.
+    const thrown = new Map<string, string[]>();
+
     for (const [check, run] of Object.entries(CHECKS)) {
       try {
         for (const detail of run(source)) {
           findings.push({ file, check, detail });
         }
       } catch (error) {
-        findings.push({ file, check, detail: `throws: ${error instanceof Error ? error.message : String(error)}` });
+        const message = error instanceof Error ? error.message : String(error);
+        thrown.set(message, [...(thrown.get(message) ?? []), check]);
       }
+    }
+
+    for (const [message, checks] of thrown) {
+      findings.push({ file, check: 'throws', detail: `${message} (in ${checks.join(', ')})` });
     }
 
     if (process.stderr.isTTY) {
