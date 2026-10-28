@@ -75,6 +75,10 @@ const SEVERITY_CLASS: Record<Severity, string> = {
   info: 'qlinter-mark-info',
 };
 
+const MARK_SELECTOR = Object.values(SEVERITY_CLASS)
+  .map((className) => `.${className}`)
+  .join(', ');
+
 const LINE_CLASS: Record<Severity, string> = {
   error: 'qlinter-line-error',
   warning: 'qlinter-line-warning',
@@ -366,15 +370,41 @@ export function createHighlighter(editor: Editor): {
     tooltipElement.style.top = `${tokenBottom + 4}px`;
   };
 
+  /*
+   * coordsChar snaps a point past a line's end back onto that line, so a hit
+   * is decided by what lies under the pointer: underlined text, or an empty
+   * line, which has nothing to underline and counts whole.
+   */
+  const hoveredMarkers = (event: MouseEvent): TextMarker[] => {
+    if (!(event.target instanceof Element)) {
+      return [];
+    }
+
+    const pos = editor.coordsChar({ left: event.clientX, top: event.clientY }, 'window');
+
+    if (event.target.closest(MARK_SELECTOR) !== null) {
+      return editor.findMarksAt(pos);
+    }
+
+    if (event.target.closest('.CodeMirror-line') === null || editor.getLine(pos.line) !== '') {
+      return [];
+    }
+
+    // Only a finding that runs past this line's break covers it; one ending right here belongs to the line above.
+    return editor.findMarksAt(pos).filter((marker) => {
+      const range = marker.find();
+
+      return range !== undefined && 'to' in range && range.to.line > pos.line;
+    });
+  };
+
   const onMouseMove = (event: MouseEvent): void => {
     // A held button means a selection is being dragged.
     if (event.buttons !== 0) {
       return;
     }
 
-    const pos = editor.coordsChar({ left: event.clientX, top: event.clientY }, 'window');
-
-    for (const marker of editor.findMarksAt(pos)) {
+    for (const marker of hoveredMarkers(event)) {
       const diagnostic = byMarker.get(marker);
 
       if (!diagnostic) {
