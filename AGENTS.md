@@ -27,6 +27,11 @@ The following sub-modules/projects exists:
   inline lint feedback and formatting for Qlik load scripts in the editor. All processing
   runs locally via the bundled Core engine.
 
+- **Chrome Extension Harness**: A dev-only, never released stand-in for the Qlik Sense Data
+  Load Editor, served locally by Vite, so the Chrome Extension's UI can be exercised without
+  a Qlik environment. It models the real editor's DOM and deliberately imports nothing from
+  the extension. It checks UI behaviour only and never replaces a check in Qlik.
+
 # Project Structure
 
 ```
@@ -51,6 +56,13 @@ The following sub-modules/projects exists:
 │   |   ├── package.json
 │   |   ├── tsconfig.json
 │   |   └── tsdown.config.ts
+│   ├── chrome-ext-harness/       # Local Data Load Editor stand-in (dev only)
+│   |   ├── src
+│   |   ├── public
+│   |   ├── index.html
+│   |   ├── package.json
+│   |   ├── tsconfig.json
+│   |   └── vite.config.ts
 |   └── vscode-ext/               # VS Code extension
 │       ├── src
 │       ├── images

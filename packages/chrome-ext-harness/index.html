@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/qlinter.svg" />
+    <title>Data Load Editor Harness | qlinter</title>
+  </head>
+  <body class="m-0 flex h-dvh flex-col bg-neutral-50 font-sans text-sm text-neutral-800 antialiased">
+    <header
+      class="flex flex-wrap items-center gap-x-4 gap-y-2 border-0 border-b border-solid border-neutral-200 bg-white px-4 py-2.5"
+    >
+      <div class="flex items-center gap-2.5">
+        <img src="/qlinter.svg" alt="qlinter" class="size-7" />
+        <span class="text-base font-semibold tracking-tight text-neutral-900">Data Load Editor Harness</span>
+      </div>
+      <div class="flex min-w-0 items-center gap-2 max-sm:w-full sm:ml-auto">
+        <label for="harness-script" class="sr-only">Script</label>
+        <div class="relative min-w-0 max-sm:flex-1">
+          <select
+            id="harness-script"
+            class="h-9 cursor-pointer rounded-md border border-solid border-neutral-300 bg-white font-sans text-sm text-neutral-800 shadow-xs transition-colors hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 w-full appearance-none pr-8 pl-3 sm:w-64"
+          ></select>
+          <svg
+            class="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-neutral-500"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <label
+          for="harness-file"
+          class="h-9 cursor-pointer rounded-md border border-solid border-neutral-300 bg-white font-sans text-sm text-neutral-800 shadow-xs transition-colors hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 inline-flex shrink-0 items-center gap-1.5 px-3"
+        >
+          <svg class="size-4 text-neutral-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z"
+            />
+            <path
+              d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
+            />
+          </svg>
+          Open file
+        </label>
+        <input id="harness-file" type="file" accept=".qvs,.txt" class="sr-only" />
+      </div>
+    </header>
+    <main class="min-h-0 flex-1 p-3 sm:p-4">
+      <div
+        id="qv-page-container"
+        class="h-full overflow-hidden rounded-lg border border-solid border-neutral-200 bg-white shadow-sm"
+      ></div>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

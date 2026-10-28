@@ -22,6 +22,7 @@
 - [Introduction](#introduction)
   - [Features](#features)
 - [Privacy & permissions](#privacy--permissions)
+- [Testing locally](#testing-locally)
 
 ## Introduction
 
@@ -72,3 +73,19 @@ lives on its own private hostname, so no fixed URL pattern could ever match them
   code that uses it.
 - [**Privacy policy**](../../docs/PRIVACY.md) — what is read, what is stored, and what leaves your
   machine.
+
+## Testing locally
+
+[`@qlinter/chrome-ext-harness`](../chrome-ext-harness) is a local stand-in for the Data Load
+Editor: a page with the same DOM anchors and a CodeMirror 5 editor, loaded with the rule fixtures
+from Core or any local `.qvs` file. It lets you check lint marks, tooltips, quick fixes, fix-all
+and the popup score without a Qlik environment.
+
+1. Build the extension with `npm run build -w @qlinter/chrome-ext`.
+2. In `chrome://extensions`, enable developer mode and load `packages/chrome-ext/dist` unpacked.
+3. Start the harness with `npm run harness:chrome-ext` and open `http://localhost:5180/dataloadeditor/app/`.
+4. Enable the `localhost` origin through the extension popup.
+
+> [!IMPORTANT]
+> The harness checks UI behaviour only. The real editor's CodeMirror options, CSS and DOM may
+> differ, so it never replaces a check in Qlik Sense itself.

@@ -1,0 +1,11 @@
+/* Without preflight: a reset would restyle CodeMirror and the extension's marks and tooltips, which this page exists to show. */
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities' layer(utilities);
+
+/* The editor DOM is built in main.ts as Qlik renders it, so it is sized here instead of carrying classes. */
+[data-testid='script-editor-container'],
+scripteditor-code-area,
+.CodeMirror {
+  display: block;
+  height: 100%;
+}
