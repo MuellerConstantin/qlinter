@@ -48,6 +48,18 @@ function inputLexErrors(source: string): string[] {
     );
 }
 
+/*
+ * `JSON.stringify` escapes control characters but prints a no-break or
+ * zero-width space as itself, which reads as `" "` or `""` — exactly the
+ * characters a lead most often turns on.
+ */
+function visible(detail: string): string {
+  return detail.replace(
+    /(?! )[\p{C}\p{Z}]/gu,
+    (char) => `\\u{${char.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}}`,
+  );
+}
+
 const UTF8 = new TextDecoder('utf-8', { fatal: true });
 
 interface Finding {
@@ -73,7 +85,10 @@ function scripts(dir: string): string[] {
 function groupOf(finding: Finding): string {
   const rule = /^([a-z]+(?:-[a-z]+)+)\b/.exec(finding.detail);
 
-  return `${finding.check}: ${rule === null ? finding.detail.replace(/\d+/g, 'N') : rule[1]}`;
+  // An escaped character keeps its digits: which character it is tells two leads apart.
+  const general = finding.detail.replace(/\\u\{[0-9A-F]+\}|\d+/g, (match) => (match.startsWith('\\') ? match : 'N'));
+
+  return `${finding.check}: ${rule === null ? general : rule[1]}`;
 }
 
 function main(): void {
@@ -135,9 +150,10 @@ function main(): void {
 
   process.stderr.write('\n');
 
+  const shown = findings.map((finding) => ({ ...finding, detail: visible(finding.detail) }));
   const groups = new Map<string, { findings: number; files: Set<string>; example: Finding }>();
 
-  for (const finding of findings) {
+  for (const finding of shown) {
     const key = groupOf(finding);
     const group = groups.get(key) ?? { findings: 0, files: new Set<string>(), example: finding };
     group.findings++;
@@ -163,7 +179,7 @@ function main(): void {
     console.log(`${' '.repeat(22)}e.g. ${row.example.slice(0, 160)}`);
   }
 
-  writeFileSync(reportPath, JSON.stringify({ scripts: files.length, summary, findings }, null, 2));
+  writeFileSync(reportPath, JSON.stringify({ scripts: files.length, summary, findings: shown }, null, 2));
   console.log(`\nfull report: ${reportPath}`);
 }
 

@@ -16,7 +16,9 @@ npm run survey -w @qlinter/core -- <corpus-dir> [report.json]
 Every `.qvs` below `<corpus-dir>` is read the way the CLI reads it: as UTF-8, a
 byte order mark dropped, a file that is not UTF-8 skipped. The summary goes to
 the terminal; the full report to `<corpus-dir>-survey.json`, beside the corpus
-rather than inside the repo, because it quotes the scripts.
+rather than inside the repo, because it quotes the scripts. A character that
+prints as nothing or as a plain space — a no-break or zero-width space, a byte
+order mark — is quoted by its code point instead, as `\u{00A0}`.
 
 | Check              | A finding means                                                          |
 | ------------------ | ------------------------------------------------------------------------ |
