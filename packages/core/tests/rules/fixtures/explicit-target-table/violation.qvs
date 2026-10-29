@@ -1,0 +1,13 @@
+[Orders]:
+Load * From [lib://Files/orders_2025.qvd] (qvd);
+
+Concatenate
+Load * From [lib://Files/orders_2026.qvd] (qvd);
+
+Left Join
+Load
+    CustomerId,
+    CustomerName
+From [lib://Files/customers.qvd] (qvd);
+
+Inner Keep Load * From [lib://Files/regions.qvd] (qvd);

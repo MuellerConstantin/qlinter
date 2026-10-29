@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   down so 100 means every line is clean. A script under ten lines scores `null`,
   because a single finding would swing the number further than the style it is
   meant to describe. See [docs/score.md](docs/score.md).
-- A rule set of 41 rules covering
+- A rule set of 42 rules covering
   - layout: `block-indent`, `load-indent`, `continuation-indent`,
     `comment-indent`, `load-clause-newline`, `load-field-per-line`,
     `multiline-call`, `one-statement-per-line`, `comma-style`,
@@ -61,9 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `paren-spacing`, `word-spacing`;
   - comments: `comment-space`, `inline-comment-space`, `block-comment-stars`,
     `multiline-comment-block`, `no-rem`;
-  - correctness: `include-no-spaces`, `no-empty-statement`,
-    `no-error-mode-zero`, `no-legacy-path-variables`, `table-label-brackets`,
-    `load-identifier-brackets`, `variable-charset`.
+  - correctness: `explicit-target-table`, `include-no-spaces`,
+    `no-empty-statement`, `no-error-mode-zero`, `no-legacy-path-variables`,
+    `table-label-brackets`, `load-identifier-brackets`, `variable-charset`.
 
   Each rule answers one question and claims its own lines or tokens. See
   [docs/rules.md](docs/rules.md) for the full reference.

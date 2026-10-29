@@ -1,0 +1,20 @@
+[Orders]:
+Load * From [lib://Files/orders_2025.qvd] (qvd);
+
+Concatenate (Orders)
+Load * From [lib://Files/orders_2026.qvd] (qvd);
+
+Left Join ([Orders])
+Load
+    CustomerId,
+    CustomerName
+From [lib://Files/customers.qvd] (qvd);
+
+Inner Keep(Orders) Load * From [lib://Files/regions.qvd] (qvd);
+
+[Archive]:
+NoConcatenate
+Load * Resident [Orders];
+
+SQL SELECT * FROM a JOIN b ON a.id = b.id;
+Trace Join and Keep are fine here;

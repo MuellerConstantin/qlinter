@@ -35,6 +35,7 @@ export {
   builtinKeywordCase,
   commentIndent,
   commentSpace,
+  explicitTargetTable,
   loadClauseNewline,
   loadFieldPerLine,
   loadIdentifierBrackets,

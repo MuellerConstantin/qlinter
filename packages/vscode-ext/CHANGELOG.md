@@ -15,10 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and still ends as a success, so data that stopped loading goes unnoticed. A
   value that may come out as 0 at run time is reported too. Where skipping is
   intended, a `// qlinter-disable-next-line` directive confirms it.
+- `explicit-target-table` rule from the bundled Core engine, also part of the
+  `recommended` preset. It warns about a `Concatenate`, `Join` or `Keep` that
+  names no table: such a prefix works on whichever table was loaded last, and
+  silently lands in the wrong one once the script is reordered.
 
 ### Changed
 
-- Expect new errors on a script that sets `ErrorMode` to 0, from the new rule
+- Expect new errors on a script that sets `ErrorMode` to 0, and new warnings on
+  a `Concatenate`, `Join` or `Keep` without a table name, from the new rules
   above.
 
 ## [0.1.0]

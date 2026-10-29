@@ -15,6 +15,7 @@ import { commentIndent } from './comment-indent.js';
 import { commentSpace } from './comment-space.js';
 import { continuationIndent } from './continuation-indent.js';
 import { eolLast } from './eol-last.js';
+import { explicitTargetTable } from './explicit-target-table.js';
 import { includeNoSpaces } from './include-no-spaces.js';
 import { inlineCommentSpace } from './inline-comment-space.js';
 import { loadClauseNewline } from './load-clause-newline.js';
@@ -79,6 +80,7 @@ export const allRules = [
   commentSpace,
   continuationIndent,
   eolLast,
+  explicitTargetTable,
   includeNoSpaces,
   inlineCommentSpace,
   loadClauseNewline,
@@ -194,6 +196,7 @@ export {
   commentSpace,
   continuationIndent,
   eolLast,
+  explicitTargetTable,
   includeNoSpaces,
   inlineCommentSpace,
   loadClauseNewline,

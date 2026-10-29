@@ -19,6 +19,7 @@
 | [comment-space](#comment-space)                           | Require a space after `//` and inside `/* */`.                 |
 | [continuation-indent](#continuation-indent)               | Indent continuation lines one level per line they hang below.  |
 | [eol-last](#eol-last)                                     | Require the file to end with exactly one newline.              |
+| [explicit-target-table](#explicit-target-table)           | Require `Concatenate`, `Join` and `Keep` to name their table.  |
 | [include-no-spaces](#include-no-spaces)                   | Disallow spaces around the `=` of an include expansion.        |
 | [inline-comment-space](#inline-comment-space)             | Require exactly one space between code and a trailing comment. |
 | [load-clause-newline](#load-clause-newline)               | Require each LOAD clause keyword to start its own line.        |
@@ -1547,6 +1548,64 @@ LET vMonth = 6;
 This rule has no options. "Exactly one newline at end of file" is the universal
 convention; making it configurable would defeat the point of an opinionated
 linter.
+
+---
+
+## explicit-target-table
+
+Require `Concatenate`, `Join` and `Keep` to name the table they work on.
+
+### Rule Details
+
+Each of these prefixes takes an optional table name in parentheses. Without
+one, Qlik uses the last table loaded before the statement. That is right on the
+day the script is written and wrong as soon as somebody moves a section, loads
+another table in between, or wraps the previous load in a condition. The data
+then lands in the wrong table, and the reload still succeeds.
+
+The rule covers `Concatenate`, `Join` with or without `Inner`, `Outer`, `Left`
+or `Right`, and `Keep` after `Inner`, `Left` or `Right`. The name may be
+written plain, in brackets or in double quotes. `NoConcatenate` does not combine
+tables and is not reported, and neither is a `JOIN` inside a SQL command, which
+reaches the database unread.
+
+There is no autofix: which table was loaded last depends on sections, include
+files, conditions and loops the linter cannot follow, and a guessed name would
+be worse than none.
+
+**Not covered:** Qlik also concatenates two loads without any prefix when they
+have exactly the same fields. Telling that apart needs the field list of every
+table, which the linter does not build.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+[Orders]:
+Load * From [lib://Files/orders_2025.qvd] (qvd);
+
+Concatenate
+Load * From [lib://Files/orders_2026.qvd] (qvd);
+
+Left Join
+Load CustomerId, CustomerName From [lib://Files/customers.qvd] (qvd);
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+[Orders]:
+Load * From [lib://Files/orders_2025.qvd] (qvd);
+
+Concatenate (Orders)
+Load * From [lib://Files/orders_2026.qvd] (qvd);
+
+Left Join ([Orders])
+Load CustomerId, CustomerName From [lib://Files/customers.qvd] (qvd);
+```
+
+### Options
+
+This rule has no options.
 
 ---
 
