@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The options page marks every rule your settings change with a green bar
+  beside it, the way VS Code marks a changed setting.
+
 ### Changed
 
+- The popup, the options page and the tooltip on a finding have a new look,
+  modelled on VS Code in qlinter's colours. Findings carry outline icons for
+  error, warning and info, and the popup shows its counts in a status bar.
 - The extension now requires Chrome 111 or later, up from Chrome 93. Its
   styles are built with Tailwind CSS 4, which supports Chrome 111 and later.
   The previous minimum was already too low: injecting into the editor needs

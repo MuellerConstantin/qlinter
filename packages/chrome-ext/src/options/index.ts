@@ -6,9 +6,9 @@ import { createRuleList } from './rule-list.js';
 
 const title = document.getElementById('options-title') as HTMLHeadingElement;
 const subtitle = document.getElementById('options-subtitle') as HTMLParagraphElement;
-const presetsLabel = document.getElementById('options-presets-label') as HTMLSpanElement;
+const presetsLabel = document.getElementById('options-presets-label') as HTMLHeadingElement;
 const presetsHelp = document.getElementById('options-presets-help') as HTMLParagraphElement;
-const rulesLabel = document.getElementById('options-rules-label') as HTMLSpanElement;
+const rulesLabel = document.getElementById('options-rules-label') as HTMLHeadingElement;
 const rulesHelp = document.getElementById('options-rules-help') as HTMLParagraphElement;
 const ruleList = document.getElementById('options-rule-list') as HTMLUListElement;
 const advancedDetails = document.getElementById('options-advanced') as HTMLDetailsElement;

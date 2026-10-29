@@ -1,5 +1,6 @@
 import type { Editor, LineHandle, TextMarker, Position } from 'codemirror';
 import type { Diagnostic, Severity } from '@qlinter/core';
+import { SEVERITY_ICON } from './icons';
 
 const TOOLTIP_HIDE_DELAY_MS = 200;
 // Long enough that a pointer passing over marked code on its way to a click opens nothing.
@@ -27,20 +28,14 @@ const SEVERITY_RANK: Record<Severity, number> = {
   error: 2,
 };
 
-const SEVERITY_GLYPH: Record<Severity, string> = {
-  error: '\u00d7',
-  warning: '!',
-  info: 'i',
-};
-
-const SEVERITY_BACKGROUND: Record<Severity, string> = {
-  error: 'ql:bg-error',
-  warning: 'ql:bg-warning',
-  info: 'ql:bg-info',
+const SEVERITY_TEXT: Record<Severity, string> = {
+  error: 'ql:text-error',
+  warning: 'ql:text-warning',
+  info: 'ql:text-info',
 };
 
 const TOOLTIP_ACTION_CLASS =
-  'ql:p-0 ql:border-0 ql:bg-transparent ql:font-[inherit] ql:text-xs ql:text-link ql:cursor-pointer ql:hover:underline';
+  'ql:p-0 ql:border-0 ql:bg-transparent ql:font-[inherit] ql:text-xs ql:text-accent-text ql:cursor-pointer ql:hover:underline';
 
 /** The part of a CodeMirror editor the tooltip actions write through. */
 export type ScriptDoc = Pick<Editor, 'getValue' | 'getLine' | 'posFromIndex' | 'replaceRange'>;
@@ -216,7 +211,7 @@ export function createHighlighter(editor: Editor): {
     if (!tooltipElement) {
       tooltipElement = document.createElement('div');
       tooltipElement.className =
-        'ql:fixed ql:z-[99999] ql:max-w-[420px] ql:px-3 ql:py-2 ql:rounded-sm ql:font-sans ql:text-sm ql:text-foreground ql:bg-background ql:border ql:border-border ql:shadow-[0_2px_10px_rgb(0_0_0/0.14)] ql:whitespace-normal';
+        'ql:fixed ql:z-[99999] ql:box-border ql:max-w-120 ql:overflow-hidden ql:rounded-md ql:border ql:border-input-border ql:bg-background ql:font-sans ql:text-sm ql:text-foreground ql:shadow-[0_0_8px_2px_rgb(0_0_0/0.16)] ql:whitespace-normal';
       tooltipElement.addEventListener('mouseenter', () => clearTimeout(hideTimer));
       tooltipElement.addEventListener('mouseleave', hideTooltip);
       document.body.appendChild(tooltipElement);
@@ -240,30 +235,33 @@ export function createHighlighter(editor: Editor): {
     }
 
     const icon = document.createElement('span');
-    icon.className = `ql:inline-flex ql:flex-none ql:items-center ql:justify-center ql:size-3.5 ql:mt-0.5 ql:rounded-full ql:text-[10px] ql:font-bold ql:text-white ${SEVERITY_BACKGROUND[diagnostic.severity]}`;
-    icon.textContent = SEVERITY_GLYPH[diagnostic.severity];
+    icon.className = `ql:flex-none ql:size-4 ql:mt-0.5 ${SEVERITY_TEXT[diagnostic.severity]}`;
+    icon.innerHTML = SEVERITY_ICON[diagnostic.severity];
 
     const body = document.createElement('span');
     body.className = 'ql:flex-auto';
     body.append(`${diagnostic.message} `);
 
+    const source = document.createElement('span');
+    source.className = 'ql:text-muted';
+
     const rule = document.createElement('a');
-    rule.className = 'ql:text-link ql:cursor-pointer ql:hover:underline';
-    rule.textContent = `qlinter(${diagnostic.ruleId})`;
+    rule.className = 'ql:text-accent-text ql:no-underline ql:cursor-pointer ql:hover:underline';
+    rule.textContent = diagnostic.ruleId;
     rule.href = `https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md#${diagnostic.ruleId}`;
     rule.target = '_blank';
     rule.rel = 'noopener noreferrer';
-    body.append(rule);
+    source.append('qlinter(', rule, ')');
+    body.append(source);
 
     const row = document.createElement('div');
-    row.className = 'ql:flex ql:items-start ql:gap-2';
+    row.className = 'ql:flex ql:items-start ql:gap-2 ql:px-2.5 ql:py-2';
     row.append(icon, body);
 
     tooltipElement.replaceChildren(row);
 
     const actions = document.createElement('div');
-    actions.className =
-      'ql:flex ql:gap-3 ql:mt-2 ql:-mx-3 ql:-mb-2 ql:px-3 ql:py-1.5 ql:bg-surface ql:border-t ql:border-border ql:rounded-b-sm';
+    actions.className = 'ql:flex ql:gap-4 ql:px-2.5 ql:py-1 ql:bg-surface ql:border-t ql:border-border';
 
     if (diagnostic.fix) {
       const fixButton = document.createElement('button');

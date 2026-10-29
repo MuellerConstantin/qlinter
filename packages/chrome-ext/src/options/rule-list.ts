@@ -12,9 +12,9 @@ import {
 const DOCS_URL = 'https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md';
 
 const FIELD_CLASS =
-  'ql:rounded-sm ql:border ql:border-border ql:bg-background ql:text-foreground ql:focus:border-accent ql:focus:outline-2 ql:focus:-outline-offset-1 ql:focus:outline-accent';
+  'ql:h-6.5 ql:rounded-sm ql:border ql:border-input-border ql:bg-input ql:text-foreground ql:focus:border-accent ql:focus:outline-1 ql:focus:-outline-offset-1 ql:focus:outline-accent';
 
-const OPTION_INPUT_CLASS = `${FIELD_CLASS} ql:min-w-24 ql:px-2 ql:py-[3px] ql:text-sm`;
+const DROPDOWN_CLASS = `${FIELD_CLASS} ql:dropdown ql:pl-2 ql:pr-7 ql:cursor-pointer`;
 
 /**
  * Hands an edit up to the caller, which decides whether the result is
@@ -35,7 +35,7 @@ interface BoundControl {
 
 function enumControl(schema: Extract<OptionSchema, { type: 'enum' }>): HTMLSelectElement {
   const select = document.createElement('select');
-  select.className = OPTION_INPUT_CLASS;
+  select.className = `${DROPDOWN_CLASS} ql:min-w-24`;
 
   for (const value of [DEFAULT_CHOICE, ...schema.values]) {
     const option = document.createElement('option');
@@ -49,7 +49,7 @@ function enumControl(schema: Extract<OptionSchema, { type: 'enum' }>): HTMLSelec
 
 function numberControl(schema: Extract<OptionSchema, { type: 'number' }>): HTMLInputElement {
   const input = document.createElement('input');
-  input.className = OPTION_INPUT_CLASS;
+  input.className = `${FIELD_CLASS} ql:number-plain ql:w-24 ql:px-2 ql:placeholder:text-muted`;
   input.type = 'number';
   input.step = '1';
 
@@ -104,7 +104,7 @@ function optionField(
   apply: ApplyEdit,
 ): { field: HTMLElement; element: HTMLSelectElement | HTMLInputElement } {
   const field = document.createElement('label');
-  field.className = 'ql:flex ql:items-center ql:gap-1.5';
+  field.className = 'ql:flex ql:items-center ql:gap-2';
 
   const name = document.createElement('span');
   name.className = 'ql:font-mono ql:text-xs ql:text-muted';
@@ -135,20 +135,22 @@ function ruleRow(
   apply: ApplyEdit,
 ): { row: HTMLLIElement; severity: HTMLSelectElement; options: BoundControl[] } {
   const row = document.createElement('li');
-  row.className = 'ql:flex ql:flex-col ql:gap-2 ql:px-3 ql:py-2';
+  row.className =
+    'ql:flex ql:flex-col ql:gap-2.5 ql:px-3 ql:py-3 ql:border-t ql:border-t-border ql:first:border-t-0 ql:border-l-2 ql:border-l-transparent ql:hover:bg-hover ql:focus-within:bg-hover ql:data-modified:border-l-accent';
 
   const head = document.createElement('div');
   head.className = 'ql:flex ql:items-center ql:justify-between ql:gap-3';
 
   const id = document.createElement('a');
-  id.className = 'ql:font-mono ql:text-sm ql:text-accent ql:hover:underline ql:focus-visible:underline';
+  id.className =
+    'ql:font-mono ql:font-medium ql:hover:text-accent-text ql:hover:underline ql:focus-visible:text-accent-text ql:focus-visible:underline ql:outline-none';
   id.textContent = rule.id;
   id.href = `${DOCS_URL}#${rule.id}`;
   id.target = '_blank';
   id.rel = 'noopener noreferrer';
 
   const severity = document.createElement('select');
-  severity.className = `${FIELD_CLASS} ql:select-chevron ql:py-1 ql:pr-7 ql:pl-2.5 ql:cursor-pointer ql:accent-accent`;
+  severity.className = `${DROPDOWN_CLASS} ql:min-w-28`;
   severity.setAttribute('aria-label', rule.id);
 
   for (const choice of SEVERITY_CHOICES) {
@@ -172,7 +174,7 @@ function ruleRow(
   if (rule.options !== undefined) {
     const container = document.createElement('div');
     container.className =
-      'ql:flex ql:flex-wrap ql:items-center ql:gap-x-4 ql:gap-y-2 ql:pl-3 ql:border-l-2 ql:border-border';
+      'ql:flex ql:flex-wrap ql:items-center ql:gap-x-6 ql:gap-y-2 ql:px-3 ql:py-2 ql:rounded-md ql:border ql:border-border ql:bg-surface';
 
     for (const [key, schema] of Object.entries(rule.options)) {
       const { field, element } = optionField(rule, key, schema, apply);
@@ -187,7 +189,13 @@ function ruleRow(
   return { row, severity, options };
 }
 
+/** Whether the config says anything about the rule, which the row flags the way VS Code flags a changed setting. */
+function isModified(config: LintConfig, ruleId: string): boolean {
+  return severityFor(config, ruleId) !== DEFAULT_CHOICE || Object.keys(optionsFor(config, ruleId)).length > 0;
+}
+
 export function createRuleList(list: HTMLUListElement, apply: ApplyEdit): RuleList {
+  const rows = new Map<string, HTMLLIElement>();
   const severitySelects = new Map<string, HTMLSelectElement>();
   const optionControls: BoundControl[] = [];
 
@@ -197,6 +205,7 @@ export function createRuleList(list: HTMLUListElement, apply: ApplyEdit): RuleLi
     const { row, severity, options } = ruleRow(rule, apply);
 
     list.appendChild(row);
+    rows.set(rule.id, row);
     severitySelects.set(rule.id, severity);
     optionControls.push(...options);
   }
@@ -209,6 +218,10 @@ export function createRuleList(list: HTMLUListElement, apply: ApplyEdit): RuleLi
 
       for (const { ruleId, key, element } of optionControls) {
         writeControl(element, optionsFor(config, ruleId)[key]);
+      }
+
+      for (const [ruleId, row] of rows) {
+        row.toggleAttribute('data-modified', isModified(config, ruleId));
       }
     },
   };

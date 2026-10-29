@@ -7,6 +7,8 @@ import type {
   Status,
   StatusMessage,
 } from './types.js';
+import type { Severity } from '@qlinter/core';
+import { SEVERITY_ICON } from './util/icons.js';
 
 const statusDot = document.getElementById('status-dot') as HTMLSpanElement;
 const statusLabel = document.getElementById('status-label') as HTMLSpanElement;
@@ -65,6 +67,10 @@ function renderDiagnostics(diagnostics: DiagnosticsMessage | null): void {
     scoreValue.textContent = chrome.i18n.getMessage('scoreValue', [String(diagnostics.score)]);
   }
 }
+
+document.querySelectorAll<HTMLElement>('[data-icon]').forEach((slot) => {
+  slot.innerHTML = SEVERITY_ICON[slot.dataset.icon as Severity];
+});
 
 grantButton.textContent = chrome.i18n.getMessage('grantButton');
 scoreLabel.textContent = chrome.i18n.getMessage('scoreLabel');

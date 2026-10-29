@@ -38,16 +38,16 @@ export function createPresetControls(elements: PresetElements, apply: ApplyEdit)
       for (const preset of selected) {
         const row = document.createElement('li');
         row.className =
-          'ql:inline-flex ql:items-center ql:gap-1.5 ql:py-1 ql:pr-1.5 ql:pl-3 ql:rounded-full ql:border ql:border-border ql:bg-surface';
+          'ql:inline-flex ql:items-center ql:gap-1 ql:h-6.5 ql:pl-2.5 ql:pr-0.5 ql:rounded-sm ql:bg-secondary';
 
         const name = document.createElement('span');
-        name.className = 'ql:font-mono ql:text-sm ql:text-accent';
+        name.className = 'ql:font-mono ql:text-xs';
         name.textContent = preset;
 
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className =
-          'ql:inline-flex ql:items-center ql:justify-center ql:size-[18px] ql:rounded-full ql:text-[15px] ql:leading-none ql:text-muted ql:cursor-pointer ql:hover:bg-border ql:hover:text-foreground ql:focus-visible:bg-border ql:focus-visible:text-foreground';
+          'ql:inline-flex ql:items-center ql:justify-center ql:size-5.5 ql:rounded-sm ql:text-base ql:leading-none ql:text-muted ql:cursor-pointer ql:hover:bg-secondary-hover ql:hover:text-foreground ql:focus-visible:outline-1 ql:focus-visible:-outline-offset-1 ql:focus-visible:outline-accent';
         remove.textContent = '×';
         remove.setAttribute('aria-label', chrome.i18n.getMessage('optionsPresetRemove', [preset]));
         remove.addEventListener('click', () => {

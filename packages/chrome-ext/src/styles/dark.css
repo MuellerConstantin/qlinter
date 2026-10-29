@@ -10,20 +10,30 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --ql-color-background: #1f1f1f;
-    --ql-color-foreground: #e5e7eb;
-    --ql-color-muted: #9ca3af;
-    --ql-color-surface: #2a2a2a;
-    --ql-color-border: #3f3f46;
-    --ql-color-accent: #00b859;
-    --ql-color-accent-hover: #00d166;
+    --ql-color-foreground: #cccccc;
+    --ql-color-muted: #9d9d9d;
+    --ql-color-surface: #181818;
+    --ql-color-hover: #2a2d2e;
+    --ql-color-border: #2b2b2b;
+    --ql-color-input: #313131;
+    --ql-color-input-border: #3c3c3c;
 
-    --ql-color-idle: #52525b;
-    --ql-color-active: #22c55e;
-    --ql-color-failed: #ef4444;
+    --ql-color-accent-hover: #00b35a;
+    --ql-color-accent-text: #2fbf71;
+    --ql-color-secondary: #313131;
+    --ql-color-secondary-hover: #3c3c3c;
 
-    --ql-color-danger: #f87171;
-    --ql-color-danger-soft: #3f1d1d;
-    --ql-color-success: #4ade80;
-    --ql-color-success-soft: #14331f;
+    --ql-color-error: #f14c4c;
+    --ql-color-warning: #cca700;
+    --ql-color-info: #3794ff;
+
+    --ql-color-idle: #5a5a5a;
+    --ql-color-active: #2fbf71;
+    --ql-color-failed: #f14c4c;
+
+    --ql-color-danger: #f48771;
+    --ql-color-danger-soft: #3a1d1d;
+    --ql-color-success: #2fbf71;
+    --ql-color-success-soft: #13301f;
   }
 }

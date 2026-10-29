@@ -5,25 +5,22 @@
     <title>qlinter</title>
     <link rel="stylesheet" href="styles/popup.css" />
   </head>
-  <body class="ql:min-w-70 ql:px-3.5 ql:py-3 ql:font-sans ql:text-sm ql:text-foreground ql:bg-background">
-    <div class="ql:flex ql:items-center ql:gap-2">
-      <span
-        id="status-dot"
-        class="ql:size-2.25 ql:shrink-0 ql:rounded-full ql:bg-idle ql:data-[status=active]:bg-active ql:data-[status=errored]:bg-failed"
-      ></span>
-      <span id="status-label">qlinter: Loading...</span>
+  <body class="ql:w-75 ql:font-sans ql:text-sm ql:text-foreground ql:bg-background">
+    <header class="ql:flex ql:items-center ql:gap-2 ql:h-10 ql:pl-3 ql:pr-1.5 ql:border-b ql:border-border">
+      <img src="images/qlinter.svg" class="ql:size-4.5" alt="" />
+      <span class="ql:font-semibold">qlinter</span>
       <button
         id="settings-button"
-        class="ql:inline-flex ql:items-center ql:justify-center ql:ml-auto ql:p-1 ql:rounded-sm ql:text-muted ql:cursor-pointer ql:hover:bg-surface ql:hover:text-foreground ql:focus-visible:bg-surface ql:focus-visible:text-foreground"
+        class="ql:inline-flex ql:items-center ql:justify-center ql:size-7 ql:ml-auto ql:rounded-md ql:text-muted ql:cursor-pointer ql:hover:bg-hover ql:hover:text-foreground ql:focus-visible:outline-1 ql:focus-visible:-outline-offset-1 ql:focus-visible:outline-accent"
         type="button"
       >
         <svg
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2"
+          stroke-width="1.75"
           stroke-linecap="round"
           stroke-linejoin="round"
           aria-hidden="true"
@@ -34,39 +31,48 @@
           <circle cx="12" cy="12" r="3" />
         </svg>
       </button>
-    </div>
-    <button
-      id="fix-all-button"
-      class="ql:w-full ql:mt-2.5 ql:px-2.5 ql:py-1.5 ql:rounded-sm ql:border ql:border-border ql:bg-surface ql:cursor-pointer ql:hover:bg-border"
-      hidden
-    ></button>
-    <div
+    </header>
+    <main class="ql:flex ql:flex-col ql:gap-3 ql:p-3">
+      <div class="ql:flex ql:items-center ql:gap-2.5">
+        <span
+          id="status-dot"
+          class="ql:size-2 ql:shrink-0 ql:rounded-full ql:bg-idle ql:data-[status=active]:bg-active ql:data-[status=active]:ring-3 ql:data-[status=active]:ring-active/20 ql:data-[status=errored]:bg-failed ql:data-[status=errored]:ring-3 ql:data-[status=errored]:ring-failed/20"
+        ></span>
+        <span id="status-label">qlinter: Loading...</span>
+      </div>
+      <button
+        id="fix-all-button"
+        class="ql:w-full ql:h-7 ql:px-3 ql:rounded-sm ql:bg-accent ql:text-on-accent ql:cursor-pointer ql:hover:bg-accent-hover ql:focus-visible:outline-1 ql:focus-visible:outline-offset-2 ql:focus-visible:outline-accent"
+        hidden
+      ></button>
+      <button
+        id="grant-button"
+        class="ql:w-full ql:h-7 ql:px-3 ql:rounded-sm ql:bg-accent ql:text-on-accent ql:cursor-pointer ql:hover:bg-accent-hover ql:focus-visible:outline-1 ql:focus-visible:outline-offset-2 ql:focus-visible:outline-accent"
+        hidden
+      >
+        Enable qlinter for this page
+      </button>
+    </main>
+    <footer
       id="summary"
-      class="ql:flex ql:gap-3.5 ql:mt-2 ql:-mx-3 ql:-mb-3 ql:px-3 ql:py-2 ql:bg-surface ql:border-t ql:border-border"
+      class="ql:flex ql:items-center ql:gap-3 ql:h-7 ql:px-3 ql:text-xs ql:bg-surface ql:border-t ql:border-border"
       hidden
     >
-      <span class="ql:inline-flex ql:items-center ql:gap-1.25 ql:text-xs">
-        <span class="ql:size-2 ql:rounded-full ql:bg-error"></span><span id="count-error">0</span>
+      <span class="ql:inline-flex ql:items-center ql:gap-1">
+        <span data-icon="error" class="ql:size-3.5 ql:text-error"></span><span id="count-error">0</span>
       </span>
-      <span class="ql:inline-flex ql:items-center ql:gap-1.25 ql:text-xs">
-        <span class="ql:size-2 ql:rounded-full ql:bg-warning"></span><span id="count-warning">0</span>
+      <span class="ql:inline-flex ql:items-center ql:gap-1">
+        <span data-icon="warning" class="ql:size-3.5 ql:text-warning"></span><span id="count-warning">0</span>
       </span>
-      <span class="ql:inline-flex ql:items-center ql:gap-1.25 ql:text-xs">
-        <span class="ql:size-2 ql:rounded-full ql:bg-info"></span><span id="count-info">0</span>
+      <span class="ql:inline-flex ql:items-center ql:gap-1">
+        <span data-icon="info" class="ql:size-3.5 ql:text-info"></span><span id="count-info">0</span>
       </span>
-      <span id="score" class="ql:inline-flex ql:items-center ql:gap-1.25 ql:ml-auto ql:text-xs ql:text-muted" hidden>
+      <span id="score" class="ql:inline-flex ql:items-center ql:gap-1.5 ql:ml-auto ql:text-muted" hidden>
         <!-- Tabular figures keep the score from shifting sideways as it updates on every keystroke. -->
         <span id="score-label"></span
         ><span id="score-value" class="ql:font-semibold ql:tabular-nums ql:text-foreground"></span>
       </span>
-    </div>
-    <button
-      id="grant-button"
-      class="ql:w-full ql:mt-2.5 ql:px-2.5 ql:py-1.5 ql:rounded-sm ql:border ql:border-border ql:bg-surface ql:cursor-pointer ql:hover:bg-border"
-      hidden
-    >
-      Enable qlinter for this page
-    </button>
+    </footer>
     <script src="popup.js" type="module"></script>
   </body>
 </html>

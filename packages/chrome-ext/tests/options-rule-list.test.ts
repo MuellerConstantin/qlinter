@@ -192,4 +192,21 @@ describe('rule list display of an existing config', () => {
     expect(severitySelect('block-indent').value).toBe('default');
     expect((optionInput('block-indent', 'size') as HTMLInputElement).value).toBe('');
   });
+
+  it('flags a row whose rule the config sets, by severity or by options alone', () => {
+    mount({ rules: { 'block-indent': [null, { size: 2 }], 'word-spacing': 'off' } });
+
+    expect(row('block-indent').hasAttribute('data-modified')).toBe(true);
+    expect(row('word-spacing').hasAttribute('data-modified')).toBe(true);
+    expect(row('variable-case').hasAttribute('data-modified')).toBe(false);
+  });
+
+  it('drops the flag once an edit takes the rule back to default', () => {
+    mount({ rules: { 'word-spacing': 'off' } });
+
+    severitySelect('word-spacing').value = 'default';
+    change(severitySelect('word-spacing'));
+
+    expect(row('word-spacing').hasAttribute('data-modified')).toBe(false);
+  });
 });
