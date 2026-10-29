@@ -37,15 +37,17 @@ export function createPresetControls(elements: PresetElements, apply: ApplyEdit)
 
       for (const preset of selected) {
         const row = document.createElement('li');
-        row.className = 'preset-row';
+        row.className =
+          'ql:inline-flex ql:items-center ql:gap-1.5 ql:py-1 ql:pr-1.5 ql:pl-3 ql:rounded-full ql:border ql:border-border ql:bg-surface';
 
         const name = document.createElement('span');
-        name.className = 'preset-name';
+        name.className = 'ql:font-mono ql:text-sm ql:text-accent';
         name.textContent = preset;
 
         const remove = document.createElement('button');
         remove.type = 'button';
-        remove.className = 'preset-remove';
+        remove.className =
+          'ql:inline-flex ql:items-center ql:justify-center ql:size-[18px] ql:rounded-full ql:text-[15px] ql:leading-none ql:text-muted ql:cursor-pointer ql:hover:bg-border ql:hover:text-foreground ql:focus-visible:bg-border ql:focus-visible:text-foreground';
         remove.textContent = '×';
         remove.setAttribute('aria-label', chrome.i18n.getMessage('optionsPresetRemove', [preset]));
         remove.addEventListener('click', () => {

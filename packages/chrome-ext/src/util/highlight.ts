@@ -1,73 +1,9 @@
 import type { Editor, LineHandle, TextMarker, Position } from 'codemirror';
 import type { Diagnostic, Severity } from '@qlinter/core';
 
-const STYLE_ID = 'qlinter-styles';
 const TOOLTIP_HIDE_DELAY_MS = 200;
 // Long enough that a pointer passing over marked code on its way to a click opens nothing.
 const TOOLTIP_SHOW_DELAY_MS = 500;
-
-export function injectStyles(): void {
-  if (document.getElementById(STYLE_ID)) {
-    return;
-  }
-
-  const style = document.createElement('style');
-
-  style.id = STYLE_ID;
-  style.textContent = `
-    .qlinter-mark-error   { text-decoration: red wavy underline; text-decoration-skip-ink: none; }
-    .qlinter-mark-warning { text-decoration: orange wavy underline; text-decoration-skip-ink: none; }
-    .qlinter-mark-info    { text-decoration: #3b82f6 dotted underline; }
-
-    /*
-     * Left stripe painted on every line that carries at least one diagnostic.
-     * Works in addition to the wavy character underline and stays visible on
-     * whitespace-only lines, where the underline has nothing to paint over.
-     */
-    .qlinter-line-error   { box-shadow: inset 2px 0 0 #ef4444; }
-    .qlinter-line-warning { box-shadow: inset 2px 0 0 #f59e0b; }
-    .qlinter-line-info    { box-shadow: inset 2px 0 0 #3b82f6; }
-
-    #qlinter-tooltip {
-      position: fixed; z-index: 99999; max-width: 420px; padding: 8px 12px;
-      border-radius: 4px; font: 13px/1.5 system-ui, sans-serif;
-      color: #1f2937; background: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.14); display: none;
-      white-space: normal;
-    }
-
-    .qlinter-tt-row { display: flex; align-items: flex-start; gap: 8px; }
-    .qlinter-tt-icon {
-      flex: 0 0 auto; width: 14px; height: 14px; margin-top: 2px;
-      border-radius: 50%; display: inline-flex; align-items: center;
-      justify-content: center; font-size: 10px; font-weight: 700; color: #fff;
-    }
-
-    .qlinter-tt-icon[data-severity='error']   { background: #ef4444; }
-    .qlinter-tt-icon[data-severity='warning'] { background: #f59e0b; }
-    .qlinter-tt-icon[data-severity='info']    { background: #3b82f6; }
-    .qlinter-tt-body { flex: 1 1 auto; }
-    .qlinter-tt-rule { color: #2563eb; cursor: pointer; }
-    .qlinter-tt-rule:hover { text-decoration: underline; }
-
-    .qlinter-tt-actions {
-      margin: 8px -12px -8px;
-      padding: 6px 12px;
-      background: #f7f8fa;
-      border-top: 1px solid #e5e7eb;
-      border-radius: 0 0 4px 4px;
-      display: flex; gap: 12px;
-    }
-    .qlinter-tt-action {
-      color: #2563eb; cursor: pointer; background: none;
-      border: none; padding: 0; font: inherit; font-size: 12px;
-    }
-    .qlinter-tt-action:hover { text-decoration: underline; }
-  `;
-
-  document.head.appendChild(style);
-}
 
 const SEVERITY_CLASS: Record<Severity, string> = {
   error: 'qlinter-mark-error',
@@ -96,6 +32,15 @@ const SEVERITY_GLYPH: Record<Severity, string> = {
   warning: '!',
   info: 'i',
 };
+
+const SEVERITY_BACKGROUND: Record<Severity, string> = {
+  error: 'ql:bg-error',
+  warning: 'ql:bg-warning',
+  info: 'ql:bg-info',
+};
+
+const TOOLTIP_ACTION_CLASS =
+  'ql:p-0 ql:border-0 ql:bg-transparent ql:font-[inherit] ql:text-xs ql:text-link ql:cursor-pointer ql:hover:underline';
 
 /** The part of a CodeMirror editor the tooltip actions write through. */
 export type ScriptDoc = Pick<Editor, 'getValue' | 'getLine' | 'posFromIndex' | 'replaceRange'>;
@@ -270,7 +215,8 @@ export function createHighlighter(editor: Editor): {
 
     if (!tooltipElement) {
       tooltipElement = document.createElement('div');
-      tooltipElement.id = 'qlinter-tooltip';
+      tooltipElement.className =
+        'ql:fixed ql:z-[99999] ql:max-w-[420px] ql:px-3 ql:py-2 ql:rounded-sm ql:font-sans ql:text-sm ql:text-foreground ql:bg-background ql:border ql:border-border ql:shadow-[0_2px_10px_rgb(0_0_0/0.14)] ql:whitespace-normal';
       tooltipElement.addEventListener('mouseenter', () => clearTimeout(hideTimer));
       tooltipElement.addEventListener('mouseleave', hideTooltip);
       document.body.appendChild(tooltipElement);
@@ -294,16 +240,15 @@ export function createHighlighter(editor: Editor): {
     }
 
     const icon = document.createElement('span');
-    icon.className = 'qlinter-tt-icon';
-    icon.dataset.severity = diagnostic.severity;
+    icon.className = `ql:inline-flex ql:flex-none ql:items-center ql:justify-center ql:size-3.5 ql:mt-0.5 ql:rounded-full ql:text-[10px] ql:font-bold ql:text-white ${SEVERITY_BACKGROUND[diagnostic.severity]}`;
     icon.textContent = SEVERITY_GLYPH[diagnostic.severity];
 
     const body = document.createElement('span');
-    body.className = 'qlinter-tt-body';
+    body.className = 'ql:flex-auto';
     body.append(`${diagnostic.message} `);
 
     const rule = document.createElement('a');
-    rule.className = 'qlinter-tt-rule';
+    rule.className = 'ql:text-link ql:cursor-pointer ql:hover:underline';
     rule.textContent = `qlinter(${diagnostic.ruleId})`;
     rule.href = `https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md#${diagnostic.ruleId}`;
     rule.target = '_blank';
@@ -311,18 +256,19 @@ export function createHighlighter(editor: Editor): {
     body.append(rule);
 
     const row = document.createElement('div');
-    row.className = 'qlinter-tt-row';
+    row.className = 'ql:flex ql:items-start ql:gap-2';
     row.append(icon, body);
 
     tooltipElement.replaceChildren(row);
 
     const actions = document.createElement('div');
-    actions.className = 'qlinter-tt-actions';
+    actions.className =
+      'ql:flex ql:gap-3 ql:mt-2 ql:-mx-3 ql:-mb-2 ql:px-3 ql:py-1.5 ql:bg-surface ql:border-t ql:border-border ql:rounded-b-sm';
 
     if (diagnostic.fix) {
       const fixButton = document.createElement('button');
       fixButton.type = 'button';
-      fixButton.className = 'qlinter-tt-action';
+      fixButton.className = TOOLTIP_ACTION_CLASS;
       fixButton.textContent = 'Quick Fix';
       fixButton.addEventListener('click', () => {
         applyFix(editor, linted, diagnostic.fix!);
@@ -333,7 +279,7 @@ export function createHighlighter(editor: Editor): {
 
     const ignoreButton = document.createElement('button');
     ignoreButton.type = 'button';
-    ignoreButton.className = 'qlinter-tt-action';
+    ignoreButton.className = TOOLTIP_ACTION_CLASS;
     ignoreButton.textContent = 'Ignore';
     ignoreButton.addEventListener('click', () => {
       applyIgnore(editor, linted, diagnostic);

@@ -1,0 +1,43 @@
+/*
+ * Injected into Qlik's own document, so it carries no preflight: a reset would restyle the editor around it.
+ * Utilities stay outside any layer, since Qlik's unlayered CSS would otherwise beat every one of them.
+ */
+@import 'tailwindcss/theme.css' layer(theme) prefix(ql);
+@import 'tailwindcss/utilities.css' source(none);
+@import './theme.css';
+
+@source '../util/highlight.ts';
+
+/*
+ * The marks are found again by these class names, so they stay plain classes with the extension's own prefix.
+ */
+.qlinter-mark-error {
+  text-decoration: --theme(--color-error) wavy underline;
+  text-decoration-skip-ink: none;
+}
+
+.qlinter-mark-warning {
+  text-decoration: --theme(--color-warning) wavy underline;
+  text-decoration-skip-ink: none;
+}
+
+.qlinter-mark-info {
+  text-decoration: --theme(--color-info) dotted underline;
+}
+
+/*
+ * Left stripe painted on every line that carries at least one diagnostic.
+ * Works in addition to the wavy character underline and stays visible on
+ * whitespace-only lines, where the underline has nothing to paint over.
+ */
+.qlinter-line-error {
+  box-shadow: inset 2px 0 0 --theme(--color-error);
+}
+
+.qlinter-line-warning {
+  box-shadow: inset 2px 0 0 --theme(--color-warning);
+}
+
+.qlinter-line-info {
+  box-shadow: inset 2px 0 0 --theme(--color-info);
+}

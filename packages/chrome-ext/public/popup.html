@@ -5,11 +5,18 @@
     <title>qlinter</title>
     <link rel="stylesheet" href="styles/popup.css" />
   </head>
-  <body>
-    <div class="status">
-      <span id="status-dot" class="dot"></span>
+  <body class="ql:min-w-70 ql:px-3.5 ql:py-3 ql:font-sans ql:text-sm ql:text-foreground ql:bg-background">
+    <div class="ql:flex ql:items-center ql:gap-2">
+      <span
+        id="status-dot"
+        class="ql:size-2.25 ql:shrink-0 ql:rounded-full ql:bg-idle ql:data-[status=active]:bg-active ql:data-[status=errored]:bg-failed"
+      ></span>
       <span id="status-label">qlinter: Loading...</span>
-      <button id="settings-button" class="icon-button" type="button">
+      <button
+        id="settings-button"
+        class="ql:inline-flex ql:items-center ql:justify-center ql:ml-auto ql:p-1 ql:rounded-sm ql:text-muted ql:cursor-pointer ql:hover:bg-surface ql:hover:text-foreground ql:focus-visible:bg-surface ql:focus-visible:text-foreground"
+        type="button"
+      >
         <svg
           width="14"
           height="14"
@@ -28,18 +35,38 @@
         </svg>
       </button>
     </div>
-    <button id="fix-all-button" hidden></button>
-    <div id="summary" class="summary" hidden>
-      <span class="count" data-severity="error"><span class="count-dot"></span><span id="count-error">0</span></span>
-      <span class="count" data-severity="warning"
-        ><span class="count-dot"></span><span id="count-warning">0</span></span
-      >
-      <span class="count" data-severity="info"><span class="count-dot"></span><span id="count-info">0</span></span>
-      <span id="score" class="score" hidden>
-        <span id="score-label"></span><span id="score-value" class="score-value"></span>
+    <button
+      id="fix-all-button"
+      class="ql:w-full ql:mt-2.5 ql:px-2.5 ql:py-1.5 ql:rounded-sm ql:border ql:border-border ql:bg-surface ql:cursor-pointer ql:hover:bg-border"
+      hidden
+    ></button>
+    <div
+      id="summary"
+      class="ql:flex ql:gap-3.5 ql:mt-2 ql:-mx-3 ql:-mb-3 ql:px-3 ql:py-2 ql:bg-surface ql:border-t ql:border-border"
+      hidden
+    >
+      <span class="ql:inline-flex ql:items-center ql:gap-1.25 ql:text-xs">
+        <span class="ql:size-2 ql:rounded-full ql:bg-error"></span><span id="count-error">0</span>
+      </span>
+      <span class="ql:inline-flex ql:items-center ql:gap-1.25 ql:text-xs">
+        <span class="ql:size-2 ql:rounded-full ql:bg-warning"></span><span id="count-warning">0</span>
+      </span>
+      <span class="ql:inline-flex ql:items-center ql:gap-1.25 ql:text-xs">
+        <span class="ql:size-2 ql:rounded-full ql:bg-info"></span><span id="count-info">0</span>
+      </span>
+      <span id="score" class="ql:inline-flex ql:items-center ql:gap-1.25 ql:ml-auto ql:text-xs ql:text-muted" hidden>
+        <!-- Tabular figures keep the score from shifting sideways as it updates on every keystroke. -->
+        <span id="score-label"></span
+        ><span id="score-value" class="ql:font-semibold ql:tabular-nums ql:text-foreground"></span>
       </span>
     </div>
-    <button id="grant-button" hidden>Enable qlinter for this page</button>
+    <button
+      id="grant-button"
+      class="ql:w-full ql:mt-2.5 ql:px-2.5 ql:py-1.5 ql:rounded-sm ql:border ql:border-border ql:bg-surface ql:cursor-pointer ql:hover:bg-border"
+      hidden
+    >
+      Enable qlinter for this page
+    </button>
     <script src="popup.js" type="module"></script>
   </body>
 </html>

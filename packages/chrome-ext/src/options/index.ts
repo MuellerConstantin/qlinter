@@ -48,15 +48,14 @@ let state: LintConfig = {};
 
 function showFeedback(text: string, kind: 'error' | 'success'): void {
   feedback.textContent = text;
-  feedback.classList.toggle('feedback-error', kind === 'error');
-  feedback.classList.toggle('feedback-success', kind === 'success');
+  feedback.dataset.kind = kind;
   feedback.hidden = false;
 }
 
 function clearFeedback(): void {
   feedback.hidden = true;
   feedback.textContent = '';
-  feedback.classList.remove('feedback-error', 'feedback-success');
+  delete feedback.dataset.kind;
 }
 
 function errorMessage(err: unknown): string {

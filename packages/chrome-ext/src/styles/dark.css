@@ -1,0 +1,29 @@
+/*
+ * The extension's own pages follow the system theme. The tooltip does not import this file: it is drawn
+ * over Qlik's editor, whose theme the system setting says nothing about.
+ * The variables carry the class prefix, as Tailwind emits them.
+ */
+:root {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ql-color-background: #1f1f1f;
+    --ql-color-foreground: #e5e7eb;
+    --ql-color-muted: #9ca3af;
+    --ql-color-surface: #2a2a2a;
+    --ql-color-border: #3f3f46;
+    --ql-color-accent: #00b859;
+    --ql-color-accent-hover: #00d166;
+
+    --ql-color-idle: #52525b;
+    --ql-color-active: #22c55e;
+    --ql-color-failed: #ef4444;
+
+    --ql-color-danger: #f87171;
+    --ql-color-danger-soft: #3f1d1d;
+    --ql-color-success: #4ade80;
+    --ql-color-success-soft: #14331f;
+  }
+}

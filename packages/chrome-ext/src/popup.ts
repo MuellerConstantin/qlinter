@@ -35,8 +35,7 @@ let activeTabId: number | null = null;
 function renderStatus(status: Status): void {
   statusLabel.textContent = chrome.i18n.getMessage(STATUS_MESSAGE_KEYS[status]);
 
-  statusDot.classList.toggle('active', status === 'active');
-  statusDot.classList.toggle('errored', status === 'errored');
+  statusDot.dataset.status = status;
 
   grantButton.hidden = status !== 'needs-permission';
 

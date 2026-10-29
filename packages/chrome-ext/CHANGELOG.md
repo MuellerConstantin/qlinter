@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The extension now requires Chrome 111 or later, up from Chrome 93. Its
+  styles are built with Tailwind CSS 4, which supports Chrome 111 and later.
+  The previous minimum was already too low: injecting into the editor needs
+  Chrome 102.
+
 ### Fixed
 
 - The tooltip on a finding no longer opens from the empty space to the right

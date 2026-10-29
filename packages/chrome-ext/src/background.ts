@@ -4,6 +4,7 @@ import type { LocationChangeMessage } from './types.js';
 const CONTENT_SCRIPT_ID = 'qlinter-content';
 const MAIN_SCRIPT_ID = 'qlinter-main';
 const SCRIPT_IDS = [CONTENT_SCRIPT_ID, MAIN_SCRIPT_ID];
+const CONTENT_STYLES = 'styles/content.css';
 
 async function syncContentScripts(): Promise<void> {
   const granted = await chrome.permissions.getAll();
@@ -27,6 +28,7 @@ async function syncContentScripts(): Promise<void> {
       id: CONTENT_SCRIPT_ID,
       matches: origins,
       js: ['content.js'],
+      css: [CONTENT_STYLES],
       runAt: 'document_idle',
     },
     {
@@ -66,6 +68,11 @@ async function handlePermissionsAdded(perms: chrome.permissions.Permissions): Pr
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           files: ['content.js'],
+        });
+
+        await chrome.scripting.insertCSS({
+          target: { tabId: tab.id },
+          files: [CONTENT_STYLES],
         });
 
         await chrome.scripting.executeScript({

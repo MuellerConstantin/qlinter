@@ -11,6 +11,11 @@ import {
 
 const DOCS_URL = 'https://github.com/MuellerConstantin/qlinter/blob/main/packages/core/docs/rules.md';
 
+const FIELD_CLASS =
+  'ql:rounded-sm ql:border ql:border-border ql:bg-background ql:text-foreground ql:focus:border-accent ql:focus:outline-2 ql:focus:-outline-offset-1 ql:focus:outline-accent';
+
+const OPTION_INPUT_CLASS = `${FIELD_CLASS} ql:min-w-24 ql:px-2 ql:py-[3px] ql:text-sm`;
+
 /**
  * Hands an edit up to the caller, which decides whether the result is
  * acceptable. The list holds no config of its own and re-renders from whatever
@@ -30,7 +35,7 @@ interface BoundControl {
 
 function enumControl(schema: Extract<OptionSchema, { type: 'enum' }>): HTMLSelectElement {
   const select = document.createElement('select');
-  select.className = 'rule-option-input';
+  select.className = OPTION_INPUT_CLASS;
 
   for (const value of [DEFAULT_CHOICE, ...schema.values]) {
     const option = document.createElement('option');
@@ -44,7 +49,7 @@ function enumControl(schema: Extract<OptionSchema, { type: 'enum' }>): HTMLSelec
 
 function numberControl(schema: Extract<OptionSchema, { type: 'number' }>): HTMLInputElement {
   const input = document.createElement('input');
-  input.className = 'rule-option-input';
+  input.className = OPTION_INPUT_CLASS;
   input.type = 'number';
   input.step = '1';
 
@@ -99,10 +104,10 @@ function optionField(
   apply: ApplyEdit,
 ): { field: HTMLElement; element: HTMLSelectElement | HTMLInputElement } {
   const field = document.createElement('label');
-  field.className = 'rule-option';
+  field.className = 'ql:flex ql:items-center ql:gap-1.5';
 
   const name = document.createElement('span');
-  name.className = 'rule-option-key';
+  name.className = 'ql:font-mono ql:text-xs ql:text-muted';
   name.textContent = key;
 
   const element = schema.type === 'enum' ? enumControl(schema) : numberControl(schema);
@@ -130,20 +135,20 @@ function ruleRow(
   apply: ApplyEdit,
 ): { row: HTMLLIElement; severity: HTMLSelectElement; options: BoundControl[] } {
   const row = document.createElement('li');
-  row.className = 'rule-row';
+  row.className = 'ql:flex ql:flex-col ql:gap-2 ql:px-3 ql:py-2';
 
   const head = document.createElement('div');
-  head.className = 'rule-head';
+  head.className = 'ql:flex ql:items-center ql:justify-between ql:gap-3';
 
   const id = document.createElement('a');
-  id.className = 'rule-id';
+  id.className = 'ql:font-mono ql:text-sm ql:text-accent ql:hover:underline ql:focus-visible:underline';
   id.textContent = rule.id;
   id.href = `${DOCS_URL}#${rule.id}`;
   id.target = '_blank';
   id.rel = 'noopener noreferrer';
 
   const severity = document.createElement('select');
-  severity.className = 'rule-severity';
+  severity.className = `${FIELD_CLASS} ql:select-chevron ql:py-1 ql:pr-7 ql:pl-2.5 ql:cursor-pointer ql:accent-accent`;
   severity.setAttribute('aria-label', rule.id);
 
   for (const choice of SEVERITY_CHOICES) {
@@ -166,7 +171,8 @@ function ruleRow(
 
   if (rule.options !== undefined) {
     const container = document.createElement('div');
-    container.className = 'rule-options';
+    container.className =
+      'ql:flex ql:flex-wrap ql:items-center ql:gap-x-4 ql:gap-y-2 ql:pl-3 ql:border-l-2 ql:border-border';
 
     for (const [key, schema] of Object.entries(rule.options)) {
       const { field, element } = optionField(rule, key, schema, apply);

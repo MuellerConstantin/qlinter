@@ -1,7 +1,7 @@
 import { debounce } from './util/debounce';
 import { getEditor } from './util/editor';
 import { conformanceScore, format, lint } from '@qlinter/core';
-import { createHighlighter, injectStyles } from './util/highlight';
+import { createHighlighter } from './util/highlight';
 import type { BridgeMessage, DiagnosticCounts, DiagnosticsBridgeMessage, GetConfigBridgeMessage } from './types.js';
 import type { Diagnostic, LintConfig } from '@qlinter/core';
 import type { Editor } from 'codemirror';
@@ -9,11 +9,13 @@ import type { Editor } from 'codemirror';
 const MOUNT_TIMEOUT_MS = 10_000;
 const LINT_DEBOUNCE_MS = 150;
 
-// The loaded user config is used verbatim — nothing runs until it names a
-// preset or rules. This matches the CLI and the VS Code extension: no preset is
-// applied implicitly. A fresh install is seeded with the `recommended` preset as
-// a real stored entry (see util/config.ts), which the user can remove again on
-// the options page; until that config arrives, this empty default lints nothing.
+/*
+ * The loaded user config is used verbatim — nothing runs until it names a
+ * preset or rules. This matches the CLI and the VS Code extension: no preset is
+ * applied implicitly. A fresh install is seeded with the `recommended` preset as
+ * a real stored entry (see util/config.ts), which the user can remove again on
+ * the options page; until that config arrives, this empty default lints nothing.
+ */
 let currentConfig: LintConfig = {};
 let triggerLint: (() => void) | undefined;
 let editorRef: Editor | undefined;
@@ -51,7 +53,6 @@ function onEditorReady(editor: Editor): void {
   console.log('[qlinter:main] CodeMirror ready');
 
   editorRef = editor;
-  injectStyles();
   const highlighter = createHighlighter(editor);
 
   const runLint = (): void => {

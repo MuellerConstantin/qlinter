@@ -33,7 +33,7 @@ function optionInput(ruleId: string, key: string): HTMLSelectElement | HTMLInput
 }
 
 function severitySelect(ruleId: string): HTMLSelectElement {
-  return row(ruleId).querySelector('.rule-severity') as HTMLSelectElement;
+  return row(ruleId).querySelector(`select[aria-label="${ruleId}"]`) as HTMLSelectElement;
 }
 
 function change(element: HTMLElement): void {
@@ -56,7 +56,7 @@ describe('rule list rendering', () => {
     mount();
 
     for (const rule of rules) {
-      const inputs = row(rule.id).querySelectorAll('.rule-option-input');
+      const inputs = row(rule.id).querySelectorAll('label > select, label > input');
 
       expect(inputs).toHaveLength(Object.keys(rule.options ?? {}).length);
     }

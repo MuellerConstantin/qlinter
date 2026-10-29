@@ -6,36 +6,80 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="styles/options.css" />
   </head>
-  <body>
-    <header class="page-header">
-      <h1 id="options-title">qlinter</h1>
-      <p id="options-subtitle" class="subtitle"></p>
+  <body class="ql:font-sans ql:text-base ql:text-foreground ql:bg-background">
+    <header
+      class="ql:px-8 ql:pt-6 ql:pb-5 ql:border-b ql:border-border ql:max-[600px]:px-4.5 ql:max-[600px]:pt-4.5 ql:max-[600px]:pb-3.5"
+    >
+      <h1 id="options-title" class="ql:text-xl ql:font-semibold">qlinter</h1>
+      <p id="options-subtitle" class="ql:mt-1 ql:text-sm ql:text-muted"></p>
     </header>
-    <main class="page-body">
+    <main class="ql:max-w-180 ql:px-8 ql:py-6 ql:max-[600px]:p-4.5">
       <form id="options-form" novalidate>
-        <section class="form-section">
-          <span id="options-presets-label" class="field-label"></span>
-          <p id="options-presets-help" class="field-help"></p>
-          <ul id="options-preset-list" class="preset-list"></ul>
-          <div id="options-preset-add-row" class="preset-add">
-            <select id="options-preset-select" class="preset-select"></select>
-            <button type="button" id="options-preset-add" class="button button-secondary"></button>
+        <section>
+          <span id="options-presets-label" class="ql:block ql:mb-1 ql:font-semibold"></span>
+          <p id="options-presets-help" class="ql:mb-3 ql:text-sm ql:text-muted"></p>
+          <ul id="options-preset-list" class="ql:flex ql:flex-wrap ql:gap-2 ql:mb-3"></ul>
+          <div id="options-preset-add-row" class="ql:flex ql:gap-2">
+            <select
+              id="options-preset-select"
+              class="ql:px-2.5 ql:py-1.5 ql:rounded-sm ql:border ql:border-border ql:bg-background ql:text-foreground ql:cursor-pointer ql:disabled:text-muted ql:disabled:cursor-not-allowed"
+            ></select>
+            <button
+              type="button"
+              id="options-preset-add"
+              class="ql:px-3.5 ql:py-2 ql:rounded-md ql:border ql:border-border ql:text-foreground ql:cursor-pointer ql:hover:bg-surface"
+            ></button>
           </div>
         </section>
-        <section class="form-section">
-          <span id="options-rules-label" class="field-label"></span>
-          <p id="options-rules-help" class="field-help"></p>
-          <ul id="options-rule-list" class="rule-list"></ul>
+        <section class="ql:mt-7">
+          <span id="options-rules-label" class="ql:block ql:mb-1 ql:font-semibold"></span>
+          <p id="options-rules-help" class="ql:mb-3 ql:text-sm ql:text-muted"></p>
+          <ul
+            id="options-rule-list"
+            class="ql:overflow-hidden ql:rounded-md ql:border ql:border-border ql:bg-surface ql:divide-y ql:divide-border"
+          ></ul>
         </section>
-        <details id="options-advanced" class="form-section advanced">
-          <summary id="options-config-label" class="field-label"></summary>
-          <p id="options-config-help" class="field-help"></p>
-          <div id="options-config" class="editor-mount" aria-labelledby="options-config-label"></div>
+        <details id="options-advanced" class="ql:group ql:mt-7">
+          <summary class="ql:flex ql:items-center ql:gap-2 ql:font-semibold ql:cursor-pointer ql:group-open:mb-2">
+            <svg
+              class="ql:size-3 ql:text-muted ql:transition-transform ql:duration-150 ql:group-open:rotate-90"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4.5 3l3 3-3 3" />
+            </svg>
+            <span id="options-config-label"></span>
+          </summary>
+          <p id="options-config-help" class="ql:mb-3 ql:text-sm ql:text-muted"></p>
+          <div
+            id="options-config"
+            class="ql:overflow-hidden ql:rounded-md ql:border ql:border-border ql:bg-surface ql:focus-within:border-accent ql:focus-within:outline-2 ql:focus-within:-outline-offset-1 ql:focus-within:outline-accent ql:[&_.CodeMirror]:h-80 ql:[&_.CodeMirror]:font-mono ql:[&_.CodeMirror]:text-sm"
+            aria-labelledby="options-config-label"
+          ></div>
         </details>
-        <div id="options-feedback" class="feedback" role="status" aria-live="polite" hidden></div>
-        <div class="actions">
-          <button type="submit" id="options-save" class="button button-primary"></button>
-          <button type="button" id="options-reset" class="button button-secondary"></button>
+        <div
+          id="options-feedback"
+          class="ql:mt-3 ql:px-3 ql:py-2 ql:rounded-md ql:text-sm ql:whitespace-pre-wrap ql:data-[kind=error]:bg-danger-soft ql:data-[kind=error]:text-danger ql:data-[kind=success]:bg-success-soft ql:data-[kind=success]:text-success"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+        <div class="ql:flex ql:gap-2 ql:mt-4">
+          <button
+            type="submit"
+            id="options-save"
+            class="ql:px-3.5 ql:py-2 ql:rounded-md ql:border ql:border-transparent ql:bg-accent ql:text-white ql:cursor-pointer ql:hover:bg-accent-hover"
+          ></button>
+          <button
+            type="button"
+            id="options-reset"
+            class="ql:px-3.5 ql:py-2 ql:rounded-md ql:border ql:border-border ql:text-foreground ql:cursor-pointer ql:hover:bg-surface"
+          ></button>
         </div>
       </form>
     </main>

@@ -1,0 +1,12 @@
+/*
+ * Utilities stay outside any layer, so against unlayered third-party CSS they compete on specificity
+ * instead of losing by layer.
+ */
+@import 'tailwindcss/theme.css' layer(theme) prefix(ql);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' source(none);
+@import './theme.css';
+@import './dark.css';
+
+@source '../../public/popup.html';
+@source '../popup.ts';

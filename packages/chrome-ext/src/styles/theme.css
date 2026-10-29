@@ -1,0 +1,44 @@
+/*
+ * The one palette and scale shared by the popup, the options page and the in-editor tooltip.
+ * Sizes are in px, not rem, so the tooltip keeps its size whatever root font size the host page sets.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-background: #ffffff;
+  --color-foreground: #1f2937;
+  --color-muted: #6b7280;
+  --color-surface: #f7f8fa;
+  --color-border: #e5e7eb;
+  --color-accent: #009c4d;
+  --color-accent-hover: #007a3c;
+  --color-link: #2563eb;
+
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  --color-idle: #d4d4d8;
+  --color-active: #16a34a;
+  --color-failed: #dc2626;
+
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+
+  --spacing: 4px;
+
+  --text-*: initial;
+  --text-xs: 12px;
+  --text-xs--line-height: 1.5;
+  --text-sm: 13px;
+  --text-sm--line-height: 1.5;
+  --text-base: 14px;
+  --text-base--line-height: 1.5;
+  --text-xl: 20px;
+  --text-xl--line-height: 1.4;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
