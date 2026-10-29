@@ -1,0 +1,11 @@
+Set ErrorMode = 0;
+
+[Orders]:
+Load
+    OrderId,
+    Amount
+From [lib://SAP/orders.qvd] (qvd);
+
+Let ErrorMode = $(vMode);
+
+ErrorMode = 0

@@ -40,6 +40,7 @@ export {
   loadIdentifierBrackets,
   loadIndent,
   noBlankLineInStatement,
+  noErrorModeZero,
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,

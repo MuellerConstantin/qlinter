@@ -11,9 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The options page marks every rule your settings change with a green bar
   beside it, the way VS Code marks a changed setting.
+- `no-error-mode-zero` rule from the bundled Core engine, so a configuration on
+  the `recommended` preset picks it up without any change. It reports every
+  `ErrorMode = 0` as an error: with it, a reload skips a statement that fails
+  and still ends as a success, so data that stopped loading goes unnoticed. A
+  value that may come out as 0 at run time is reported too. Where skipping is
+  intended, a `// qlinter-disable-next-line` directive confirms it.
 
 ### Changed
 
+- Expect new errors on a script that sets `ErrorMode` to 0, from the new rule
+  above.
 - The popup, the options page and the tooltip on a finding have a new look,
   modelled on VS Code in qlinter's colours. Findings carry outline icons for
   error, warning and info, and the popup shows its counts in a status bar.

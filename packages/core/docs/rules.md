@@ -30,6 +30,7 @@
 | [multiline-comment-block](#multiline-comment-block)       | Require a multi-line comment to be one block comment.          |
 | [no-blank-line-in-statement](#no-blank-line-in-statement) | Disallow a blank line inside a single statement.               |
 | [no-empty-statement](#no-empty-statement)                 | Disallow a `;` that ends an empty statement.                   |
+| [no-error-mode-zero](#no-error-mode-zero)                 | Disallow setting `ErrorMode` to anything but 1 or 2.           |
 | [no-leading-blank-lines](#no-leading-blank-lines)         | Disallow blank lines above the first line of content.          |
 | [no-legacy-path-variables](#no-legacy-path-variables)     | Disallow legacy QlikView-era path system variables.            |
 | [no-multiple-empty-lines](#no-multiple-empty-lines)       | Limit how many consecutive empty lines may appear.             |
@@ -2592,6 +2593,74 @@ Let vYear = 2026;
 Load
     ';;' as Separator
 Resident Src;
+```
+
+### Options
+
+This rule has no options.
+
+---
+
+## no-error-mode-zero
+
+Disallow setting `ErrorMode` to anything but 1 or 2.
+
+### Rule Details
+
+With `ErrorMode` at `0`, Qlik skips a statement that fails and carries on with
+the next one. The reload still ends as a success, so a source that stopped
+delivering — a broken connection, a missing file — goes unnoticed while the app
+keeps serving the data of the last good reload. `1`, the default, halts the
+script; `2` fails it at once without prompting.
+
+Every assignment of `0` is reported, also one that a later `Set ErrorMode = 1`
+undoes: whether the statements in between check `ScriptError` is not something
+a linter can tell, and a reset at the very end of the script protects nothing.
+Where skipping a failure is intended, say so in the script with
+`// qlinter-disable-next-line no-error-mode-zero` above the assignment. The
+directive then documents the decision for the next reader and the next review.
+
+A value other than a plain `1` or `2` — a dollar-sign expansion, an
+expression, a quoted `'0'` — is reported as well, because it may come out as
+`0` when the script runs. The rule offers no autofix: only the author knows
+whether the reload should stop there.
+
+The rule looks at `Set`, at `Let` and at an assignment written without either
+keyword, and matches the name in any case. The Qlik reference calls variable
+names case sensitive, but does not say whether that holds for `ErrorMode`, and
+an `errormode = 0` that Qlik does honour is exactly the failure this rule is
+for. A comparison such as `If ErrorMode = 0 Then`
+reads the setting and is not reported.
+
+**Not seen:** an assignment in a file pulled in with `$(Include=…)`, or one
+made by `Call`ing a subroutine, is outside the file being linted.
+
+Examples of **incorrect** code for this rule:
+
+```qlik
+Set ErrorMode = 0;
+
+[Orders]:
+Load * From [lib://SAP/orders.qvd] (qvd);
+
+Set ErrorMode = 1;
+Let ErrorMode = $(vMode);
+```
+
+Examples of **correct** code for this rule:
+
+```qlik
+Set ErrorMode = 1;
+
+// qlinter-disable-next-line no-error-mode-zero
+Set ErrorMode = 0;
+[Optional]:
+Load * From [lib://Files/optional.qvd] (qvd);
+Set ErrorMode = 1;
+
+If ScriptErrorCount > 0 Then
+    Trace Optional source missing;
+End If
 ```
 
 ### Options

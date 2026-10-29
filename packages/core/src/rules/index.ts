@@ -26,6 +26,7 @@ import { multilineCall } from './multiline-call.js';
 import { multilineCommentBlock } from './multiline-comment-block.js';
 import { noBlankLineInStatement } from './no-blank-line-in-statement.js';
 import { noEmptyStatement } from './no-empty-statement.js';
+import { noErrorModeZero } from './no-error-mode-zero.js';
 import { noLeadingBlankLines } from './no-leading-blank-lines.js';
 import { noLegacyPathVariables } from './no-legacy-path-variables.js';
 import { noMultipleEmptyLines } from './no-multiple-empty-lines.js';
@@ -89,6 +90,7 @@ export const allRules = [
   multilineCommentBlock,
   noBlankLineInStatement,
   noEmptyStatement,
+  noErrorModeZero,
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,
@@ -203,6 +205,7 @@ export {
   multilineCommentBlock,
   noBlankLineInStatement,
   noEmptyStatement,
+  noErrorModeZero,
   noLeadingBlankLines,
   noLegacyPathVariables,
   noMultipleEmptyLines,

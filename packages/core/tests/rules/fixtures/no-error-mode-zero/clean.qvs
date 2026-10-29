@@ -1,0 +1,9 @@
+Set ErrorMode = 1;
+Let ErrorMode = 2;
+ErrorMode = 1
+
+Set vL.ErrorModeBackup = 0;
+
+If ErrorMode = 0 Then
+    Trace ErrorMode is 0;
+End If
